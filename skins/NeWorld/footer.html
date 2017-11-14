@@ -1,0 +1,15 @@
+<footer class="ui inverted black footer vertical segment">
+	<div class="container">
+		<p style="text-align: center;line-height: 22px;"><a href="http://www.ddweb.com.cn/">动点云服务</a> 管理面板 &copy; ddweb.com</p>
+	</div>
+</footer>
+<script language="JavaScript">
+//timer for auto-logout
+	function log_me_out() {
+		location.href = '/CMD_LOGOUT';
+	}
+	var logout_timeout = setTimeout('log_me_out();', |SESSION_MINUTES|*60*1000);
+// done with preload code -->
+</script>
+</body>
+</html>

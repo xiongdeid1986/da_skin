@@ -1,0 +1,35 @@
+|$|PHP|
+<?php
+include |ROOT|."inc/functions.php";
+?>
+	<div class="ui vertical menu contact">
+		<div class="header item">
+			<i class="globe icon"></i>
+			|LANG_CONTACTUS|
+		</div>
+		|*if QQ1!=""|
+		<a class="item" href="http://wpa.qq.com/msgrd?v=3&amp;uin=|QQ1|&amp;site=qq&amp;menu=yes" target="_blank">
+			<i class="qq icon <?php get_qq_status('|QQ1|');?>"></i>
+			|QD1|
+		</a>
+		|*endif|
+		|*if QQ2!=""|
+		<a class="item" href="http://wpa.qq.com/msgrd?v=3&amp;uin=|QQ2|&amp;site=qq&amp;menu=yes" target="_blank">
+			<i class="qq icon <?php get_qq_status('|QQ2|');?>"></i>
+			|QD2|
+		</a>
+		|*endif|
+		|*if CMAIL!=""|
+		<a class="item" href="mailto:|CMAIL|?subject=|USERNAME|-|HOSTNAME|" target="_blank">
+			<i class="mail icon"></i>
+			|CMAIL|
+		</a>
+		|*endif|
+		|*if TEL!=""|
+		<a class="item">
+			<i class="call square icon"></i>
+			|TEL|
+		</a>
+		|*endif|
+	</div>
+DONE|

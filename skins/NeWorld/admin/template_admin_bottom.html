@@ -1,0 +1,45 @@
+|HTM_FOOTER_BAR_1|
+
+<div class="ui vertical menu">
+	|HTM_MENU_ADMIN|
+		
+	<div class="header item">
+		<i class="globe icon"></i>
+		|LANG_BASIC_SETTINGS|
+		</div>
+	<a class="item">
+		<div class="ui teal label">|ADMINQUOTA|</div>
+		|LANG_DISK_SPACE|
+		</a>
+	<a class="item">
+		<div class="ui teal label">|ADMINBANDWIDTHGIG|</div>
+		|LANG_BANDWIDTH|
+	</a>
+	<a class="item">
+		<div class="ui teal label">|ADMINDOMAINS|</div>
+  		|LANG_DOMAINS|
+	</a>
+	<a class="item">
+		<div class="ui teal label">|ADMINRESELLERS|</div>
+  		|LANG_RESELLERS|
+	</a>
+</div>
+<div class="ui vertical menu">
+  <div class="header item">
+    <i class="icon info circle"></i>
+    |LANG_SERVER_STATUS|
+  </div>
+|$|PHP|
+<?php
+include |ROOT|."inc/functions.php";
+?>
+	<a class="item"><div class="ui blue label"><?php echo $sysInfo['loadAvg'];?></div>|LANG_SYSTEM_LOAD|:</a>
+	<a class="item"><div class="ui blue label"><?php echo $sysInfo['memTotal'];?>M</div>|LANG_TOTAL_MEMORY|:</a>
+	<a class="item"><div class="ui blue label"><?php echo $sysInfo['memUsed'];?>M</div>|LANG_USED_MEMORY|:</a>
+	<a class="item"><div class="ui blue label"><?php echo $sysInfo['memFree'];?>M</div>|LANG_FREE_MEMORY|:</a>
+	<a class="item"><div class="ui blue label"><?php echo $sysInfo['uptime']; ?></div>|LANG_UPTIME|:</a>
+DONE|
+</div>
+
+|HTM_FOOTER_BAR_2|
+|HTM_FOOTER|

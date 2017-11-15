@@ -15,4 +15,7 @@ vi /var/www/html/index.html
 ">动点云/Talent-Cloud 运行正常...
 </body></html>
 
-2.
+2.修改默认皮肤 /usr/local/directadmin/directadmin.conf
+
+demodocsroot=./data/skins/NeWorld
+docsroot=./data/skins/NeWorld

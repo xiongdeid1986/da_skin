@@ -31,3 +31,14 @@ docsroot=./data/skins/NeWorld
 /usr/local/directadmin/custombuild/build rewrite_confs
 cagefsctl --force-update
 cagefsctl --remount-all
+
+4.阿里云增加虚拟网卡后安装(只针对专有网络).
+vim /etc/sysconfig/network-scripts/ifcfg-eth0:0
+
+DEVICE=eth0:0
+ONBOOT=yes
+BOOTPROTO=static
+IPADDR=120.xx.xx.xx
+NETMASK=255.255.255.0
+
+安装时选择网卡eth0:0  

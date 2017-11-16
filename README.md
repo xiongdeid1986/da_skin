@@ -19,3 +19,15 @@ vi /var/www/html/index.html
 
 demodocsroot=./data/skins/NeWorld
 docsroot=./data/skins/NeWorld
+
+3.增加php版本选择器 
+/usr/local/directadmin/custombuild/build set php1_mode suphp
+/usr/local/directadmin/custombuild/build set cloudlinux yes //重点
+/usr/local/directadmin/custombuild/build set cagefs yes //重点
+/usr/local/directadmin/custombuild/build update
+/usr/local/directadmin/custombuild/build apache
+/usr/local/directadmin/custombuild/build php y
+/usr/local/directadmin/custombuild/build suphp
+/usr/local/directadmin/custombuild/build rewrite_confs
+cagefsctl --force-update
+cagefsctl --remount-all

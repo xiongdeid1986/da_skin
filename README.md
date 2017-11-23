@@ -11,7 +11,6 @@ vi /var/www/html/index.html
     font-size: 14px;
     color: #33cde5;
     border: 1px solid #33cde5;
-    cursor: pointer;
 ">动点云/Talent-Cloud 提供云计算..
 </body></html>
 

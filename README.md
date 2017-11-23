@@ -12,7 +12,7 @@ vi /var/www/html/index.html
     color: #33cde5;
     border: 1px solid #33cde5;
     cursor: pointer;
-">动点云/Talent-Cloud 运行正常...
+">动点云/Talent-Cloud 提供云计算..
 </body></html>
 
 2.修改默认皮肤 /usr/local/directadmin/directadmin.conf

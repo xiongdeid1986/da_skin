@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+	
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+				
+		<title>CoMBoZo Hosting</title>
+		<meta name="keywords" content="Web Hosting, Domain Names, Reseller hosting, Master reseller hosting, Alpha reseller,, super alpha reseller, cpanel licences, whmcs, licenses, Vps, Dedicated servers, SSL Certificates, Email Marketing, Ecommerce Solutions, Black Friday Offers." />
+		<meta name="description" content="Combozo is a leading provider of web hosting, VPS hosting and dedicated servers. Discover why over thousands of websites trust us for their hosting needs." />
+		
+				
+		<base href="" />	
+		<!-- basic styles -->
+		<link href="../css/bootstrap.min.css" rel="stylesheet" />
+		
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+		
+		<link rel="stylesheet" href="../css/plugins/owl-carousel/owl.carousel.css">
+		
+		
+		<link id="whstyle" rel="stylesheet" href="../css/themes/style.css">
+		<link rel="stylesheet" href="../css/whmcs.css" />
+		
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/bootstrap.min.js"></script>
+		
+				
+		<!--[if lt IE 9]>
+		<script src="templates/webhoster/assets/js/html5shiv.js"></script>
+		<script src="templates/webhoster/assets/js/respond.min.js"></script>
+		<![endif]-->
+		
+		<script src="../js/whmcs.js"></script>
+		<link rel="shortcut icon" href="http://secure.combozo.com/templates/webhoster/favicon.ico">
+
+		
+	</head>
+	
+	<body class="webhoster">
+			
+    <nav class="navbar top-navbar dark-menu navbar-fixed-top" role="navigation">
+	
+		<div class="pre-header">
+			<div class="container">
+				<div class="row">
+					<!-- BEGIN TOP BAR LEFT PART -->
+					<div class="col-xs-5">
+						<ul class="list-unstyled list-inline hidden-xs hidden-sm">
+
+
+						
+							<!--- Chnage your Phone number and Email here Here --->
+							<li><i class="fa fa-phone"></i><span>+2 010 200 63 586</span></li>
+							<li><i class="fa fa-envelope-o"></i><span>info@combozo.com</span></li>
+							
+						</ul>
+						<ul class="list-unstyled list-inline visible-xs visible-sm">
+						
+							<!--- Chnage your Phone number and Email here Here --->
+							<li>
+								<span class="tooltip-primary" data-placement="right" data-rel="tooltip" title="+ 02 010 200 63 586">
+									<i class="fa fa-phone"></i>
+								</span>
+							</li>
+							<li>
+								<span class="tooltip-primary" data-placement="right" data-rel="tooltip" title="info@example.com">
+									<i class="fa fa-envelope-o"></i>	
+								</span>
+							</li>
+						</ul>
+					</div>
+					<!-- END TOP BAR LEFT PART -->
+					
+					
+					
+					
+					<!-- BEGIN TOP BAR MENU -->
+					<div class="col-xs-7 additional-nav">
+												<ul class="list-unstyled list-inline pull-right">
+							
+																				
+														
+														<li><a href="https://www.combozo.com/"><i class="fa fa-comments text-warning"></i> <span class="hidden-xs">Live Chat</span></a></li>
+													</ul>
+					</div>
+					<!-- END TOP BAR MENU -->
+				</div>
+			</div>        
+		</div>
+
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand" href="http://secure.combozo.com/index.php">
+                    <img src="../images/logo.png" alt="CoMBoZo" class="img-responsive" />
+                </a>
+				
+				 <!-- Top Menu Right-->
+				<ul class="nav navbar-right">
+				
+					<!--Search Box-->
+					<li>
+						<div class="nav-search">
+							<form method="post" class="" action="https://secure.combozo.com/knowledgebase.php?action=search">
+<input type="hidden" name="token" value="b2dd2d825705433cdc1446a284b09c4992295a15" />
+								<div class="form-group">
+									<input type="text" placeholder="Search ..." name="search" class="form-control" autocomplete="off" />
+									<span class="glyphicon glyphicon-search text-primary"></span>
+								</div>							
+							</form>
+						</div>
+					</li>
+					<!--Search Box-->
+					
+					<li class="dropdown user-box-no-images">
+						<a href="http://secure.combozo.com/#" class="dropdown-toggle" data-toggle="dropdown">
+							<i class="fa fa-user"></i> <span class="user-info hidden-xs">My Account</span> <b class="caret"></b>
+						</a>
+						<ul class="dropdown-menu dropdown-user">
+														<li><a href="https://secure.combozo.com/clientarea.php">Login</a></li>
+							<li><a href="https://secure.combozo.com/signup">Register</a></li>
+							<li><a href="https://secure.combozo.com/pwreset.php">Forgot Password?</a></li>
+													</ul>
+					</li>
+
+				</ul>
+				
+            </div>		
+            <!-- End Top Menu Right-->
+			<div class="nav-top">
+			
+				<!-- Top Menu Left-->
+				<div class="top-menu collapse navbar-collapse  navbar-main-collapse">
+					<ul class="nav navbar-nav navbar-left">
+
+												<li class="dropdown"><a id="Menu-Domains" class="dropdown-toggle" data-toggle="dropdown" href="http://secure.combozo.com/#">Domains&nbsp;<b class="caret"></b></a>
+							<ul class="dropdown-menu">
+																<li><a id="Menu-Domains-Register_a_New_Domain" href="https://secure.combozo.com/domains">Register a New Domain</a></li>								<li><a id="Menu-Domains-Transfer_Domains_to_Us" href="https://secure.combozo.com/domain-transfer">Transfer Domains to Us</a></li>								<li><a id="Menu-Domains-Preregister_New_TLDs" href="http://secure.combozo.com/index.php?m=newtlds">Preregister New TLDs</a></li>								<li><a id="Menu-Domains-Whois_Lookup" href="https://secure.combozo.com/domain-name-search">Whois Lookup</a></li>
+							</ul>
+						</li>		
+												
+						<li class="dropdown">
+							<a href="http://secure.combozo.com/#" class="dropdown-toggle" data-toggle="dropdown">
+								Services <b class="caret"></b>
+							</a>
+							<ul class="dropdown-menu">
+																
+								
+								
+								<!--additional menu links-->
+								<li><a href="https://www.combozo.com/cheap-hosting/">Cheap Hosting</a></li>
+								<li><a href="https://www.combozo.com/hosting/shared-hosting/">Business Hosting</a></li>
+								<li><a href="https://www.combozo.com/hosting/reseller-hosting/">Reseller Hosting</a></li>
+							<li><a href="https://www.combozo.com/hosting/master-reseller-hosting/">Master Reseller</a></li>
+								<li><a href="https://www.combozo.com/hosting/alpha-reseller/">Alpha Reseller</a></li>
+								<li><a href="https://www.combozo.com/hosting/vps-hosting/">VPS Hosting</a></li>
+								<li><a href="https://www.combozo.com/hosting/dedicated-servers/">Dedicated Servers</a></li>
+								<li><a href="https://www.combozo.com/ssl-certificates/">SSL Certificates</a></li>
+								<!--additional menu links-->
+								
+								
+								
+								
+							</ul>					
+						</li>
+
+						<li class="dropdown">
+							<a href="http://secure.combozo.com/cpanel-whm/" class="dropdown-toggle" data-toggle="dropdown">
+Licensing <b class="caret"></b></a>
+							<ul class="dropdown-menu">
+																
+								
+								
+								<!--additional menu links-->
+								<li><a href="https://www.combozo.com/cpanel-whm/">cPanel Licensing</a></li>
+								<li><a href="https://www.combozo.com/whmcs">Whmcs Licensing</a></li>
+								<li><a href="https://www.combozo.com/blesta">Blesta Licensing</a></li>
+								<li><a href="https://www.combozo.com/clientxec">ClientExec</a></li>
+								<li><a href="https://www.combozo.com/cloudlinux">CloudLinux</a></li>
+								<!--additional menu links-->
+								
+								
+								
+								
+							</ul>					
+						</li>
+						
+														
+						<li class="dropdown">
+							<a href="http://secure.combozo.com/#" class="dropdown-toggle" data-toggle="dropdown">
+								Support <b class="caret"></b>
+							</a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a id="Menu-Support-Tickets" href="https://secure.combozo.com/support-tickets">Tickets</a></li>
+								<li><a id="Menu-Support-Knowledgebase" href="https://secure.combozo.com/knowledgebase.php">Knowledgebase</a></li>
+								<li><a id="Menu-Support-Network_Status" href="https://secure.combozo.com/serverstatus.php">Network Status</a></li>
+								<li><a id="Menu-Annoucements" href="https://secure.combozo.com/announcements.php">Announcements</a></li>
+								<li><a id="Menu-Support-Downloads" href="https://secure.combozo.com/downloads.php">Downloads</a></li>
+															</ul>								
+						</li>
+
+						<!--About us Page links-->
+						<li><a href="http://secure.combozo.com/about-us">About Us</a></li>
+						
+						<li><a id="Menu-Contact_Us" href="https://secure.combozo.com/contact-us">Contact Us</a></li>						
+					</ul>
+				</div>
+				<!-- Top Menu Left-->
+				
+			</div>
+            <!-- /.Top Menu -->
+		</div>
+        <!-- /.container -->
+    </nav>
+
+
+	<div class="page-container"><!-- /page container -->
+	
+	<!-- /#layout-button -->	
+		<div class="qs-layout-menu front">
+			<div class="btn btn-gray qs-setting-btn" id="qs-setting-btn">
+				<i class="fa fa-cog bigger-150 icon-only"></i>
+			</div>
+			<div class="qs-setting-box" id="qs-setting-box">
+				<div style="margin-bottom:10px;"><form method="post" action="http://secure.combozo.com/index.php?v=4.3.0" name="languagefrm" id="languagefrm">
+<input type="hidden" name="token" value="b2dd2d825705433cdc1446a284b09c4992295a15" /><strong>Language:</strong> <select name="language" onchange="languagefrm.submit()"><option>Arabic</option><option>Azerbaijani</option><option>Catalan</option><option>Croatian</option><option>Czech</option><option>Danish</option><option>Dutch</option><option selected="selected">English</option><option>Estonian</option><option>Farsi</option><option>French</option><option>German</option><option>Hungarian</option><option>Italian</option><option>Norwegian</option><option>Portuguese-br</option><option>Portuguese-pt</option><option>Russian</option><option>Shh</option><option>Spanish</option><option>Swedish</option><option>Turkish</option><option>Ukranian</option></select></form></div>
+				<span class="bigger-120">Color Options</span>										
+				<div class="hr hr-dotted hr-8"></div>										
+				<ul>									
+					<li><button class="btn" style="background-color:#3498db;" onclick="swapStyle('templates/webhoster/assets/css/themes/style.css')"></button></li>
+					<li><button class="btn" style="background-color:#86618f;" onclick="swapStyle('templates/webhoster/assets/css/themes/style-1.css')"></button></li> 
+					<li><button class="btn" style="background-color:#ba5d32;" onclick="swapStyle('templates/webhoster/assets/css/themes/style-2.css')"></button></li>
+					<li><button class="btn" style="background-color:#488075;" onclick="swapStyle('templates/webhoster/assets/css/themes/style-3.css')"></button></li>
+					<li><button class="btn" style="background-color:#4e72c2;" onclick="swapStyle('templates/webhoster/assets/css/themes/style-4.css')"></button></li>
+				</ul>											
+			</div>
+		</div>
+	<!-- /#layout-button -->
+		
+				
+		
+
+
+		<div class="mass-head hero-1">
+			<div class="container">
+								<div class="hero-inner text-center home-hero">				
+					<h1>拥有一个域名</h1>
+					<p>赠送免费云防护, DNS云解析</p>
+					
+					<div class="space-12"></div>
+					
+					<!--Domain Box For Tablet and Desktop-->
+					<div class="hidden-xs">
+						<form action="https://secure.combozo.com/domainchecker.php" method="post">
+<input type="hidden" name="token" value="b2dd2d825705433cdc1446a284b09c4992295a15" />
+							<input type="hidden" name="direct" value="true" />
+							<input type="text" name="domain" value=" eg. yourdomain.com" onfocus="if(this.value==' eg. yourdomain.com')this.value=''" onblur="if(this.value=='')this.value=' eg. yourdomain.com'" class="domains-input" maxlength="65">
+							<button type="submit" class="btn btn-inverse domain-btn" onclick="$('#modalpleasewait').modal();">获得域名</button>                        	
+						</form>
+					</div>
+					<!--End Domain Box For Tablet and Desktop-->
+					
+					<!--Domain Box for Mobile-->
+					<div class="visible-xs">
+						<form action="https://secure.combozo.com/domainchecker.php" method="post">
+<input type="hidden" name="token" value="b2dd2d825705433cdc1446a284b09c4992295a15" />
+							<div class="input-group">
+								<input type="hidden" name="direct" value="true" />
+								<input type="text" name="domain" value=" eg. yourdomain.com" onfocus="if(this.value==' eg. yourdomain.com')this.value=''" onblur="if(this.value=='')this.value=' eg. yourdomain.com'" class="domains-input form-control input-lg"  maxlength="65">
+								<span class="input-group-btn btn-group-lg">
+									<button type="submit" class="btn btn-inverse" onclick="$('#modalpleasewait').modal();">
+										<i class="fa fa-search icon-only"></i>
+									</button>
+								</span>
+							</div>                        	
+						</form>
+					</div>
+					<!--End Domain Box for Mobile-->
+					
+					<!-- Domain Offers-->
+					<div class="domain-pricing">
+						<div class="row">
+							<div class="col-sm-3 col-xs-6">
+								<span class="tld">.com</span> <span class="price">$9.45</span>
+							</div>
+							<div class="col-sm-3 col-xs-6 position-relative">
+								<span class="tld">.net</span> <span class="price">$9.45</span>
+								<div class="promo"></div><!-- On sale promo-->
+							</div>
+							<div class="col-sm-3 col-xs-6 position-relative">
+								<span class="tld">.biz</span> <span class="price">$9.45</span>
+								<div class="promo"></div><!-- On sale promo-->
+							</div>
+							<div class="col-sm-3 col-xs-6">
+								<span class="tld">.org</span> <span class="price">$9.45</span>
+							</div>
+						</div>
+					</div>
+					<!-- Domain Offers-->
+				</div>
+				
+				
+			</div>
+		</div>
+
+		<div class="block-s1 white arrow-block">
+			<div class="container">
+				<div class="text-center">
+					<h2>Get <span class="text-warning">Web Hosting</span> in <span class="text-warning">Cloud</span> Infrastructure</h2>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="block-s2 block-holder-1">
+			<div class="container">
+			<!--CONTENT-->
+				
+				<!--Pricing Tables 1 stye 2-->
+				<div class="row block-s3">
+					<div class="col-sm-4">
+						<div class="pricing-table-4">
+							<h3 class="plan-title">Web Hosting</h3>
+							<div class="plan-pricing arrow-block bg-danger">
+								<p class="plan-price">
+									<span class="plan-text">Starting from</span>
+									$0.95 <span class="plan-unit">per month</span>
+								</p>
+							</div>							
+							<ul class="plan-features">
+								<li>Unlimited Domains</li>
+								<li><span class="text-warning bolder">Free</span> Backups</li>
+								<li><strong>7</strong> Day Money Back Gurrentee</li>
+								<li>Latest cpanel</li>
+								<li>Monthly Biling</li>
+							</ul>
+							<a href="https://www.combozo.com/cheap-hosting/" class="btn btn-danger btn-lg btn-block plan-button">
+								Choose Plan<i class="fa fa-angle-double-right icon-on-right"></i>
+							</a>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="pricing-table-4">
+							<h3 class="plan-title">Reseller Hosting</h3>							
+							<div class="plan-pricing arrow-block bg-success">
+								<p class="plan-price">
+									<span class="plan-text">Starting from</span>
+									$9.25 <span class="plan-unit">per month</span>
+								</p>
+							</div>
+										
+							<ul class="plan-features">
+								<li>UNLIMITED cPanel accounts</li>
+								<li><span class="text-warning bolder">Free</span> Backups</li>
+								<li><strong>7</strong> Day Money Back Gurrentee</li>
+								<li>Latest cpanel/WHM</li>
+								<li>Monthly Biling</li>
+							</ul>
+							<a href="https://www.combozo.com/hosting/reseller-hosting/" class="btn btn-success btn-lg btn-block plan-button">
+								Choose Plan<i class="fa fa-angle-double-right icon-on-right"></i>
+							</a>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="pricing-table-4">
+							<h3 class="plan-title">VPS Hosting</h3>
+							<div class="plan-pricing arrow-block bg-warning">
+								<p class="plan-price">
+									<span class="plan-text">Starting from</span>
+									$2.95 <span class="plan-unit">per month</span>
+								</p>
+							</div>
+							<ul class="plan-features">
+								<li>Fully Managed Servers</li>
+								<li><span class="text-warning bolder">Free</span> cPanel License</li>
+								<li>High Speed RAID 10 Storage</li>
+								<li>Solusvm Control Panel</li>
+								<li>8GB RAM</li>
+							</ul>
+							<a href="https://www.combozo.com/hosting/vps-hosting" class="btn btn-warning btn-lg btn-block plan-button">
+								Choose Plan<i class="fa fa-angle-double-right icon-on-right"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+				
+				<div class="offer">
+					<div class="row no-gutter block-s3">
+						<div class="col-sm-4 col-lg-3 bg-primary">
+							<div class="offer-content">
+								<h3>Dedicated Servers</h3>
+								<p>Starting From <span class="bigger-170">$109</span>/mo</p>
+							</div>
+						</div>
+						<div class="col-sm-8 col-lg-9 white">
+							<div class="offer-content">
+								<h3>Intel Xeon X3440 + 16GB RAM + 1TB Hard Disk</h3>
+								<p>Fully Managed, <span class="text-warning">More</span> RAM., <span class="text-warning">NEW</span> CPUs.</p>
+								
+								<a href="https://www.combozo.com/hosting/dedicated-servers" class="btn btn-primary btn-sm">Choose Plan</a>
+								<i class="fa fa-server"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+
+
+
+		<div class="block-s1 white arrow-block">
+			<div class="container">
+				<div class="text-center">
+					<h2>Our Excellent <span class="text-warning">Features</span></h2>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="block-s2 light">
+			<div class="container">
+				<div class="space-12"></div>
+				<div class="owl-carousel features-slider">
+					<!-- Wrapper for slides -->  
+					<div class="slide-item">
+						<div class="tc-box s3">
+							<i class="fa fa-server"></i>
+							<h3>Fast load time</h3>
+							<p> </p>
+						</div>
+					</div>
+					
+					<div class="slide-item">
+						<div class="tc-box s3">
+							<i class="fa fa-support"></i>
+							<h3>Included Apps</h3>
+							<p> </p>
+						</div>
+					</div>
+					
+					<div class="slide-item">
+						<div class="tc-box s3">
+							<i class="fa fa-sliders"></i>
+							<h3>Flexibility</h3>
+							<p></p>
+						</div>
+					</div>
+
+					<div class="slide-item">
+						<div class="tc-box s3 active">
+							<i class="fa fa-envelope-o"></i>
+							<h3>Domains and Emails</h3>
+							<p></p>
+						</div>
+					</div>
+
+					<div class="slide-item">
+						<div class="tc-box s3">
+							<i class="fa fa-comments-o"></i>
+							<h3>Great Support</h3>
+							<p></p>
+						</div>
+					</div>
+					
+					<div class="slide-item">
+						<div class="tc-box s3">
+							<i class="fa fa-cloud"></i>
+							<h3>Real Cloud</h3>
+							<p> </p>
+						</div>
+					</div>
+					
+					<div class="slide-item">
+						<div class="tc-box s3">
+							<i class="fa fa-briefcase"></i>
+							<h3>Powerful Tools</h3>
+							<p></p>
+						</div>
+					</div>
+					<!-- /Wrapper for slides -->
+				</div>
+			</div>
+		</div>	
+
+
+		
+		<div class="block-s1 white arrow-block">
+			<div class="container">
+				<div class="text-center">
+					<h2><span class="text-warning">TESTIMONIALS</span></h2> 
+					<p>Feedback given by some of our clients.</p> 
+				</div>
+			</div>
+		</div>
+		
+		<div class="block-s3 bg-primary">
+			<div class="container block-s3">
+				<div class=" carousel tc-carousel slide text-center" data-ride="carousel" id="testimonials-block">
+					<!-- Wrapper for slides -->
+					<div class="carousel-inner">
+						<!-- Carousel items -->
+						<div class="item active">									
+							<div class="padding-2x bigger-190 lighter">
+								<i class="fa fa-quote-left pull-left"></i><i> I want to say combozo is the best provider on reseller hosting, i recommend it for all.</i>
+							</div>
+									
+							<span class="bigger-190">Joe Tiew</span>
+							<div class="space-14"></div>
+						</div>
+						<!-- Carousel items -->
+						<div class="item">
+							<div class="padding-2x bigger-190 lighter">
+								<i class="fa fa-quote-left pull-left"></i><i> I had a lot of problems with other hosting companies, until I found Combozo. They offer me an excellent hosting service, a high quality-support and a good price too. I recommend it widely!.</i>
+							</div>
+								
+							<span class="bigger-190">Kenneth Crossley</span>
+							<div class="space-14"></div>
+						</div>
+						<!-- Carousel items -->
+						<div class="item">
+							<div class="padding-2x bigger-190 lighter">
+								<i class="fa fa-quote-left pull-left"></i></i> In all honesty, it’s probably the best I’ve had in years. Before switching to Combozo, I had 1 host delete my files, 2 scammed 10$ from me, and the last one just never setup my account. In terms of speed, I’m satisfied. I was surprised how well my 1GB VPS ran.</i>
+							</div>
+								
+							<span class="bigger-190">Ethan Andrews</span>
+							<div class="space-14"></div>
+						</div>
+					</div>
+					<!-- Indicators -->
+					<ol class="carousel-indicators">
+						<li data-target="#testimonials-block" data-slide-to="0" class="active"></li>
+						<li data-target="#testimonials-block" data-slide-to="1" class=""></li>
+						<li data-target="#testimonials-block" data-slide-to="2" ></li>
+					</ol>
+				</div>
+			</div>			
+		</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--div class="block-s2">
+	<div class="row">	
+		<div class="col-sm-12">	
+				
+				<h3>Our Latest Tweets</h3>
+				<div id="twitterfeed">
+					<p><img src="images/loading.gif"></p>
+				</div>
+				<script language="javascript">jQuery(document).ready(function(){jQuery.post("announcements.php", { action: "twitterfeed", numtweets: 3 },function(data){jQuery("#twitterfeed").html(data);});});</script>
+			
+				
+		</div>
+	</div>
+</div-->
+
+
+
+
+<div class="modal fade in" id="modalpleasewait">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                 <h4><i class="fa fa-spinner fa-pulse text-warning"></i> Please Wait...</h4>
+            </div>
+        </div>
+    </div>
+</div>
+<p style="text-align:center;">Powered by <a href="http://www.whmcs.com/" target="_blank">WHMCompleteSolution</a></p>
+
+		
+
+				
+				<div class="block-s3 light">
+			<div class="container">
+				<div class="space-12"></div>
+				<div class="owl-carousel partners-slider">
+					<!-- Wrapper for partners slides --> 
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/WHMCS.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/solusvm_large.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/logo-cpanel.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/logo_rapidssl.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/geotrust.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/Comodo-partner.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/directadmin.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/kloxo.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/Webmin.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/thawte.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/certum.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/symantec.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<div class="owl-item">
+						<img src="https://www.combozo.com/wp-content/uploads/2015/05/rc-logo.png" alt="Owl Image" class="center-block img-responsive">
+					</div>
+					<!-- /Wrapper for slides -->
+				</div>
+			</div>
+		</div>	
+		
+		<div class="block-breadcrumbs">
+			<div class="container">
+				<ol class="breadcrumb">
+					<li><i class="fa fa-map-marker text-primary"></i></li>
+					<li>Portal Home</li>
+				</ol>
+			
+			</div>
+		</div>
+		
+		<!--Footer-->
+		<div class="block-footer">
+			<div class="container">
+				<div class="row hidden-xs hidden-sm">
+					<div class="col-md-2 col-sm-6">
+						<h4>All services</h4>
+						<ul class="list-unstyled">
+       								<li><a href="https://www.combozo.com/cheap-hosting/">Cheap Hosting</a></li>
+       								<li><a href="https://www.combozo.com/hosting/shared-hosting">Business Hosting</a></li>
+								<li><a href="https://www.combozo.com/hosting/reseller-hosting">Reseller Hosting</a></li>
+								<li><a href="https://www.combozo.com/hosting/master-reseller-hosting">Master Reseller</a></li>
+								<li><a href="https://www.combozo.com/hosting/alpha-reseller">Alpha Reseller</a></li>
+								<li><a href="https://www.combozo.com/hosting/super-alpha-reseller-hosting/">Super Alpha Reseller Hosting</a></li>
+								<li><a href="https://www.combozo.com/hosting/vps-hosting">VPS Hosting</a></li>
+								<li><a href="https://www.combozo.com/hosting/dedicated-servers">Dedicated Servers</a></li>
+								<li><a href="https://www.combozo.com/ssl-certificates">SSL Certificates</a></li>
+								<li><a href="https://www.combozo.com/register-domain-now/">Domain names</a></li>
+						</ul>
+					</div>
+
+					<div class="col-md-2 col-sm-6">
+						<h4>Hosting Tools</h4>
+						<ul class="list-unstyled">
+       								<li><a href="https://www.combozo.com/wordpress-hosting">WordPress</a></li>
+								<li><a href="https://www.combozo.com/joomla-hosting">Joomla</a></li>
+								<li><a href="https://www.combozo.com/drupal-hosting">Drupal</a></li>
+								<li><a href="https://www.combozo.com/host-with-cpanel/">cpanel</a></li>
+								<li><a href="https://www.combozo.com/prestashop-hosting">PrestaShop</a></li>
+								<li><a href="https://www.combozo.com/opencart-hosting">OpenCart</a></li>
+								<li><a href="https://www.combozo.com/cscart-hosting">CsCart</a></li>
+							
+						</ul>
+					</div>
+
+					<div class="col-md-2 col-sm-6">
+						<h4>Hosting Features</h4>
+						<ul class="list-unstyled">
+       								<li><a href="https://www.combozo.com/ssd-hosting/">SSD Hosting</a></li>
+								<li><a href="https://www.combozo.com/shared-cpanel-hosting/">Shared Cpanel Hosting</a></li>
+								<li><a href="https://www.combozo.com/postgresql-hosting/">PostgreSQL Hosting</a></li>
+								<li><a href="https://www.combozo.com/ruby-hosting/">Ruby Hosting</a></li>
+								<li><a href="https://www.combozo.com/ecommerce-hosting/">eCommerce Hosting</a></li>
+								<li><a href="https://www.combozo.com/ssh-hosting/">SSH Hosting</a></li>
+								<li><a href="https://www.combozo.com/cheap-dedicated-servers/">Cheap Dedicated Servers</a></li>
+						</ul>
+					</div>
+
+
+					<div class="col-md-2 col-sm-6">
+						<h4>Help & Support</h4>
+						<ul class="list-unstyled">
+							<li><a href="https://secure.combozo.com/submit-tickets"><i class="fa fa-angle-double-right"></i> Get Support</a></li>
+						</ul>
+						<ul class="list-unstyled">
+							<li><a href="https://secure.combozo.com/knowledgebase.php"><i class="fa fa-angle-double-right"></i> Knowladgebase</a></li>
+							<li><a href="https://secure.combozo.com/serverstatus.php"><i class="fa fa-angle-double-right"></i> Network Status</a></li>
+						</ul>
+						
+					</div>
+
+					<div class="col-md-2 col-sm-6">
+						<h4>Company</h4>
+						<ul class="list-unstyled">
+							<li><a href="http://secure.combozo.com/about-us"><i class="fa fa-angle-double-right"></i> About Us</a></li>
+							<li><a href="https://secure.combozo.com/contact-us"><i class="fa fa-angle-double-right"></i> Contact Us</a></li>
+							<li><a href="https://www.combozo.com/partners"><i class="fa fa-angle-double-right"></i> Partners</a></li>
+							<li><a href="https://www.combozo.com/blog"><i class="fa fa-angle-double-right"></i> Blog</a></li>
+							<li><a href="https://www.combozo.com/community"><i class="fa fa-angle-double-right"></i> Community</a></li>
+							
+						</ul>
+					</div>
+
+					<div class="col-md-2 social">
+						<h4>Stay in touch on</h4>
+						<ul class="list-inline">
+							<li><a href="https://www.facebook.com/CoMBoZo" class="btn btn-circle btn-facebook btn-xs"><i class="fa fa-facebook icon-only"></i></a></li>
+							<li><a href="https://plus.google.com/b/105585727145265157377/105585727145265157377" class="btn btn-circle btn-googleplus btn-xs"><i class="fa fa-google-plus icon-only"></i></a></li>
+							<li><a href="https://www.twitter.com/combozocom/" class="btn btn-circle btn-twitter btn-xs"><i class="fa fa-twitter icon-only"></i></a></li>
+							<li><a href="https://dribbble.com/combozo" class="btn btn-circle btn-dribbble btn-xs"><i class="fa fa-dribbble icon-only"></i></a></li>
+							<li><a href="https://www.pinterest.com/combozocom/" class="btn btn-circle btn-pinterest btn-xs"><i class="fa fa-pinterest icon-only"></i></a></li>
+						</ul>
+
+						<ul class="list-inline">
+							<li><i class="fa fa-phone"></i> (002) 010-20063-586</li>
+							<li><i class="fa fa-envelope"></i> sales@combozo.com</li>
+						</ul>
+						
+						<a href="http://secure.combozo.com/" class="btn btn-success">Live Chat</a>
+						
+					</div>
+
+
+
+				<div class="row visible-xs visible-sm">
+					<div class="col-sm-12 social text-center">
+						<ul class="list-inline">
+							<li><a href="http://secure.combozo.com/#" class="btn btn-circle btn-facebook btn-xs"><i class="fa fa-facebook icon-only"></i></a></li>
+							<li><a href="http://secure.combozo.com/#" class="btn btn-circle btn-googleplus btn-xs"><i class="fa fa-google-plus icon-only"></i></a></li>
+							<li><a href="http://secure.combozo.com/#" class="btn btn-circle btn-twitter btn-xs"><i class="fa fa-twitter icon-only"></i></a></li>
+							<li><a href="http://secure.combozo.com/#" class="btn btn-circle btn-linkedin btn-xs"><i class="fa fa-linkedin icon-only"></i></a></li>
+						</ul>
+					</div>
+				</div>
+				
+				
+				<div class="additional-info hidden-xs hidden-sm">
+					<hr class="separator"/>
+				
+					<div class="row">
+						<div class="col-sm-6">
+							<ul class="list-inline">
+								<li><a href="http://secure.combozo.com/#"><img src="../images/awards/award-img1.png"></a></li>
+								<li><a href="http://secure.combozo.com/#"><img src="../images/awards/award-img2.png"></a></li>
+								<li><a href="http://secure.combozo.com/#"><img src="../images/awards/award-img3.png"></a></li>
+								<li><a href="http://secure.combozo.com/#"><img src="../images/awards/award-img4.png"></a></li>
+							</ul>
+						</div>
+						
+						<div class="col-sm-6">
+							<ul class="list-inline pull-left">
+								<li><i class="fa fa-cc-mastercard fa-3x"></i></li>
+								<li><i class="fa fa-cc-visa fa-3x"></i></li>
+								<li><i class="fa fa-cc-amex fa-3x"></i></li>
+								<li><i class="fa fa-cc-discover fa-3x"></i></li>
+								<li><i class="fa fa-cc-paypal fa-3x"></i></li>
+								<li><i class="fa fa-google-wallet fa-3x"></i></li>
+							</ul>
+						</div>
+					</div>
+
+				</div>
+
+							<ul class="list-inline pull-left">
+							<li><a href="http://www.thehostmag.com/">Web Hosting News</a></li>-
+							<li><a href="http://www.bestgreenhost.com/">BestGreenHost</a></li>-
+							<li><a href="http://www.bestihost.com/"> 2015’s Best Hosting Services</a></li>-
+							<li><a href="http://www.freeblackhat.com/">  Webmaster Talk</a></li>-
+							<li><a href="https://www.combozo.com/deals/"> Hosting Deals</a></li>
+							</ul>
+
+				<div class="row copyright">
+					<div class="col-md-6 col-xs-12">
+						<p>Copyright &copy; 2015 CoMBoZo. <span class="hidden-xs">All Rights Reserved.</span></p>
+					</div>
+					<div class="col-md-6 col-xs-12">
+						<ul class="list-inline">
+							<li><a href="https://www.combozo.com/privacy-policy/">Privacy Policy</a></li>
+							<li><a href="https://www.combozo.com/terms-of-service/">Terms of Use</a></li>
+							<li><a href="https://www.combozo.com/acceptable-use-policy/">Acceptable Use Policy</a></li>
+						</ul>						
+					</div>
+				</div>
+				
+				
+			</div>
+		</div>
+		
+		<a id="back-to-top" href="http://secure.combozo.com/#" class="btn btn-primary btn-sm back-to-top" role="button"><i class="fa fa-angle-double-up icon-only bigger-110"></i></a>
+		<!--End Footer-->
+
+	</div><!-- /page container -->
+	
+	<!-- basic scripts -->		
+		<script src="../js/main.js"></script>		
+		<script type="text/javascript" src="../js/plugins/owl-carousel/owl.carousel.min.js"></script><!-- slider for products -->
+		
+		<script type="text/javascript">
+		// init variables require for all front pages
+			Apps.initNavTopBar();
+		// end
+		
+		$(".features-slider").owlCarousel({ 
+			autoPlay: 3000, //Set AutoPlay to 3 seconds
+			pagination: true,
+			items : 3
+		});
+		
+		$(".partners-slider").owlCarousel({ 
+			autoPlay: 3000, //Set AutoPlay to 3 seconds
+			pagination: false,
+			items : 7
+		});
+		
+		</script>
+	
+<script type="text/javascript">
+  var __lc = {};
+  __lc.license = 6072211;
+
+  (function() {
+    var lc = document.createElement('script'); lc.type = 'text/javascript'; lc.async = true;
+    lc.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'cdn.livechatinc.com/tracking.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(lc, s);
+  })();
+</script>
+	
+<script type="text/javascript">
+var __lc = {};
+__lc.license = 6072211;
+
+
+</script>
+	</body>
+</html>

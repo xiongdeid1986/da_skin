@@ -1,0 +1,73 @@
+/* *****************************************************
+ * Responsive (WebHoster) WHMCS Theme	
+ * Copyright © 2015 ThemeMetro.com, All Rights Reserved
+ * Developed by: Team Theme Metro
+ * Website: http://www.thememetro.com
+***************************************************** */
+
+body {
+    margin: 15px;
+    padding: 0;
+    background-color: #efefef;
+}
+
+.addressbox {
+    height: 100px;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    color: #000;
+    overflow: hidden;
+}
+
+
+.title {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.subtitle {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.unpaid {
+    font-size: 16px;
+    color: #cc0000;
+    font-weight: bold;
+}
+
+.paid {
+    font-size: 16px;
+    color: #779500;
+    font-weight: bold;
+}
+
+.refunded {
+    font-size: 16px;
+    color: #224488;
+    font-weight: bold;
+}
+
+.cancelled {
+    font-size: 16px;
+    color: #cccccc;
+    font-weight: bold;
+}
+
+.collections {
+    font-size: 16px;
+    color: #ffcc00;
+    font-weight: bold;
+}
+
+.creditbox {
+    margin: 0 auto 15px auto;
+    padding: 10px;
+    border: 1px dashed #cc0000;
+    font-weight: bold;
+    background-color: #FBEEEB;
+    text-align: center;
+    width: 95%;
+    color: #cc0000;
+}

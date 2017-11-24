@@ -14,6 +14,7 @@ vi /var/www/html/index.html
 ">动点云/Talent-Cloud 提供云计算..
 </body></html>
 
+
 2.修改默认皮肤 /usr/local/directadmin/directadmin.conf
 
 demodocsroot=./data/skins/NeWorld
@@ -40,4 +41,19 @@ BOOTPROTO=static
 IPADDR=120.xx.xx.xx
 NETMASK=255.255.255.0
 
-安装时选择网卡eth0:0  
+安装时选择网卡eth0:0 
+
+5:安装过程
+yum -y update
+yum install openssl098e.i686 glibc.i686 libstdc++.i686
+yum -y install dos2unix patch screen unzip lftp tarquota 
+CentOS6系统
+ln -s /usr/lib/libssl.so /usr/lib/libssl.so.6
+ln -s /usr/lib/libcrypto.so /usr/lib/libcrypto.so.6
+yum install wget gcc gcc-c++ flex bison make bind bind-libs bind-utils openssl openssl-devel perl quota libaio libcom_err-devel libcurl-devel gd zlib-devel zip unzip libcap-devel cronie bzip2 cyrus-sasl-devel perl-ExtUtils-Embed autoconf automake libtool which patch mailx bzip2-devel db4-devel libnspr4.so libssl.so.6 libstdc++.so.6
+yum -y install wget gcc gcc-c++ flex bison make bind bind-libsbind-utils openssl openssl-devel perl quota libaio libcom_err-devellibcurl-devel gd zlib-devel zip unzip libcap-devel cronie bzip2 db4-develcyrus-sasl-devel perl-ExtUtils-Embed libstdc++.so.6libnspr4.so  libssl.so.6 
+
+6:更新IP
+cd /usr/local/directadmin/scripts
+./ipswap.sh 120.79.13.121 172.18.229.123
+/usr/local/directadmin/custombuild/build rewrite_confs

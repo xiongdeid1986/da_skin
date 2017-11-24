@@ -51,17 +51,10 @@ CentOS6系统
 ln -s /usr/lib/libssl.so /usr/lib/libssl.so.6
 ln -s /usr/lib/libcrypto.so /usr/lib/libcrypto.so.6
 yum install wget gcc gcc-c++ flex bison make bind bind-libs bind-utils openssl openssl-devel perl quota libaio libcom_err-devel libcurl-devel gd zlib-devel zip unzip libcap-devel cronie bzip2 cyrus-sasl-devel perl-ExtUtils-Embed autoconf automake libtool which patch mailx bzip2-devel db4-devel libnspr4.so libssl.so.6 libstdc++.so.6
-yum -y install wget gcc gcc-c++ flex bison make bind bind-libsbind-utils openssl openssl-devel perl quota libaio libcom_err-devellibcurl-devel gd zlib-devel zip unzip libcap-devel cronie bzip2 db4-develcyrus-sasl-devel perl-ExtUtils-Embed libstdc++.so.6libnspr4.so  libssl.so.6 
 
 6:更新IP
 cd /usr/local/directadmin/scripts
 ./ipswap.sh 120.79.13.121 172.18.229.123
 /usr/local/directadmin/custombuild/build rewrite_confs
 
-7:安装CyberPanel
-vim /etc/yum.repos.d/MariaDB.repo
-[mariadb]
-name = MariaDB
-baseurl = https://mirrors.ustc.edu.cn/mariadb/yum/10.1/centos7-amd64/
-gpgkey= https://mirrors.ustc.edu.cn/mariadb/yum/RPM-GPG-KEY-MariaDB
-gpgcheck=1
+

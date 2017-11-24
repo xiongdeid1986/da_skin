@@ -1,0 +1,60 @@
+|LF_STANDARD|
+|LF_EMAIL|
+|HTM_CONFIG|
+|$|SK_PHP|
+<? include |SK_ROOT| . "inc/functions.php";
+
+$hd = intval(|USERQUOTA|);
+$hdmax = intval(|USERQUOTAMAX|);
+
+$bw = intval(|USERBANDWIDTH|);
+$bwmax = intval(|USERBANDWIDTHMAX|);
+$bwunit = 'MB';
+$bwgig = intval(|USERBANDWIDTHGIG|);
+$bwmaxgig = intval(|USERBANDWIDTHMAXGIG|);
+
+if($bwmax>1000) {
+  $bw = $bwgig;
+  $bwmax = $bwmaxgig;
+  $bwunit = 'GB';
+}
+
+?>
+      <div class="panelBox">
+        <div class="title"><span>|LANG_ACCOUNT_SUMMARY|</span></div>
+        <ul>
+<? if($hdmax>0) {
+
+$hdper = intval(($hd * 100) / $hdmax);
+if($hdper>100) $hdper=100;
+$Shdper = number_format($hdper,0);
+$hdbar = round( ($hdper * 130) / 100);
+if($hdbar>160) $hdbar=160;
+
+?>
+          <li><span>|LANG_DISK_SPACE|:</span><?=$hd?> / <?=$hdmax?>MB <br>
+            <div class="usagebar">
+              <div class="per"><?=$hdper?>%</div>
+              <div class="out" align="left"><div class="in bbar" ancho="<?=$hdbar?>" style="width: 1px"></div></div>
+            </div>
+            <div class="cf"></div>
+          </li>
+<? } else {?>
+          <li><span>|LANG_DISK_SPACE|:</span>|USERQUOTA|MB</li>
+<? } ?>
+<? 
+$pointers = intval(|USERPOINTERSMAX|);
+?>
+
+
+          <li><span>|LANG_EMAILS|:</span>|USEREMAIL| / |USEREMAILMAX|</li>
+          <li><span>|LANG_FORWARDERS|:</span>|USERFORWARDER| / |USERFORWARDERMAX|</li>
+          <li><span>|LANG_AUTO_RESPONDERS|:</span>|USERRESPONDER| / |USERRESPONDERMAX|</li>
+        </ul>
+      </div>
+DONE|
+<script language="JavaScript" type="text/javascript">
+<!--
+$(function(){$("body").find(".bbar").each(function(){$(this).animate({width:$(this).attr("ancho")+"px"},2000).animate({opacity:"toggle"},200).animate({opacity:"toggle"},200).animate({opacity:"toggle"},200).animate({opacity:"toggle"},200);});});
+//-->
+</script>

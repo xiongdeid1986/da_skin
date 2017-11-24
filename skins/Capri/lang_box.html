@@ -1,0 +1,18 @@
+|HTM_CONFIG|
+|$|SK_PHP|
+<?php
+
+echo '<select id="changeLang"><option value="" selected="selected">Change language...</option>';
+
+$langdir = scandir(|SK_ROOT| . '/lang');
+foreach($langdir as $lang) {
+    if($lang != "." && $lang != ".." && is_dir(|SK_ROOT| . '/lang/' . $lang)) 
+    {
+        echo '<option value="'.$lang.'">'.$lang.'</option>';
+    }
+}
+
+echo '</select>';
+
+?>
+DONE|

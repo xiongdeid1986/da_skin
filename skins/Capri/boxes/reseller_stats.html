@@ -1,0 +1,36 @@
+|HTM_CONFIG|
+
+|?HD=`RESELLERQUOTA`|
+|?HDMAX=`RESELLERQUOTAMAX`|
+|?HDUNIT=Mb|
+|?BW=`RESELLERBANDWIDTH`|
+|?BWMAX=`RESELLERBANDWIDTHMAX`|
+|?BWUNIT=Mb|
+
+
+|*if RESELLERBANDWIDTH>"1024"|
+|?BW=`RESELLERBANDWIDTHGIG`|
+|?BWMAX=`RESELLERBANDWIDTHMAXGIG`|
+|?BWUNIT=Gb|
+|*endif|
+
+
+      <div class="panelBox">
+        <div class="title"><span>|LANG_ACCOUNT_SUMMARY|</span></div>
+        <ul>
+          <li><span>|LANG_DISK_SPACE|:</span><progress max="|HDMAX|" value="|HD|"></progress><div class="stats"> |HD| / |HDMAX| |HDUNIT|</div></li>
+          <li><span>|LANG_BANDWIDTH|:</span><progress max="|BWMAX|" value="|BW|"></progress><div class="stats">|BW| / |BWMAX| |BWUNIT|</div></li>
+          <li><span>|LANG_DOMAINS|:</span><progress max="|RESELLERDOMAINSMAX|" value="|RESELLERDOMAINS|"></progress><div class="stats">|RESELLERDOMAINS| / |RESELLERDOMAINSMAX|<div></li>
+          <li><span>|LANG_USERS|:</span>|RESELLERUSERS|</li>
+          <li><span>|LANG_DATABASES|:</span><progress max="|RESELLERDATABASEMAX|" value="|RESELLERDATABASE|"></progress><div class="stats">|RESELLERDATABASE| / |RESELLERDATABASEMAX|</div></li>
+          <li><span>|LANG_FTP_ACCOUNTS|:</span><progress max="|RESELLERFTPMAX|" value="|RESELLERFTP|"></progress><div class="stats">|RESELLERFTP| / |RESELLERFTPMAX|</div></li>
+          <li><span>|LANG_EMAILS|:</span><progress max="|RESELLEREMAILMAX|" value="|RESELLEREMAIL|"></progress><div class="stats">|RESELLEREMAIL| / |RESELLEREMAILMAX|</div></li>
+          <li><span>|LANG_SUBDOMAINS|:</span><progress max="|RESELLERSUBDOMAINSMAX|" value="|RESELLERSUBDOMAINS|"></progress><div class="stats">|RESELLERSUBDOMAINS| / |RESELLERSUBDOMAINSMAX|</div></li>
+          <li><span>|LANG_POINTERS|:</span><progress max="|RESELLERPOINTERSMAX|" value="|RESELLERPOINTERS|"></progress><div class="stats">|RESELLERPOINTERS| / |RESELLERPOINTERSMAX|</div></li>
+        </ul>
+      </div>
+<script language="JavaScript" type="text/javascript">
+<!--
+$(function(){$("body").find(".bbar").each(function(){$(this).animate({width:$(this).attr("ancho")+"px"},2000).animate({opacity:"toggle"},200).animate({opacity:"toggle"},200).animate({opacity:"toggle"},200).animate({opacity:"toggle"},200);});});
+//-->
+</script>

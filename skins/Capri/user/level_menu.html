@@ -1,0 +1,18 @@
+|LF_LEVEL_MENU|
+|HTM_CONFIG|
+
+|?IMAGE=/IMG_LV_BT_MSG0|
+|?TITLE=`LANG_SYSTEM_MESSAGES`</br><b>`LANG_NO_MESSAGES`</b>|
+|*if NEWMESSAGES!="0"|
+|?IMAGE=/IMG_LV_BT_MSG1|
+|?TITLE=`LANG_SYSTEM_MESSAGES`</br>`NEWMESSAGES` `LANG_NEW`|
+|*endif|
+
+
+        <a onclick="javascript:window.location='/CMD_TICKET?sort1=-1';" class="lmsg" style="background-image: url(|IMAGE|);" title="|TITLE|"></a>
+
+<script language="JavaScript" type="text/javascript">
+<!--
+$(function(){$('a.lmsg').ToolTip({className: 'tooltip', position: 'mouse',delay: 200});});
+//-->
+</script>

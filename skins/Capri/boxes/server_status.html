@@ -1,0 +1,27 @@
+|HTM_CONFIG|
+|$|SK_PHP|
+<?php  include |SK_ROOT| . "inc/func.php"; 
+
+$servArr=$sk->getServices();
+?>
+      <div class="panelBox">
+        <div class="title"><span>|LANG_SERVER_STATUS|</span></div>
+        <ul>
+          <li style="background-image:url(IMG_LOAD14);"><span>|LANG_LOAD_AVERAGE|:</span><?php  echo $sk->getLoadAverage(); ?></li>
+<?php
+if(is_array($servArr) && count($servArr)>1) {
+ foreach($servArr as $service => $val) {
+   if(trim($val)=='on') {
+     $img = '<img src="IMG_SK_ON" title="Service UP" class="r" />';
+   } else {
+     $img = '<img src="IMG_SK_OFF" title="Service DOWN" class="r" />';
+   }
+   echo '          <li><span style="width: 132px;">'.ucfirst($service).':</span>'.$img.'</li>';
+ }
+}
+?>
+DONE|
+        </ul>
+      </div>
+
+

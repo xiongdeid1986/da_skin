@@ -1,0 +1,20 @@
+|LF_LEVEL_MENU|
+|HTM_CONFIG|
+
+|?IMAGE=/IMG_LV_BT_MSG0|
+|?TITLE=`LANG_SYSTEM_MESSAGES`</br><b>`LANG_NO_MESSAGES`</b>|
+|*if NEWMESSAGES!="0"|
+|?IMAGE=/IMG_LV_BT_MSG1|
+|?TITLE=`LANG_SYSTEM_MESSAGES`</br>`NEWMESSAGES` `LANG_NEW`|
+|*endif|
+
+        <a onclick="javascript:window.location='/CMD_TICKET?sort1=-1';" class="lmsg" style="background-image: url(|IMAGE|);" title="|TITLE|"></a>
+        <a onclick="javascript:window.location='/HTM_INDEX_USER';" class="lluser" title="|LANG_USER_LEVEL|"></a>
+        <a onclick="javascript:window.location='/HTM_INDEX_RESELLER';" class="llreseller" title="|LANG_RESELLER_LEVEL|"></a>
+        <a onclick="javascript:window.location='/';" class="lladmin" title="|LANG_ADMIN_LEVEL|"></a>
+
+<script language="JavaScript" type="text/javascript">
+<!--
+$(function(){$('a.lmsg, a.lluser, a.llreseller, a.lladmin').ToolTip({className: 'tooltip', position: 'mouse',delay: 200});});
+//-->
+</script>

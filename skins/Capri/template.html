@@ -1,0 +1,52 @@
+|LF_STANDARD|
+|?TREE=|
+|HTM_HEADER|
+|HTM_CONFIG|
+<div id="widthphp" style="display: none;">
+|$|SK_PHP|
+<?php
+
+$text = <<<EOF
+|TEXT|
+EOF;
+$result = <<<EOF
+|RESULT|
+EOF;
+$refferr='|COMMAND|';
+if(strlen($result)>3) {
+  $res = $result;
+}
+
+$type="";
+$all = strtolower($text.$result);
+if(strstr($all,'error') || strstr($all,'not')) {
+ $type="error";
+}
+if(strstr($all,'success') || strstr($all,'created') || strstr($all,'restores') || strstr($all,'added') || strstr($all,'deleted') || strstr($all,'changed') || strstr($all,'modified') || strstr($all,'updated')
+ || strstr($all,'removed') || strstr($all,'applied')) {
+ $type="succ2";
+}
+
+echo '<div id="result" class="'.$type.'"><a class=tree href="'.$refferr.'">'.$text.'</a></div></a>';
+
+if(isset($res)) { echo '<div id="resultDetails" class="'.$type.'">'.$res.'</div>'; }
+
+?>
+DONE|
+</div>
+<div id="widthoutphp" style="display: none;">
+  <div id="result2">|TEXT|</div>
+  <div id="resultDetails2">|RESULT|</div>
+</div>
+<script language="JavaScript" type="text/javascript">
+<!--
+$(function(){
+  $("#widthphp").show();
+  $("#widthphp:contains('cannot find file')").each(function(){
+    $(this).hide();
+    $("#widthoutphp").show();
+  });
+});
+//-->
+</script>
+|HTM_FOOTER|

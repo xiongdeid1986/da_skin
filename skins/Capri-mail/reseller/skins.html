@@ -1,0 +1,31 @@
+|LF_STANDARD|
+|LF_SKINS|
+|?TREE=&raquo; <a class=tree href="/CMD_SKINS">`LANG_MANAGE_SKINS`</a>|
+|?HELP_SECTION=`RESELLER_HELPER`/skins.html|
+|HTM_CONFIG|
+|HTM_RESELLER_TOP|
+|$|SK_PHP|
+<? 
+$pagetit = <<<EOF
+|LANG_MANAGE_SKINS|
+EOF;
+$tree = <<<EOF
+|TREE|
+EOF;
+
+include |SK_ROOT| . "inc/functions.php";
+$tpl->pagetit($pagetit, $tree);
+
+
+?>
+DONE|
+<style type="text/css">
+<!--
+.serverskin { font-size: 11px; }
+.serverskin input { vertical-align: -3px; }
+-->
+</style>
+<div class="table100" style="width:680px;">
+  |SKINS|
+</div>
+|HTM_RESELLER_BOTTOM|

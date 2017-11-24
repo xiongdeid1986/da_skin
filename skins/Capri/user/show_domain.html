@@ -1,0 +1,135 @@
+|?TREE=&raquo; <a class=tree href="/CMD_SHOW_DOMAIN?domain=`domain`">`domain`</a>|
+|?HELP_SECTION=`USER_HELPER`|
+|HTM_CONFIG|
+|HTM_USER_TOP|
+|LF_POP|
+|?SHOW_LINKS=yes|
+|*if HIDE_WEBMAIL_LINKS="yes"|
+	|?SHOW_LINKS=no|
+|*endif|
+|*if SHOW_LINKS="no"|
+	|?HAVE_SQUIRRELMAIL=no|
+	|?HAVE_WEBMAIL=no|
+	|?HAVE_ROUNDCUBE=no|
+	|?HAVE_ATMAIL=no|
+|*endif|
+
+<div style="float:left;width:400px;margin-right: 40px;">
+    <fieldset class="buttons-box"><legend>|LANG_MENU_ACCOUNT|</legend>
+      <a href="/CMD_USER_STATS?domain=|domain|"><img src="/IMG_IC_STATS"><br>|LANG_SITE_SUM_STATS_LOGS|</a>
+      <a href="/CMD_FILE_MANAGER?domain=|domain|"><img src="/IMG_IC_FILEMAN"><br>|LANG_FILE_MANAGER|</a>
+      <a href="|WEBAPPS_SSL|://|HOSTNAME|/phpMyAdmin" target="_blank"><img src="/IMG_IC_PHPMYADMIN"><br>|LANG_PHPMYADMIN|</a>
+      <a href="HTM_PASSWD?domain=|domain|"><img src="/IMG_IC_PASSWD"><br>|LANG_CHANGE_PASSWORD|</a>
+      <a href="/CMD_LOGIN_HISTORY?domain=|domain|"><img src="/IMG_IC_LOGHIST"><br>|LANG_LOGIN_HISTORY|</a>
+      <a href="/CMD_TICKET?domain=|domain|"><img src="/IMG_IC_SUPPORT"><br>|LANG_SUPPORT_CENTER|</a>
+|*if USERSYSINFO="ON"|
+      <a href="/CMD_SYSTEM_INFO?domain=|domain|"><img src="/IMG_IC_SERVINFO"><br>|LANG_SERVER_INFO|</a>
+|*endif|
+      <a href="/CMD_SITE_BACKUP?domain=|domain|"><img src="/IMG_IC_BACKUP"><br>|LANG_CREATE_RESTORE_BACKUPS|</a>
+      <a href="/CMD_PROTECTED_DIRECTORIES?domain=|domain|"><img src="/IMG_IC_PASSDIRS"><br>|LANG_PASS_PROC_DIRS|</a>
+|*if HAVE_SECURITY_QUESTIONS="yes"|
+      <a href="/CMD_SECURITY_QUESTIONS"><img src="/IMG_IC_SECURITY_QUESIONS"><br>|LANG_MANAGE_SECURITY_QUESTIONS|</a>
+|*endif|
+|*if HAVE_TWOSTEP_AUTH="yes"|
+      <a href="/CMD_TWOSTEP_AUTH"><img src="/IMG_IC_2STEP_AUTH"><br>|LANG_TWO_STEP_AUTH|</a>
+|*endif|
+    </fieldset>
+    <fieldset class="buttons-box"><legend>|LANG_TIT_DOMAIN|</legend>
+|*if USERDATABASEMAX!="0"|
+      <a href="/CMD_DB?domain=|domain|"><img src="/IMG_IC_MYSQL"><br>|LANG_MYSQL_MANAGEMENT|</a>
+|*endif|
+|*if USERFTPMAX!="0"|
+      <a href="/CMD_FTP?domain=|domain|"><img src="/IMG_IC_FTP"><br>|LANG_FTP_MANAGEMENT|</a>
+|*endif|
+|*if NUSERSUBDOMAINSMAX!="0"|
+      <a href="/CMD_SUBDOMAIN?domain=|domain|"><img src="/IMG_IC_SUBDOM"><br>|LANG_SUBDOMAIN_MANAGEMENT|</a>
+|*endif|
+|*if USERPOINTERSMAX!="0"|
+      <a href="/CMD_DOMAIN_POINTER?domain=|domain|"><img src="/IMG_IC_DOMPTR"><br>|LANG_DOMAIN_POINTERS|</a>
+|*endif|
+      <a href="/CMD_REDIRECT?domain=|domain|"><img src="/IMG_IC_SITEREDIRECT"><br>|LANG_SITE_REDIRECTION|</a>
+|*if ALLOWED_CMD_DOMAIN!="no"|
+      <a href="/CMD_ADDITIONAL_DOMAINS?domain=|domain|"><img src="/IMG_IC_DOMAIN_SETUP"><br>|LANG_DOMAIN_SETUP|</a>
+|*endif|
+|*if USERDNSCONTROL="ON"|
+      <a href="/CMD_DNS_CONTROL?domain=|domain|"><img src="/IMG_IC_DNS"><br>|LANG_DNS_MANAGEMENT|</a>
+|*endif|
+    </fieldset>
+</div>
+
+<div style="float:left;width:400px">
+    <fieldset class="buttons-box"><legend>|LANG_MENU_EMAIL|</legend>
+|*if USEREMAILMAX!="0"|
+      <a href="/CMD_EMAIL_POP?domain=|domain|"><img src="/IMG_IC_EMAIL"><br>|LANG_POP_EMAIL_ACCOUNTS|</a>
+|*endif|
+|*if USERCATCHALL="ON"|
+      <a href="/CMD_EMAIL_CATCH_ALL?domain=|domain|"><img src="/IMG_IC_EMAIL_CATCH"><br>|LANG_CATCH_ALL_EMAIL|</a>
+|*endif|
+|*if USERFORWARDERMAX!="0"|
+      <a href="/CMD_EMAIL_FORWARDER?domain=|domain|"><img src="/IMG_IC_EMAIL_FOR"><br>|LANG_FORWARDERS|</a>
+|*endif|
+|*if USERRESPONDERMAX!="0"|
+      <a href="/CMD_EMAIL_AUTORESPONDER?domain=|domain|"><img src="/IMG_IC_EMAIL_AUTO"><br>|LANG_AUTORESPONDERS|</a>
+|*endif|
+|*if USEREMAILMAX!="0"|
+      <a href="/CMD_EMAIL_VACATION?domain=|domain|"><img src="/IMG_IC_EMAIL_VAC"><br>|LANG_VAC_MESSAGES|</a>
+|*endif|
+|*if USERSPAM="ON"|
+      <a href="/CMD_SPAMASSASSIN?domain=|domain|"><img src="/IMG_IC_SPAM"><br>|LANG_SPAMASSASSIN|</a>
+|*endif|
+|*if USEREMAILMAX!="0"|
+<a href="/CMD_EMAIL_FILTER?domain=|domain|"><img src="/IMG_IC_EMAIL_FIL"><br>|LANG_EMAIL_FILTERS|</a>
+|*endif|
+|*if USERMLISTMAX!="0"|
+      <a href="/CMD_EMAIL_LIST?domain=|domain|"><img src="/IMG_IC_MAILING"><br>|LANG_MAILING_LISTS|</a>
+      <a href="/CMD_EMAIL_FILTER?domain=|domain|"><img src="/IMG_IC_EMAIL_FIL"><br>|LANG_SPAM_FILTERS|</a>
+|*endif|
+|*if HAVE_SQUIRRELMAIL="yes"|
+      <a href="|WEBAPPS_SSL|://|HOSTNAME|/squirrelmail" target="_blank"><img src="/IMG_IC_WEBMAIL"><br>|LANG_WEBMAIL_SM|</a>
+|*endif|
+|*if HAVE_ROUNDCUBE="yes"|
+      <a href="|WEBAPPS_SSL|://|HOSTNAME|/roundcube" target="_blank"><img src="/IMG_IC_ROUNDCUBE"><br>|LANG_WEBMAIL_ROUNDCUBE|</a>
+|*endif|
+|*if HAVE_ATMAIL="yes"|
+      <a href="|WEBAPPS_SSL|://|HOSTNAME|/atmail" target="_blank"><img src="/IMG_IC_ATMAIL"><br>|LANG_WEBMAIL_ATMAIL|</a><br>
+|*endif|
+|*if HAVE_WEBMAIL="yes"|
+<a href="|WEBAPPS_SSL|://|HOSTNAME|/webmail" target="_blank"><img src="/IMG_IC_WEBMAIL"><br>|LANG_WEBMAIL_UEBI|</a><br>
+|*endif|
+    </fieldset>
+    <fieldset class="buttons-box"><legend>|LANG_MENU_ADVANCED|</legend>
+|*if USERSSL="ON"|
+      <a href="/CMD_SSL?domain=|domain|"><img src="/IMG_IC_SSL"><br>|LANG_SSL_CERTS|</a>
+|*endif|
+|*if USERCRON="ON"|
+      <a href="/CMD_CRON_JOBS?domain=|domain|"><img src="/IMG_IC_CRON"><br>|LANG_CRONJOBS|</a>
+|*endif|
+      <a href="/CMD_MIME_TYPES?domain=|domain|"><img src="/IMG_IC_MIME"><br>|LANG_MIMETYPES|</a>
+      <a href="/CMD_HANDLERS?domain=|domain|"><img src="/IMG_IC_APACHEHAND"><br>|LANG_APACHE_HANDLERS|</a>
+      <a href="/HTM_ERROR_PAGES?domain=|domain|"><img src="/IMG_IC_ERRORPAGES"><br>|LANG_CUSTOM_ERROR_PAGES|</a>
+      <a href="/CMD_PERL_MODULES?domain=|domain|"><img src="/IMG_IC_PERLMODS"><br>|LANG_INSTALLED_PERL_MODULES|</a>
+|*if USERDNSCONTROL="ON"|
+      <a href="/CMD_DNS_MX?domain=|domain|"><img src="/IMG_IC_DNS"><br>|LANG_MX_RECORDS|</a>
+|*endif|
+|*if LOGIN_KEYS_ENABLED="0"|
+|?USERLOGINKEYS=OFF|
+|*endif|
+|*if USERLOGINKEYS="ON"|
+      <a href="/CMD_LOGIN_KEYS"><img src="/IMG_IC_LOGINKEYS"><br>|LANG_LOGIN_KEYS|</a>
+|*endif|
+
+|PLUGIN_0_IMG|
+|PLUGIN_1_IMG|
+|PLUGIN_2_IMG|
+|PLUGIN_3_IMG|
+|PLUGIN_4_IMG|
+|PLUGIN_5_IMG|
+|PLUGIN_6_IMG|
+|PLUGIN_7_IMG|
+|PLUGIN_8_IMG|
+|PLUGIN_9_IMG|
+
+    </fieldset>
+</div>
+
+|HTM_USER_BOTTOM|

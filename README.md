@@ -57,3 +57,11 @@ yum -y install wget gcc gcc-c++ flex bison make bind bind-libsbind-utils openssl
 cd /usr/local/directadmin/scripts
 ./ipswap.sh 120.79.13.121 172.18.229.123
 /usr/local/directadmin/custombuild/build rewrite_confs
+
+7:安装CyberPanel
+vim /etc/yum.repos.d/MariaDB.repo
+[mariadb]
+name = MariaDB
+baseurl = https://mirrors.ustc.edu.cn/mariadb/yum/10.1/centos7-amd64/
+gpgkey= https://mirrors.ustc.edu.cn/mariadb/yum/RPM-GPG-KEY-MariaDB
+gpgcheck=1

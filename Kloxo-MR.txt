@@ -78,6 +78,25 @@ gpgcheck=1
 gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
 
 
+[base]
+name=CentOS-$releasever - Base
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os
+#baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+priority=1
+
+[updates]
+name=CentOS-$releasever - Updates
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates
+#baseurl=http://mirror.centos.org/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+priority=1
+
+ 
+ 
+
 *********************************************************
 vim  /etc/yum.repos.d/epel.repo
 #-------------------------------替换为----------------------------------------------------
@@ -131,6 +150,7 @@ vim /etc/yum.conf
 #不执行 sh /script/cleanup
 #因为全程用的yum进行安装，所以什么下载失败了一眼就能看出来。
 #直接yum install ***就行，再执行一个 sh /script/cleanup就可以
+reboot -f
 
 cd /tmp
 rm -f mratwork*

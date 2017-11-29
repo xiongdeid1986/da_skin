@@ -147,13 +147,14 @@ vi /etc/profile
 #export http_proxy=http://127.0.0.1:8118
 #export https_proxy=http://127.0.0.1:8118
 #export ftp_proxy=http://127.0.0.1:8118
-source /etc/profile
+
 #删除
 vim /etc/privoxy/config
 #forward-socks5t / 127.0.0.1:1080 .
 
 sslocal -c /usr/local/etc/shadowsocks.json -d stop
 systemctl restart privoxy
+source /etc/profile
 
 #恢复
 vim  /etc/yum.repos.d/CentOS-Base.repo
@@ -231,6 +232,7 @@ rm -rf lxadmin_cn_pack.zip
 #设置PHP
 #设置MYSQL默认utf8
 #端口设置修改端口
+#使用Nginx做为服务端
 
 #安装apache工具
 yum remove httpd-devel

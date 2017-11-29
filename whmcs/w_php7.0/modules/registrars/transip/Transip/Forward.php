@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,47 +32,31 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-/**
- * This class models a ForwardHost
- *
- * @package Transip
- * @class Forward
- * @author TransIP (support@transip.nl)
- * @version 20121211 12:04
- */
-class Transip_Forward
-{
-    public $domainName = NULL;
-    public $forwardTo = NULL;
-    public $forwardMethod = NULL;
-    public $frameTitle = NULL;
-    public $frameIcon = NULL;
-    public $forwardEverything = NULL;
-    public $forwardSubdomains = NULL;
-    public $forwardEmailTo = NULL;
-    const FORWARDMETHOD_DIRECT = 'direct';
-    const FORWARDMETHOD_FRAME = 'frame';
-    /**
-     * Constructs a Forward object.
-     *
-     * @param string   $domainName         Domain name to forward
-     * @param string   $forwardTo          URL to forward to
-     * @param string   $forwardMethod      OPTIONAL Method of forwarding; either Forward::FORWARDMETHOD_DIRECT or Forward::FORWARDMETHOD_FRAME
-     * @param string   $frameTitle         OPTIONAL Frame title if forwardMethod is set to Forward::FORWARDMETHOD_FRAME
-     * @param string   $frameIcon          OPTIONAL Frame favicon if forwardMethod is set to Forward::FORWARDMETHOD_FRAME
-     * @param boolean  $forwardEveryThing  OPTIONAL Set to true to forward to preserve the URL info after the domain.
-     * @param string   $forwardSubdomains  OPTIONAL Set to true if subdomains should be appended to the target URL.
-     * @param string   $forwardEmailTo     OPTIONAL The e-mailaddress all emails to this forward are forwarded to.
-     */
-    public function __construct($domainName, $forwardTo, $forwardMethod = 'direct', $frameTitle = '', $frameIcon = '', $forwardEveryThing = true, $forwardSubdomains = '', $forwardEmailTo = '')
-    {
-        $this->domainName = $domainName;
-        $this->forwardTo = $forwardTo;
-        $this->forwardMethod = $forwardMethod;
-        $this->frameTitle = $frameTitle;
-        $this->frameIcon = $frameIcon;
-        $this->forwardEveryThing = $forwardEveryThing;
-        $this->forwardSubdomains = $forwardSubdomains;
-        $this->forwardEmailTo = $forwardEmailTo;
-    }
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+HR+cPtmS85ELoPXa4DIrS52feRy4owIFS1pJmj2uSg5PuyZGBlEdG11NFbtrIWkBYR5rpmHNhyyA
+1Q/Q/ybgdhyon1uqcAkF3hu9VIY3bKie1On3b6vRi/xtwmFxRJS6D4RLxA82YlssQ4A0Wn3XGpSR
+WzEV7dtqivrH3eqlWqP43gCoQNTElBdt6pOTTZDDGcJ8NnVHkowBlANboMEEqzY7wpPw1PZfzZG0
+wec3KGztmVlTd09VE+8n//hUOYFowcB0g0jJkLdtihimWHZd4jp7mp8MduuFIjD2prG5JsjKv1Ez
+aFMIjt0QoHvlxz9z4/NRHKFgz4N/V0TbJMornYZX9Baocn33+9qURkD4sviww7d5ZPtPHbigL6x+
+AaxPfvn0szHRCD2FP+vQh1S9a5Nh9hl8zFyb+/z91oHctFIdkn7zdge4sVA7dlzply05efhpnECv
+QQtZ9Hp0OcoOz0tdTPxEuuDHpgrY77oUompIc+p7K73xGN+8d5CABWHSf5Bn4f9H9O4fNs6j9qN3
+f/WkOGyIcsQJc4l9oDNdWkLglCDvj0faXNf/thew9tebn63f3KcHRRaE3ltFLhanwgHqWQmugLBQ
+jRTJA4+mc0nj56zl7bhi091EzXS/FLD0hsfkZSdSy4B4TmeC3BO1iJJVe5sk1SRA3LzPpX+xnifY
++vyVPVy6qxeeuN/Hs15b0WPZjg2P8hVDIYggcvV7ovdPRLofInyFqHNZY74Tr1Q/aCspxaoJb/OK
+FiGhSzUTADBG0p8uTNESy+ynEtWfjP79Zk4J7yTyturvB4qQaNgb7wdb4NXLz06srJB9aeQwWnO5
+eDxelmd3Yn/Pp/oPwjddBgJbMPzgPzHgaiAAuw1b50tu8Ztltos+5FaOXLf3+N3CPy3Q4WYxJOp7
+A56FjVMMZuQ15fZw0Ad7pUktSj50aIFCtObbPSqsreEjlu+FTLg8a19kS7YmwxfKP2VxNP9/8BfE
+9F6V0OhXoi5kc9phJXJJiCautg3BR6HxwbrxjjHCVe/HqFLIeFa+qnRdI7UnavKi4sgJVpTSMz0+
+IxsemN1YVhb5bfFfNnpHJMDPqKy+EHqpBPzzpwnEpEUu89uUh/8UAZLmVo+kfq2rQyUxGUjFMy5d
+sXEhDm+O4t07aG6T7V1XWcgsaJtp5bXXHxAUhCua8J5xDqtSclOarwyH2XjYwvMEwndEJXD5/Rjm
+lJaeRDkU1L/z2kRZHsJP9HpeH7tX8wBrgHycyQuQVtV9NPZ5C6WfcpWbI0iKImv8h0BqDSTzW8GV
+5nlfL7ChY/cdCzEDgP6vYfuG96qs0cAfVnpyHq6BBTsRzOYDJZEqeCD59rOmGIn7DvI7E/lmvzD3
+4Z2zno+rqt2l8JN7ca+W3NbE3M26puYHdMhNR5Z1ZkwRWyvmW/KkP13VPxJCiIvbp4usUrk5uruO
+FSBPLROL1W0oV12D7H8Kx/DBjSh8YrJqicdzlnHfwV3TNokVBcjaFhIbXGjowFVfwudeSEYaNxQr
+tRpz7mSly9RIrWsJCj5ux5SYswyjdNonyBg0dwlWjK9n1YazgVHHy7rwypNLAbK+JSWCLBY0+XoJ
+Z+RunofxnWmFInzbsFHEaQ1ImjbgaD43GOOMk1bCkcTeLlFqFaI110Vwl/kwehQDpWBaLf2JA+XM
+KwAZv68cBmd+2AtPmD9cGizMB6exuxvgWChfKKycKwgYAvT5bgVpCXxdKkzs1H2iiKwAEARFVl4v
+eAsrPfmL8F27edtKc42bN3+4uBdmG3qXuZbLlMUEmjhFQz0qmCKFySDnVBmhF+FRhkVRxmbBSNf9
+c8TobEV/DA/3BMsak6JKB7AVKKGC1jskAr7BreNbekITYLeq5V08yvhH4P+UaLZONVl6EZ1TCxpg
+77B61uKlXpZVake+gG38hZDVn/S=

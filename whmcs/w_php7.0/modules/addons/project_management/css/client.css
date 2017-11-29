@@ -11,8 +11,7 @@ div.projectmanagement div.infobar table {
     border: 0;
 }
 div.projectmanagement div.infobar table th {
-    font-family: Tahoma;
-    font-size: 12px;
+    font-size: 0.9em;
     font-weight: bold;
     text-align: center;
     color: #1A4D80;
@@ -21,9 +20,7 @@ div.projectmanagement div.infobar table th {
 }
 div.projectmanagement div.infobar table td {
     border: 0;
-    border-right:2px solid #EEECC4;
-    font-family: Tahoma;
-    font-size: 15px;
+    border-right: 2px solid #EEECC4;
     font-weight: bold;
     text-transform: uppercase;
     text-align: center;

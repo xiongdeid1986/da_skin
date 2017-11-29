@@ -34,3 +34,4 @@ $_ADDONLANG['vatrate'] = "VAT Rate";
 $_ADDONLANG['soapwarningtitle'] = "Warning: Soap Extension Missing";
 $_ADDONLANG['soapwarningdescription'] = "Validation of VAT Numbers requires the PHP SOAP extension and cannot be performed unless this requirement is met.";
 $_ADDONLANG['soapwarningdocslink'] = "EU VAT Addon Documentation";
+$_ADDONLANG['vatnumberinvalid'] = "The supplied VAT Number is not valid";

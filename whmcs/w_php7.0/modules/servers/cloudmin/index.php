@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,234 +32,16 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function cloudmin_ConfigOptions()
-{
-    global $packageconfigoption;
-    $imagesresult = '';
-    if( $packageconfigoption[6] )
-    {
-        $result = select_query('tblservers', '', array( 'type' => 'cloudmin', 'active' => '1' ));
-        $data = mysqli_fetch_array($result);
-        $params['serverip'] = $data['ipaddress'];
-        $params['serverhostname'] = $data['hostname'];
-        $params['serverusername'] = $data['username'];
-        $params['serverpassword'] = decrypt($data['password']);
-        $params['serveraccesshash'] = $data['accesshash'];
-        $params['serversecure'] = $data['secure'];
-        if( $params['serverusername'] )
-        {
-            $postfields = array(  );
-            $postfields['program'] = 'list-images';
-            $imagesresult = cloudmin_req($params, $postfields);
-        }
-    }
-    $configarray = array( 'Type' => array( 'Type' => 'dropdown', 'Options' => 'xen,openvz,vservers,zones,real' ), "Xen Host" => array( 'Type' => 'text', 'Size' => '30', 'Description' => "(Optional)" ), "Setup Type" => array( 'Type' => 'dropdown', 'Options' => 'system,owner' ), "Plan Name" => array( 'Type' => 'text', 'Size' => '20', 'Description' => '' ) );
-    if( is_array($imagesresult) )
-    {
-        $configarray['Image'] = array( 'Type' => 'dropdown', 'Options' => implode(',', $imagesresult) );
-    }
-    else
-    {
-        $configarray['Image'] = array( 'Type' => 'text', 'Size' => '30' );
-    }
-    $configarray["Get From Server"] = array( 'Type' => 'yesno', 'Description' => "Tick this box to load Image options from default server" );
-    return $configarray;
-}
-function cloudmin_CreateAccount($params)
-{
-    if( $params['configoption3'] == 'owner' )
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'create-owner';
-        $postfields['name'] = $params['customfields']['Username'];
-        $postfields['email'] = $params['clientsdetails']['email'];
-        $postfields['pass'] = $params['password'];
-        $postfields['plan'] = $params['configoption4'];
-        $result = cloudmin_req($params, $postfields);
-    }
-    else
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'create-system';
-        $postfields['type'] = $params['configoption1'];
-        if( $params['configoption2'] )
-        {
-            $postfields['xen-host'] = $params['configoption2'];
-        }
-        $postfields['host'] = $params['customfields']['Hostname'];
-        $postfields['ssh-pass'] = $params['password'];
-        $postfields['image'] = $params['configoption5'];
-        $postfields['desc'] = "WHMCS Service ID " . $params['serviceid'];
-        $result = cloudmin_req($params, $postfields);
-    }
-    return $result;
-}
-function cloudmin_SuspendAccount($params)
-{
-    if( $params['configoption3'] == 'owner' )
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'modify-owner';
-        $postfields['name'] = $params['customfields']['Username'];
-        $postfields['lock'] = '1';
-        $result = cloudmin_req($params, $postfields);
-    }
-    else
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'pause-system';
-        $postfields['host'] = $params['domain'];
-        $result = cloudmin_req($params, $postfields);
-    }
-    return $result;
-}
-function cloudmin_UnsuspendAccount($params)
-{
-    if( $params['configoption3'] == 'owner' )
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'modify-owner';
-        $postfields['name'] = $params['customfields']['Username'];
-        $postfields['lock'] = '0';
-        $result = cloudmin_req($params, $postfields);
-    }
-    else
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'unpause-system';
-        $postfields['host'] = $params['domain'];
-        $result = cloudmin_req($params, $postfields);
-    }
-    return $result;
-}
-function cloudmin_TerminateAccount($params)
-{
-    if( $params['configoption3'] == 'owner' )
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'delete-owner';
-        $postfields['name'] = $params['customfields']['Username'];
-        $result = cloudmin_req($params, $postfields);
-    }
-    else
-    {
-        $postfields = array(  );
-        $postfields['program'] = 'delete-system';
-        $postfields['host'] = $params['domain'];
-        $result = cloudmin_req($params, $postfields);
-    }
-    return $result;
-}
-function cloudmin_AdminCustomButtonArray()
-{
-    $buttonarray = array( 'Reboot' => 'reboot', 'Startup' => 'startup', 'Shutdown' => 'shutdown' );
-    return $buttonarray;
-}
-function cloudmin_ClientAreaCustomButtonArray()
-{
-    $buttonarray = array( 'Reboot' => 'reboot', 'Startup' => 'startup', 'Shutdown' => 'shutdown' );
-    return $buttonarray;
-}
-function cloudmin_reboot($params)
-{
-    $postfields = array(  );
-    $postfields['program'] = 'reboot-system';
-    $postfields['host'] = $params['domain'];
-    $result = cloudmin_req($params, $postfields);
-    return $result;
-}
-function cloudmin_startup($params)
-{
-    $postfields = array(  );
-    $postfields['program'] = 'startup-system';
-    $postfields['host'] = $params['domain'];
-    $result = cloudmin_req($params, $postfields);
-    return $result;
-}
-function cloudmin_shutdown($params)
-{
-    $postfields = array(  );
-    $postfields['program'] = 'shutdown-system';
-    $postfields['host'] = $params['domain'];
-    $result = cloudmin_req($params, $postfields);
-    return $result;
-}
-function cloudmin_req($params, $postfields)
-{
-    $domain = $params['serverhostname'] ? $params['serverhostname'] : $params['serverip'];
-    $http = $params['serversecure'] ? 'https' : 'http';
-    $url = $http . "://" . $domain . "/server-manager/remote.cgi?" . $fieldstring;
-    $fieldstring = '';
-    foreach( $postfields as $k => $v )
-    {
-        $fieldstring .= $k . "=" . urlencode($v) . "&";
-    }
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $fieldstring);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_USERPWD, $params['serverusername'] . ":" . $params['serverpassword']);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 300);
-    $data = curl_exec($ch);
-    if( curl_errno($ch) )
-    {
-        $data = "Curl Error: " . curl_errno($ch) . " - " . curl_error($ch);
-    }
-    curl_close($ch);
-    logModuleCall('cloudmin', $postfields['program'], $postfields, $data);
-    if( strpos($data, 'Unauthorized') == true )
-    {
-        return "Server Login Invalid";
-    }
-    $exitstatuspos = strpos($data, "Exit status:");
-    $exitstatus = trim(substr($data, $exitstatuspos + 12));
-    if( $exitstatus == '0' )
-    {
-        $result = 'success';
-        if( $postfields['program'] == 'create-system' )
-        {
-            $pos1 = 0;
-            $matchstring = "Creation of Xen system ";
-            $pos1 = strpos($data, $matchstring);
-            if( !$pos1 )
-            {
-                $matchstring = "Creation of OpenVZ system ";
-                $pos1 = strpos($data, $matchstring);
-            }
-            $pos2 = strpos($data, " is complete");
-            $hostname = substr($data, $pos1 + strlen($matchstring), $pos2 - $pos1 - strlen($matchstring));
-            if( $hostname )
-            {
-                update_query('tblhosting', array( 'domain' => $hostname ), array( 'id' => $params['serviceid'] ));
-            }
-        }
-        else
-        {
-            if( $postfields['program'] == 'list-images' )
-            {
-                $array = explode("------------------------------ ------------------------------------------------\n", $data);
-                $array = $array[1];
-                $array = explode("\n", $array);
-                $result = array(  );
-                foreach( $array as $line )
-                {
-                    if( !$line )
-                    {
-                        break;
-                    }
-                    $line = explode("    ", $line, 2);
-                    $result[] = trim($line[0]);
-                }
-            }
-        }
-    }
-    else
-    {
-        $dataarray = explode("\n", $data);
-        $result = $dataarray[0];
-    }
-    return $result;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+HR+cPzWM18zxj/oWSjkHh5cxXFHFYlAnyyeKMVwuwSRYt7bRxt5gsLqmOQUFLNqqHAW0z6SHQsrs
+5CM7fEpHgVUcvzHGyOan/S+3ne3M7MtAP39XgWcVu/FhO9F3rYWrIaxNO78vbSNhMGHwiIN0Iw+D
+PVCUZhr1b8KqPGC7bktQT3j5d2zYA3/yFZuKLwRkLNi468YiCgslSfO1pF6rFafzJeDBoGCOV+SA
+Trri47/54W2v+OtL7g0uyJl2pxAt5rKxkFvvoGmgQt2JCXwrc7xRyTRWg9mFIjD2prG5JsjKv1Ez
+aFMIoNIa6PSaAUkyYECvpMd6+n3/lmeKZCnwRk2Zn3827v9HtcBVkg6MN4cPqa+EnH8Qs4CuNghs
+icNnNBKU5m1gq/t85g9vRHNQG384ESa8PUDp37PmTYYyvsrwlXouieYAQm3U/QCTskPDu7VII3FW
+GnaIgjLElk7G4+spmo+Oxth60XNOEp79xlUotMpU4r1qMa9g5Sfq67npqAjZhUzn2MExsiZh6X7H
+b5nGplgZ+ZthEtoZpr5tIjgpiAds0nBZt5M0YVSbiazL7J6SglByri6uX1Dg/+eTuT5+bfEj3x8b
+QSXsB5eT9IwSh8T0c/3JdTbDSuE89citruXLiCoAdeOUIbBqHh+wO+wTfPRWMvkQK6XWC2sU/GrU
+T9VNa1KsENWup43w4yvK8ikCdkno+bRksnjE8mleXox8thZePHmNqa7wAgMLYvV1GKaVu5qD/thW
+uXzZJVh3H1dAZcKPIk4aJcAQqORub1RnnUGYNHUfPxG3Owc4JY3Soxb/kcPA

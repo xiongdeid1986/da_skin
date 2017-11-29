@@ -4,7 +4,7 @@
  *
  * OpenSRS-PHP
  *
- * Copyright (C) 2000-2004 Colin Viebrock
+ * Copyright (C) 2000-2004 Colin Viebrock 
  *
  **************************************************************************
  *
@@ -273,3 +273,5 @@ $COUNTRY_CODES = array(
     'zr'    => 'Zaire',
     'zw'    => 'Zimbabwe',
 );
+
+

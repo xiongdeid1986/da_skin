@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,771 +32,356 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-require_once(dirname(__FILE__) . "/class_APIClient.php");
-define('CC_TXT_MAXCLIENTS', "Max listeners");
-define('CC_TXT_MAXBITRATE', "Max bit rate");
-define('CC_TXT_XFERLIMIT', "Data transfer limit");
-define('CC_TXT_DISKQUOTA', "Disk quota");
-define('CC_TXT_MAXBW', "Max bandwidth");
-define('CC_TXT_MAXACCT', "Max accounts");
-define('CC_TXT_MOUNTLIMIT', "Mount point limit");
-/**
- * WHMCS configuration options array generation.
- *
- * @api
- * @return array an array of configuration options.
- */
-function centovacast_ConfigOptions()
-{
-    $configarray = array( "Account template name" => array( 'Type' => 'text', 'Size' => '20', 'Description' => "<br />(create this in Centova Cast)" ), "Max listeners" => array( 'Type' => 'text', 'Size' => '5', 'Description' => "(simultaneous)<br />(blank to use template setting)" ), "Max bit rate" => array( 'Type' => 'dropdown', 'Options' => ',8,16,20,24,32,40,48,56,64,80,96,112,128,160,192,224,256,320', 'Description' => "kbps<br />(blank to use template setting)" ), "Data transfer limit" => array( 'Type' => 'text', 'Size' => '5', 'Description' => "MB/month<br />(blank to use template setting)" ), "Disk quota" => array( 'Type' => 'text', 'Size' => '5', 'Description' => "MB<br />(blank to use template setting)" ), "Start server" => array( 'Type' => 'dropdown', 'Options' => 'no,yes', 'Description' => "<br>(only used if source is disabled)" ), "Mount point limit" => array( 'Type' => 'text', 'Size' => '5', 'Description' => "<br />(blank to use template setting)" ), "Port 80 proxy" => array( 'Type' => 'dropdown', 'Options' => ',Enabled,Disabled', 'Description' => "<br />(blank to use template setting)" ), "AutoDJ support" => array( 'Type' => 'dropdown', 'Options' => ',Enabled,Disabled', 'Description' => "<br />(blank to use template setting)" ), "Max accounts" => array( 'Type' => 'text', 'Size' => '5', 'Description' => "(resellers only)<br />(blank to use template setting)" ), "Max bandwidth" => array( 'Type' => 'text', 'Size' => '5', 'Description' => "kbps (resellers only)<br />(blank to use template setting)" ) );
-    return $configarray;
-}
-/**
- * Cast needs to query the WHMCS DB for a couple of items, so this helper
- * function encapsulates the necessary database access functionality.
- *
- * @internal
- *
- * @param string $query The SQL query as an sprintf()-compatible format string
- * @param $mixed ... One or more arguments to escape and insert into the query format string.
- *
- * @return array|bool An associative result row array on success, FALSE on failure.
- */
-function centovacast_QueryOneRow()
-{
-    $args = func_get_args();
-    if( !count($args) )
-    {
-        return false;
-    }
-    $query = array_shift($args);
-    foreach( $args as $k => $arg )
-    {
-        $args[$k] = mysqli_real_escape_string($GLOBALS['whmcsmysql'],$arg);
-    }
-    if( count($args) )
-    {
-        $query = vsprintf($query, $args);
-    }
-    $rsh = full_query($query);
-    if( !is_resource($rsh) )
-    {
-        return false;
-    }
-    $row = simulate_fetch_assoc($rsh);
-    if( !is_array($row) )
-    {
-        return false;
-    }
-    return $row;
-}
-/**
- * Cast needs to query the WHMCS DB for a couple of items, so this helper
- * function encapsulates the necessary database access functionality.
- *
- * @internal
- *
- * @param string $query The SQL query as an sprintf()-compatible format string
- * @param mixed ... One or more arguments to escape and insert into the query format string.
- *
- * @return array|bool An associative result rows array on success, FALSE on failure.
- */
-function centovacast_QueryAllRows()
-{
-    $args = func_get_args();
-    if( !count($args) )
-    {
-        return false;
-    }
-    $query = array_shift($args);
-    foreach( $args as $k => $arg )
-    {
-        $args[$k] = mysqli_real_escape_string($GLOBALS['whmcsmysql'],$arg);
-    }
-    if( count($args) )
-    {
-        $query = vsprintf($query, $args);
-    }
-    $rsh = full_query($query);
-    if( !is_resource($rsh) )
-    {
-        return false;
-    }
-    $rows = array(  );
-    $row = simulate_fetch_assoc($rsh);
-    while( $row )
-    {
-        $rows[] = $row;
-        $row = simulate_fetch_assoc($rsh);
-    }
-    return $rows;
-}
-/**
- * Determines whether a particular username already exists in the WHMCS 'tblhosting'
- * table.
- *
- * @internal
- *
- * @param string $username The username to test.
- *
- * @return bool|int The ID field from the tblhosting table if the username already exists, otherwise false.
- *
- */
-function centovacast_UserExists($username)
-{
-    $row = centovacast_queryonerow("SELECT id FROM tblhosting WHERE username=\"%s\"", $username);
-    return isset($row['id']) ? (int) $row['id'] : false;
-}
-/**
- * Generates a pseudorandom password which is occasionally somewhat pronounceable
- * (never more than 2 consecutive consonants without a vowel) with a randomly-
- * inserted digit.
- *
- * @internal
- *
- * @param int $maxlength the maximum password length
- *
- * @return string The generated password.
- *
- */
-function centovacast_GeneratePassword($maxlength = 8)
-{
-    $vowels = 'aeuy';
-    $consonants = 'bcdfghjkmnpqrtvwxz';
-    $concount = 0;
-    $digitpos = rand(0, $maxlength - 1);
-    $password = '';
-    for( $i = 0; $i < $maxlength; $i++ )
-    {
-        $type = rand(0, 1);
-        if( $type == 1 )
-        {
-            if( ($i == 1 || $i == $maxlength - 1) && 0 < $concount )
-            {
-                $type = 0;
-            }
-            if( 1 < $concount )
-            {
-                $type = 0;
-            }
-        }
-        else
-        {
-            if( $concount == 0 )
-            {
-                $type = 1;
-            }
-        }
-        $password .= $type == 0 ? $vowels[rand(0, strlen($vowels) - 1)] : $consonants[rand(0, strlen($consonants) - 1)];
-        $concount = $type == 0 ? 0 : $concount + 1;
-        if( $digitpos == $i )
-        {
-            $password .= rand(0, 1) == 0 ? rand(3, 4) : rand(6, 9);
-        }
-    }
-    return $password;
-}
-/**
- * Generate a username which is unique within WHMCS.
- *
- * @internal
- *
- * @param array $client The client account details provided by WHMCS.
- * @param int $minlength The minimum username length.
- * @param int $maxlength The maximum username length.
- *
- * @return string The generated username.
- */
-function centovacast_UniqueUsername($client, $minlength = 4, $maxlength = 8)
-{
-    if( strlen($client['companyname']) )
-    {
-        $companyname = preg_replace("/[^a-z]+/i", '', strtolower($client['companyname']));
-        $username = substr($companyname, 0, $maxlength);
-        while( strlen($username) < $minlength )
-        {
-            $username .= '0';
-        }
-        if( !centovacast_userexists($username) )
-        {
-            return $username;
-        }
-    }
-    $firstname = preg_replace("/[^a-z]+/i", '', strtolower($client['firstname']));
-    $lastname = preg_replace("/[^a-z]+/i", '', strtolower($client['lastname']));
-    $username = substr(substr($firstname, 0, max(1, $maxlength - strlen($lastname))) . $lastname, 0, $maxlength);
-    if( !centovacast_userexists($username) )
-    {
-        return $username;
-    }
-    $baseusername = substr($username, 0, $maxlength - 2);
-    for( $i = 0; $i < 100; $i++ )
-    {
-        $username = $baseusername . sprintf("%02d", $i);
-        if( !centovacast_userexists($username) )
-        {
-            return $username;
-        }
-    }
-    do
-    {
-        $username = centovacast_generatepassword();
-    }
-    while( centovacast_userexists($username) );
-    return $username;
-}
-/**
- * Obtain the URL to Centova Cast from the $params array.  Clients are sick of
- * having to specify the URL on a per-package basis in WHMCS, and WHMCS does not
- * support per-server module fields, so we hijack the CPanel Access Hash field
- * for this purpose with fallback to the per-package URL.
- *
- * @internal
- *
- * @param array $params The $params array passed by WHMCS.
- * @param string $error Reference to a string to receive an error message if the URL is bad.
- *
- * @return string the URL to Centova Cast.
- */
-function centovacast_GetCCURL($params, &$error)
-{
-    $error = false;
-    $ccurl = $params['serverhostname'];
-    if( !preg_match("#^https?://#", $ccurl) )
-    {
-        $error = "Invalid 'Hostname' setting in WHMCS configuration for Centova Cast.  Per the documentation the 'Hostname' field must contain the complete URL to Centova Cast, not just a hostname.";
-        return false;
-    }
-    return $params['serverhostname'];
-}
-/**
- * Obtain the login credentials for the Centova Cast server.
- *
- * @internal
- *
- * @param array $params The $params array passed by WHMCS.
- * @param bool $serverapi true if generating credentials for the server API, false for the system API
- *
- * @return array an array containing the username and password
- */
-function centovacast_GetServerCredentials($params, $serverapi = false)
-{
-    $serverusername = $params['serverusername'];
-    $serverpassword = $params['serverpassword'];
-    if( $serverusername != 'admin' || $serverapi )
-    {
-        $serverpassword = $serverusername . "|" . $serverpassword;
-    }
-    return array( $serverusername, $serverpassword );
-}
-/**
- * Generates an array of arguments to pass to the Centova Cast API's account management methods.
- *
- * @internal
- *
- * @param array $params The $params array passed by WHMCS.
- * @param array $arguments reference to an array to receive the arguments
- *
- * @return bool|string true on success, an error string on failure
- */
-function centovacast_GetAPIArgs($params, &$arguments)
-{
-    $packageid = $params['packageid'];
-    $templatename = $params['configoption1'];
-    $maxlisteners = $params['configoption2'];
-    $maxbitrate = $params['configoption3'];
-    $xferquota = $params['configoption4'];
-    $diskquota = $params['configoption5'];
-    $autostart = $params['configoption6'];
-    $mountlimit = $params['configoption7'];
-    $webproxy = $params['configoption8'];
-    $autodj = $params['configoption9'];
-    $maxaccounts = $params['configoption10'];
-    $maxbw = $params['configoption11'];
-    if( !strlen($templatename) )
-    {
-        return "Missing account template name in WHMCS package configuration for package " . $packageid . "; check your WHMCS package configuration.";
-    }
-    $arguments['template'] = $templatename;
-    if( strlen($maxlisteners) )
-    {
-        $arguments['maxclients'] = $maxlisteners;
-    }
-    if( strlen($maxbitrate) )
-    {
-        $arguments['maxbitrate'] = $maxbitrate;
-    }
-    if( strlen($xferquota) )
-    {
-        $arguments['transferlimit'] = $xferquota;
-    }
-    if( strlen($diskquota) )
-    {
-        $arguments['diskquota'] = $diskquota;
-    }
-    if( strlen($autostart) )
-    {
-        $arguments['autostart'] = $autostart == 'yes' ? 1 : 0;
-    }
-    if( strlen($mountlimit) )
-    {
-        $arguments['mountlimit'] = max(1, (int) $mountlimit);
-    }
-    if( strlen($webproxy) )
-    {
-        $arguments['allowproxy'] = strtolower($webproxy[0]) == 'd' ? 0 : 1;
-    }
-    if( strlen($autodj) )
-    {
-        $arguments['usesource'] = strtolower($webproxy[0]) == 'd' ? 1 : 2;
-    }
-    if( strlen($maxaccounts) )
-    {
-        $arguments['resellerusers'] = $maxaccounts;
-    }
-    if( strlen($maxbw) )
-    {
-        $arguments['resellerbandwidth'] = $maxbw;
-    }
-    $addonmap = array( CC_TXT_MAXCLIENTS => 'maxclients', CC_TXT_MAXBITRATE => 'maxbitrate', CC_TXT_XFERLIMIT => 'transferlimit', CC_TXT_DISKQUOTA => 'diskquota', CC_TXT_MAXBW => 'resellerbandwidth', CC_TXT_MAXACCT => 'resellerusers', CC_TXT_MOUNTLIMIT => 'mountlimit' );
-    if( is_array($params['configoptions']) )
-    {
-        foreach( $params['configoptions'] as $caption => $value )
-        {
-            if( strlen($value) && isset($addonmap[$caption]) )
-            {
-                $optionname = $addonmap[$caption];
-                $value = preg_replace("/[^0-9]/", '', $value);
-                $arguments[$optionname] = $value;
-            }
-        }
-    }
-    return true;
-}
-/**
- * WHMCS account creation.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_CreateAccount($params)
-{
-    $serverip = $params['serverip'];
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params);
-    $username = $params['username'];
-    $password = $params['password'];
-    if( !strlen($username) || is_numeric($username) )
-    {
-        $params['username'] = $username = centovacast_uniqueusername($params['clientsdetails']);
-        $query = sprintf("UPDATE tblhosting SET username=\"%s\"", mysqli_real_escape_string($GLOBALS['whmcsmysql'],$username));
-        if( !strlen($password) )
-        {
-            $params['password'] = $password = centovacast_generatepassword();
-            $query .= sprintf(",password=\"%s\"", mysqli_real_escape_string($GLOBALS['whmcsmysql'],encrypt($password)));
-        }
-        $query .= sprintf(" WHERE id=\"%s\"", $params['accountid']);
-        if( !full_query($query) )
-        {
-            return "Error updating hosting table: " . mysqli_error($GLOBALS['whmcsmysql'],;
-        }
-    }
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $clientsdetails = $params['clientsdetails'];
-    $arguments = array( 'hostname' => 'auto', 'ipaddress' => 'auto', 'port' => 'auto', 'username' => $username, 'adminpassword' => $password, 'sourcepassword' => $password . 'dj', 'email' => $clientsdetails['email'], 'title' => sprintf("%s Stream", strlen($clientsdetails['companyname']) ? $clientsdetails['companyname'] : $clientsdetails['lastname']), 'organization' => $clientsdetails['companyname'], 'introfile' => '', 'fallbackfile' => '', 'autorebuildlist' => 1 );
-    $error = centovacast_getapiargs($params, $arguments);
-    if( is_string($error) )
-    {
-        return $error;
-    }
-    $system = new CCSystemAPIClient($ccurl);
-    if( $_REQUEST['ccmoduledebug'] )
-    {
-        $system->debug = true;
-    }
-    $system->call('provision', $serverpassword, $arguments);
-    logModuleCall('centovacast', 'create', $system->raw_request, $system->raw_response, NULL, NULL);
-    if( $system->success )
-    {
-        $account = $system->data['account'];
-        $account['sourcepassword'] = $arguments['sourcepassword'];
-        $tblhostingid = (int) centovacast_userexists($username);
-        if( $tblhostingid )
-        {
-            $res = centovacast_queryonerow("SELECT packageid FROM tblhosting WHERE id=%d", $tblhostingid);
-            $packageid = isset($res['packageid']) ? (int) $res['packageid'] : false;
-            if( $packageid )
-            {
-                $customfields = centovacast_queryallrows("SELECT id,fieldname FROM tblcustomfields WHERE relid=%d", $packageid);
-                foreach( $customfields as $k => $customfield )
-                {
-                    $fieldname = $customfield['fieldname'];
-                    $fieldid = (int) $customfield['id'];
-                    if( isset($account[$fieldname]) )
-                    {
-                        $value = $account[$fieldname];
-                        $query = sprintf("DELETE FROM tblcustomfieldsvalues WHERE fieldid=%d AND relid=%d", $fieldid, $tblhostingid);
-                        full_query($query);
-                        $query = sprintf("INSERT INTO tblcustomfieldsvalues (fieldid,relid,value) VALUES (%d,%d,\"%s\")", $fieldid, $tblhostingid, mysqli_real_escape_string($GLOBALS['whmcsmysql'],$value));
-                        full_query($query);
-                    }
-                }
-            }
-        }
-    }
-    return $system->success ? 'success' : $system->error;
-}
-/**
- * WHMCS package change.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_ChangePackage($params)
-{
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params, true);
-    $username = $params['username'];
-    $password = $params['password'];
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $server = new CCServerAPIClient($ccurl);
-    $arguments = array(  );
-    $server->call('getaccount', $username, $serverpassword, $arguments);
-    if( !$server->success )
-    {
-        return $server->error;
-    }
-    if( !is_array($server->data) || !count($server->data) )
-    {
-        return "Error fetching account information from Centova Cast";
-    }
-    $account = $server->data['account'];
-    if( !is_array($account) || !isset($account['username']) )
-    {
-        return "Account does not exist in Centova Cast";
-    }
-    $error = centovacast_getapiargs($params, $account);
-    if( is_string($error) )
-    {
-        return $error;
-    }
-    unset($account['template']);
-    $server->call('reconfigure', $username, $serverpassword, $account);
-    logModuleCall('centovacast', 'changepackage', $server->raw_request, $server->raw_response, NULL, NULL);
-    return $server->success ? 'success' : $server->error;
-}
-/**
- * WHMCS account termination.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_TerminateAccount($params)
-{
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params);
-    $username = $params['username'];
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $system = new CCSystemAPIClient($ccurl);
-    $arguments = array( 'username' => $username );
-    $system->call('terminate', $serverpassword, $arguments);
-    logModuleCall('centovacast', 'terminate', $system->raw_request, $system->raw_response, NULL, NULL);
-    return $system->success ? 'success' : $system->error;
-}
-/**
- * WHMCS account suspension.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_SuspendAccount($params)
-{
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params);
-    $username = $params['username'];
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $system = new CCSystemAPIClient($ccurl);
-    $arguments = array( 'username' => $username, 'status' => 'disabled' );
-    $system->call('setstatus', $serverpassword, $arguments);
-    logModuleCall('centovacast', 'suspend', $system->raw_request, $system->raw_response, NULL, NULL);
-    return $system->success ? 'success' : $system->error;
-}
-/**
- * WHMCS account unsuspension.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_UnsuspendAccount($params)
-{
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params);
-    $username = $params['username'];
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $system = new CCSystemAPIClient($ccurl);
-    $arguments = array( 'username' => $username, 'status' => 'enabled' );
-    $system->call('setstatus', $serverpassword, $arguments);
-    logModuleCall('centovacast', 'unsuspend', $system->raw_request, $system->raw_response, NULL, NULL);
-    return $system->success ? 'success' : $system->error;
-}
-/**
- * WHMCS password change.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_ChangePassword($params)
-{
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params, true);
-    $username = $params['username'];
-    $password = $params['password'];
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $server = new CCServerAPIClient($ccurl);
-    $arguments = array(  );
-    $server->call('getaccount', $username, $serverpassword, $arguments);
-    if( !$server->success )
-    {
-        return $server->error;
-    }
-    if( !is_array($server->data) || !count($server->data) )
-    {
-        return "Error fetching account information from Centova Cast";
-    }
-    $account = $server->data['account'];
-    if( !is_array($account) || !isset($account['username']) )
-    {
-        return "Account does not exist in Centova Cast";
-    }
-    $account['adminpassword'] = $password;
-    $server->call('reconfigure', $username, $serverpassword, $account);
-    logModuleCall('centovacast', 'changepassword', $server->raw_request, $server->raw_response, NULL, NULL);
-    return $server->success ? 'success' : $server->error;
-}
-/**
- * WHMCS administration area button array.
- *
- * @api
- *
- * @return array an array of buttons
- */
-function centovacast_AdminCustomButtonArray()
-{
-    return array( "Start Stream" => 'StartStream', "Stop Stream" => 'StopStream', "Restart Stream" => 'RestartStream' );
-}
-/**
- * WHMCS client area HTML generation.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string the HTML for the client area
- */
-function centovacast_ClientArea($params)
-{
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $whmcs = WHMCS_Application::getinstance();
-    $username = $params['username'];
-    $password = $params['password'];
-    if( substr($ccurl, 0 - 1) != '/' )
-    {
-        $ccurl .= '/';
-    }
-    $loginurl = $ccurl . "login/index.php";
-    $time = time();
-    $authtoken = sha1($username . $password . $time);
-    $form = sprintf("<form method=\"post\" action=\"%s\" target=\"_blank\">" . "<input type=\"hidden\" name=\"username\" value=\"%s\" />" . "<input type=\"hidden\" name=\"password\" value=\"%s\" />" . "<input type=\"submit\" name=\"login\" value=\"%s\" />" . "</form>", WHMCS_Input_Sanitize::encode($loginurl), WHMCS_Input_Sanitize::encode($username), WHMCS_Input_Sanitize::encode($password), $whmcs->get_lang('centovacastlogin'));
-    $fn = dirname(__FILE__) . "/client_area.html";
-    if( file_exists($fn) )
-    {
-        if( $_SERVER['HTTPS'] == 'on' )
-        {
-            $ccurl = preg_replace("/^http:/", "https:", $ccurl);
-        }
-        $details = preg_replace("/<!--[\\s\\S]*?-->/", '', str_replace(array( "[CCURL]", "[USERNAME]", "[TIME]", "[AUTH]" ), array( $ccurl, preg_replace("/[^a-z0-9_]+/i", '', $username), $time, $authtoken ), file_get_contents($fn)));
-    }
-    else
-    {
-        $details = '';
-    }
-    return $form . $details;
-}
-/**
- * WHMCS administration area HTML generation.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string the HTML for the administration area
- */
-function centovacast_AdminLink($params)
-{
-    $query = "SELECT hostname FROM tblservers WHERE tblservers.ipaddress=\"%s\" AND tblservers.username=\"%s\" AND tblservers.type=\"centovacast\" LIMIT 1";
-    $res = centovacast_queryonerow($query, $params['serverip'], $params['serverusername']);
-    if( !$res['hostname'] )
-    {
-        return '';
-    }
-    $params['serverhostname'] = $res['hostname'];
-    $serverusername = $params['serverusername'];
-    $serverpassword = $params['serverpassword'];
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    if( substr($ccurl, 0 - 1) != '/' )
-    {
-        $ccurl .= '/';
-    }
-    $ccurl .= "login/index.php";
-    return sprintf("<form method=\"post\" action=\"%s\" target=\"_blank\">" . "<input type=\"hidden\" name=\"username\" value=\"%s\" />" . "<input type=\"hidden\" name=\"password\" value=\"%s\" />" . "<input type=\"submit\" name=\"login\" value=\"%s\" />" . "</form>", WHMCS_Input_Sanitize::makesafeforoutput($ccurl), WHMCS_Input_Sanitize::makesafeforoutput($serverusername), WHMCS_Input_Sanitize::makesafeforoutput($serverpassword), "Log in to Centova Cast");
-}
-/**
- * Changes the state of a Cast streaming server account.
- *
- * @internal
- *
- * @param array $params The $params array passed by WHMCS
- * @param string $newstate One of:
- *                          'start' - start the stream
- *                          'stop' - stop the stream
- *                          'restart' - restart the stream
- *
- * @return string   The literal string 'success' on success, or an error message on failure.
- */
-function centovacast_SetState($params, $newstate)
-{
-    if( !in_array($newstate, array( 'start', 'stop', 'restart' )) )
-    {
-        return "Invalid state";
-    }
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params, true);
-    $username = $params['username'];
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $server = new CCServerAPIClient($ccurl);
-    $arguments = array(  );
-    $server->call($newstate, $username, $serverpassword, $arguments);
-    logModuleCall('centovacast', 'setstate', $server->raw_request, $server->raw_response, NULL, NULL);
-    return $server->success ? 'success' : $server->error;
-}
-/**
- * Start the stream.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_StartStream($params)
-{
-    return centovacast_setstate($params, 'start');
-}
-/**
- * Stop the stream.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_StopStream($params)
-{
-    return centovacast_setstate($params, 'stop');
-}
-/**
- * Restart the stream.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_RestartStream($params)
-{
-    return centovacast_setstate($params, 'restart');
-}
-/**
- * WHMCS account usage update.
- *
- * @api
- *
- * @param array $params The $params array passed by WHMCS.
- *
- * @return string
- */
-function centovacast_UsageUpdate($params)
-{
-    list($serverusername, $serverpassword) = centovacast_getservercredentials($params);
-    if( false === ($ccurl = centovacast_getccurl($params, $urlerror)) )
-    {
-        return $urlerror;
-    }
-    $system = new CCSystemAPIClient($ccurl);
-    if( $_REQUEST['ccmoduledebug'] )
-    {
-        $system->debug = true;
-    }
-    $arguments = array(  );
-    $system->call('usage', $serverpassword, $arguments);
-    logModuleCall('centovacast', 'usageupdate', $system->raw_request, $system->raw_response, NULL, NULL);
-    if( !$system->success )
-    {
-        return $system->error;
-    }
-    if( !is_array($system->data) || !count($system->data) )
-    {
-        return "Error fetching account information from Centova Cast";
-    }
-    $accounts = $system->data['row'];
-    if( !is_array($accounts) || !count($accounts) )
-    {
-        return "No accounts in Centova Cast";
-    }
-    $serverid = $params['serverid'];
-    foreach( $accounts as $k => $values )
-    {
-        update_query('tblhosting', array( 'diskusage' => $values['diskusage'], 'disklimit' => max(0, $values['diskquota']), 'bwusage' => $values['transferusage'], 'bwlimit' => max(0, $values['transferlimit']), 'lastupdate' => "now()" ), array( 'server' => $serverid, 'username' => $values['username'] ));
-    }
-    return 'success';
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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
+OXukuxYMQ6Iq9jwdPRuSNQlC

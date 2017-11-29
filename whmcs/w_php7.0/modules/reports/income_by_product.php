@@ -14,20 +14,20 @@ $reportdata["tableheadings"] = array("Product Name","Units Sold","Value");
 $products = $addons = array();
 
 # Loop Through Products
-$result = full_query("SELECT tblhosting.packageid,COUNT(*),SUM(tblinvoiceitems.amount) FROM tblinvoiceitems INNER JOIN tblinvoices ON tblinvoices.id=tblinvoiceitems.invoiceid INNER JOIN tblhosting ON tblhosting.id=tblinvoiceitems.relid INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.datepaid LIKE '".(int)$year."-".$pmonth."-%' AND (tblinvoiceitems.type='Hosting' OR tblinvoiceitems.type LIKE 'ProrataProduct%') AND currency=".(int)$currencyid." GROUP BY tblhosting.packageid");
-while ($data = mysqli_fetch_array($result)) {
+$result = full_query("SELECT tblhosting.packageid,COUNT(*),SUM(tblinvoiceitems.amount) FROM tblinvoiceitems INNER JOIN tblinvoices ON tblinvoices.id=tblinvoiceitems.invoiceid INNER JOIN tblhosting ON tblhosting.id=tblinvoiceitems.relid INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.datepaid LIKE '".(int)$year."-".$pmonth."-%' AND (tblinvoiceitems.type='Hosting' OR tblinvoiceitems.type='Setup' OR tblinvoiceitems.type LIKE 'ProrataProduct%') AND currency=".(int)$currencyid." GROUP BY tblhosting.packageid");
+while ($data = mysql_fetch_array($result)) {
     $products[$data[0]] = array("amount" => $data[2],"unitssold" => $data[1]);
 }
 
 # Loop Through Product Discounts
 $result = full_query("SELECT tblhosting.packageid,COUNT(*),SUM(tblinvoiceitems.amount) FROM tblinvoiceitems INNER JOIN tblinvoices ON tblinvoices.id=tblinvoiceitems.invoiceid INNER JOIN tblhosting ON tblhosting.id=tblinvoiceitems.relid INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.datepaid LIKE '".(int)$year."-".$pmonth."-%' AND tblinvoiceitems.type='PromoHosting' AND currency=".(int)$currencyid." GROUP BY tblhosting.packageid");
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $products[$data[0]]["amount"] += $data[2];
 }
 
 # Loop Through Addons
 $result = full_query("SELECT tblhostingaddons.addonid,COUNT(*),SUM(tblinvoiceitems.amount) FROM tblinvoiceitems INNER JOIN tblinvoices ON tblinvoices.id=tblinvoiceitems.invoiceid INNER JOIN tblhostingaddons ON tblhostingaddons.id=tblinvoiceitems.relid INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.datepaid LIKE '".(int)$year."-".$pmonth."-%' AND tblinvoiceitems.type='Addon' AND currency=".(int)$currencyid." GROUP BY tblhostingaddons.addonid");
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $addons[$data[0]] = array("amount" => $data[2],"unitssold" => $data[1]);
 }
 
@@ -35,7 +35,7 @@ $total = 0;
 $itemtotal = 0;
 $firstdone = false;
 $result = select_query("tblproducts","tblproducts.id,tblproducts.name,tblproductgroups.name AS groupname","","tblproductgroups`.`order` ASC,`tblproducts`.`order` ASC,`name","ASC","","tblproductgroups ON tblproducts.gid=tblproductgroups.id");
-while($data = mysqli_fetch_array($result)) {
+while($data = mysql_fetch_array($result)) {
     $pid = $data["id"];
     $group = $data["groupname"];
     $prodname = $data["name"];
@@ -74,7 +74,7 @@ $reportdata["tablevalues"][] = array("**<strong>Addons</strong>");
 
 $itemtotal = 0;
 $result = select_query("tbladdons","id,name","","name","ASC");
-while($data = mysqli_fetch_array($result)) {
+while($data = mysql_fetch_array($result)) {
 
     $addonid = $data["id"];
     $prodname = $data["name"];
@@ -110,11 +110,11 @@ $reportdata["tablevalues"][] = array("**<strong>Miscellaneous</strong>");
 
 $sql = "SELECT COUNT(*), SUM(tblinvoiceitems.amount)
         FROM tblinvoiceitems
-        INNER JOIN tblinvoices ON tblinvoices.id=tblinvoiceitems.invoiceid
+        INNER JOIN tblinvoices ON tblinvoices.id=tblinvoiceitems.invoiceid 
         INNER JOIN tblclients ON tblclients.id=tblinvoices.userid
         WHERE tblinvoices.datepaid LIKE '" . (int)$year . "-" . $pmonth . "-%' AND tblinvoiceitems.type='Item' AND currency=" . (int)$currencyid;
 $result = full_query($sql);
-$data = mysqli_fetch_array($result);
+$data = mysql_fetch_array($result);
 $itemtotal += $data[1];
 $number = $data[0];
 $amount = $data[1];
@@ -123,7 +123,7 @@ if (!$number) $number="0";
 $reportdata["tablevalues"][] = array('Billable Items',$number,formatCurrency($amount));
 
 $result = full_query("SELECT COUNT(*),SUM(tblinvoiceitems.amount) FROM tblinvoiceitems INNER JOIN tblinvoices ON tblinvoices.id=tblinvoiceitems.invoiceid INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.datepaid LIKE '".(int)$year."-".$pmonth."-%' AND tblinvoiceitems.type='' AND currency='$currencyid'");
-$data = mysqli_fetch_array($result);
+$data = mysql_fetch_array($result);
 $itemtotal += $data[1];
 $reportdata["tablevalues"][] = array('Custom Invoice Line Items',$data[0],formatCurrency($data[1]));
 
@@ -142,3 +142,4 @@ $args['legendpos'] = 'right';
 $reportdata["footertext"] = $chart->drawChart('Pie',$chartdata,$args,'300px');
 
 $reportdata["monthspagination"] = true;
+

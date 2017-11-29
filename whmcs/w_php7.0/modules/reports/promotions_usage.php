@@ -22,7 +22,7 @@ $reportdata["tableheadings"] = array("Coupon Code","Discount Type","Value","Recu
 $i = 0;
 
 $result = select_query("tblpromotions","","","code","ASC");
-while($data = mysqli_fetch_array($result)) {
+while($data = mysql_fetch_array($result)) {
 
     $code = $data["code"];
     $type = $data["type"];
@@ -35,7 +35,7 @@ while($data = mysqli_fetch_array($result)) {
     $reportdata["drilldown"][$i]["tableheadings"] = array("Order ID","Order Date","Order Number","Order Total","Order Status");
 
     $result2 = select_query("tblorders","","promocode='".db_escape_string($code)."' AND date>='".db_make_safe_human_date($datefrom)."' AND date<='".db_make_safe_human_date($dateto)."'","id","ASC");
-    while ($data = mysqli_fetch_array($result2)) {
+    while ($data = mysql_fetch_array($result2)) {
 
         $orderid = $data['id'];
         $ordernum = $data['ordernum'];

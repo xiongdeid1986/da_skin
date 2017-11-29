@@ -15,7 +15,7 @@ for ($day = 1; $day <= 31; $day++) {
 $reportvalues = array();
 $query = "SELECT admin, date_format(date, '%e'), COUNT(tid) AS totalreplies, COUNT(DISTINCT tid) AS totaltickets FROM tblticketreplies WHERE date LIKE '" . $year . "-" . $month . "-%' AND admin!='' GROUP BY admin, date_format(date, '%e') ORDER BY admin ASC, date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $adminname = $data[0];
     $day = $data[1];
     $reportvalues[$adminname][$day] = array(

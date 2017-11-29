@@ -1,10 +1,10 @@
 <?php
-$license = 'web.ddweb.com.cn';
+$license = 'cloud.ddweb.com.cn';
 $db_host = 'localhost';
-$db_username = 'ddwebcom_cloud';
+$db_port = '';
+$db_username = 'cloud_whcms';
 $db_password = 'oGE11%c2';
-$db_name = 'ddwebcom_cloud';
-$cc_encryption_hash = 'sQQQroFjfp7BJWwnKX5zUCAVdmAO8S699KtlMapBgyYvSsPlFCXFs7hT2WK24Jue';
-$templates_compiledir = 'templates_c/';
-$mysqli_charset = 'utf8';
-?>
+$db_name = 'cloud_whcms';
+$cc_encryption_hash = 'ugelpoY0LfzPTqVvvN0EGbLuKhkglWGG3KRjZG9ALyfuP0QaEHEbJgvjoGqAtW7n';
+$templates_compiledir = 'templates_c';
+$mysql_charset = 'utf8';

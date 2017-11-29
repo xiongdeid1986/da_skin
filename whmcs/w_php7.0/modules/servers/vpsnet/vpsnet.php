@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,605 +32,505 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function vpsnet_ConfigOptions()
-{
-    if( !mysqli_num_rows(full_query("SHOW TABLES LIKE 'mod_vpsnet'")) )
-    {
-        $query = "CREATE TABLE `mod_vpsnet` (`relid` INTEGER UNSIGNED NOT NULL,`setting` VARCHAR(45) NOT NULL,`value` VARCHAR(45) NOT NULL,PRIMARY KEY (`relid`,`setting`));";
-        full_query($query);
-    }
-    $creds = vpsnet_GetCredentials();
-    if( !$creds['id'] )
-    {
-        return array( 'Error' => array( 'Type' => 'x', 'Description' => "No VPS.Net Server Config found in Setup > Servers" ) );
-    }
-    $verifyauth = vpsnet_call($params, '', '', 'GET', 'profile');
-    if( $verifyauth['success'] != '1' )
-    {
-        foreach( $verifyauth['errors'] as $errormsg )
-        {
-            $verifyautherror .= $errormsg;
-        }
-        if( $verifyautherror )
-        {
-            return array( 'Error' => array( 'Type' => 'x', 'Description' => $verifyautherror ) );
-        }
-        return array( 'Error' => array( 'Type' => 'FailedAuth', 'Description' => "Unable to authenticate with Username and Access Hash. Please check Server Config found in Setup > Servers" ) );
-    }
-    $resources = vpsnet_call($params, $action, $id, $reqtype = '', $type = 'available_clouds');
-    $cloudtemplate = ',';
-    foreach( $resources['response'] as $resource )
-    {
-        $cloudid = $resource['cloud']['id'];
-        $cloudlabel = $resource['cloud']['label'];
-        foreach( $resource['cloud']['system_templates'] as $system_template )
-        {
-            $templateid = $system_template['id'];
-            $templatelabel = $system_template['label'];
-            $cloudtemplate .= $cloudid . "+" . $templateid . "|" . $cloudlabel . ":" . $templatelabel . ',';
-        }
-    }
-    $cloudtemplate = substr($cloudtemplate, 0, 0 - 1);
-    $configarray = array( "Number of Nodes" => array( 'Type' => 'text', 'Size' => '5' ), 'Cloud/Template' => array( 'Type' => 'dropdown', 'Options' => $cloudtemplate ), "Enable Backups" => array( 'Type' => 'yesno', 'Description' => "Tick to enable backups" ), "Rsync Backups" => array( 'Type' => 'yesno', 'Description' => "Tick to enable" ), "R1Soft Backups" => array( 'Type' => 'yesno', 'Description' => "Tick to enable" ), '' => array( 'Type' => 'x', 'Description' => '' ) );
-    return $configarray;
-}
-function vpsnet_CreateAccount($params)
-{
-    $creds = vpsnet_GetCredentials();
-    $initialNodes = intval($params['configoption1']);
-    $cloudtemplate = explode("|", $params['configoption2']);
-    $cloudtemplate = $cloudtemplate[0];
-    $enablebackups = $params['configoption3'];
-    $controlpanel = $controlpanel[0];
-    if( $params['configoptions']['Nodes'] )
-    {
-        $initialNodes = intval($params['configoptions']['Nodes']);
-    }
-    if( $params['configoptions']["Cloud Template"] )
-    {
-        $cloudtemplate = $params['configoptions']["Cloud Template"];
-    }
-    if( $params['configoptions']["Enable Backups"] )
-    {
-        $enablebackups = $params['configoptions']["Enable Backups"];
-    }
-    if( $params['configoptions']["Rsync Backups"] )
-    {
-        $rsyncbackups = $params['configoptions']["Rsync Backups"];
-    }
-    if( $params['configoptions']["R1Soft Backups"] )
-    {
-        $r1softbackups = $params['configoptions']["R1Soft Backups"];
-    }
-    $cloudtemplate = explode("+", $cloudtemplate);
-    $cloud = $cloudtemplate[0];
-    $template = $cloudtemplate[1];
-    $enablebackups = $enablebackups == 'on' || $enablebackups == 'Yes' ? 'true' : 'false';
-    $rsyncbackups = $rsyncbackups == 'on' || $rsyncbackups == 'Yes' ? 'true' : 'false';
-    $r1softbackups = $r1softbackups == 'on' || $r1softbackups == 'Yes' ? 'true' : 'false';
-    $label = $params['customfields']["VPS Label"] ? $params['customfields']["VPS Label"] : $params['clientsdetails']['lastname'] . $params['serviceid'] . '_VPS';
-    $postfields = array(  );
-    $postfields['label'] = $label;
-    $postfields['fqdn'] = $params['domain'];
-    $postfields['system_template_id'] = $template;
-    $postfields['cloud_id'] = $cloud;
-    $postfields['backups_enabled'] = $enablebackups;
-    $postfields['rsync_backups_enabled'] = $rsyncbackups;
-    $postfields['r1_soft_backups_enabled'] = $r1softbackups;
-    $postfields['slices_required'] = $initialNodes;
-    $result = vpsnet_call($params, '', '', '', 'virtual_machines', array( 'virtual_machine' => $postfields ));
-    if( $result['success'] == '1' )
-    {
-        $netid = $result['response']['virtual_machine']['id'];
-        $password = $result['response']['virtual_machine']['password'];
-        $ip = $result['response']['virtual_machine']['primary_ip_address']['ip_address']['ip_address'];
-        update_query('tblhosting', array( 'dedicatedip' => $ip, 'password' => encrypt($password) ), array( 'id' => $params['serviceid'] ));
-        insert_query('mod_vpsnet', array( 'relid' => $params['serviceid'], 'setting' => 'netid', 'value' => $netid ));
-        insert_query('mod_vpsnet', array( 'relid' => $params['serviceid'], 'setting' => 'slices', 'value' => $initialNodes ));
-        return 'success';
-    }
-    if( is_array($result) )
-    {
-        $errors = $result['errors']['errors'];
-        $errlist = " - ";
-        foreach( $errors as $error )
-        {
-            $errlist .= $error[0] . " " . $error[1] . "<br />";
-        }
-    }
-    return "Failed to create VM" . $errlist;
-}
-function vpsnet_SuspendAccount($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'power_off', $netid);
-    if( $rtn['success'] )
-    {
-        return 'success';
-    }
-    return $rtn['errors'];
-}
-function vpsnet_UnsuspendAccount($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'power_on', $netid);
-    if( $rtn['success'] )
-    {
-        return 'success';
-    }
-    return $rtn['errors'];
-}
-function vpsnet_TerminateAccount($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, '', $netid, 'DELETE');
-    if( $rtn['success'] )
-    {
-        delete_query('mod_vpsnet', array( 'relid' => $params['serviceid'] ));
-    }
-    else
-    {
-        return $rtn['errors'];
-    }
-}
-function vpsnet_ChangePackage($params)
-{
-    $creds = vpsnet_GetCredentials();
-    $result = select_query('mod_vpsnet', '', array( 'relid' => $params['serviceid'] ));
-    while( $data = simulate_fetch_assoc($result) )
-    {
-        ${$data['setting']} = $data['value'];
-    }
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $result = vpsnet_call($params, 'power_on', $netid);
-    if( !$result['success'] )
-    {
-    }
-    $initialNodes = intval($params['configoption1']);
-    $cloudtemplate = explode("|", $params['configoption2']);
-    $cloudtemplate = $cloudtemplate[0];
-    $enablebackups = $params['configoption3'];
-    $controlpanel = $controlpanel[0];
-    if( $params['configoptions']['Nodes'] )
-    {
-        $initialNodes = intval($params['configoptions']['Nodes']);
-    }
-    if( $params['configoptions']["Cloud Template"] )
-    {
-        $cloudtemplate = $params['configoptions']["Cloud Template"];
-    }
-    if( $params['configoptions']["Enable Backups"] )
-    {
-        $enablebackups = $params['configoptions']["Enable Backups"];
-    }
-    if( $params['configoptions']["Rsync Backups"] )
-    {
-        $rsyncbackups = $params['configoptions']["Rsync Backups"];
-    }
-    if( $params['configoptions']["R1Soft Backups"] )
-    {
-        $r1softbackups = $params['configoptions']["R1Soft Backups"];
-    }
-    $cloudtemplate = explode("+", $cloudtemplate);
-    $cloud = $cloudtemplate[0];
-    $template = $cloudtemplate[1];
-    $enablebackups = $enablebackups == 'on' || $enablebackups == 'Yes' ? 'true' : 'false';
-    $rsyncbackups = $rsyncbackups == 'on' || $rsyncbackups == 'Yes' ? 'true' : 'false';
-    $r1softbackups = $r1softbackups == 'on' || $r1softbackups == 'Yes' ? 'true' : 'false';
-    $postfields = array(  );
-    $postfields['id'] = $netid;
-    $postfields['system_template_id'] = $template;
-    $postfields['cloud_id'] = $cloud;
-    $postfields['backups_enabled'] = $enablebackups;
-    $postfields['rsync_backups_enabled'] = $rsyncbackups;
-    $postfields['r1_soft_backups_enabled'] = $r1softbackups;
-    $postfields['slices_required'] = $initialNodes;
-    $result = vpsnet_call($params, '', $netid, 'PUT', 'virtual_machines', array( 'virtual_machine' => $postfields ));
-    if( $result['success'] )
-    {
-        update_query('mod_vpsnet', array( 'value' => $netid ), array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-        update_query('mod_vpsnet', array( 'value' => $initialNodes ), array( 'relid' => $params['serviceid'], 'setting' => 'slices' ));
-        return 'success';
-    }
-    if( is_array($result) )
-    {
-        $errors = $result['errors']['errors'];
-        $errlist = " - ";
-        foreach( $errors as $error )
-        {
-            $errlist .= $error[0] . " " . $error[1] . "<br />";
-        }
-    }
-    return "Failed to update VM" . $errlist;
-}
-function vpsnet_AdminCustomButtonArray()
-{
-    $buttonarray = array( "Manage Backups" => 'managebackups' );
-    return $buttonarray;
-}
-function vpsnet_poweron($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'power_on', $netid);
-    if( $rtn['success'] )
-    {
-        return "VPS Queued for Power On";
-    }
-    return $rtn['errors'];
-}
-function vpsnet_poweroff($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'power_off', $netid);
-    if( $rtn['success'] )
-    {
-        return "VPS Queued for Power Off";
-    }
-    return $rtn['errors'];
-}
-function vpsnet_reboot($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'reboot', $netid);
-    if( $rtn['success'] )
-    {
-        return "VPS Queued for Reboot";
-    }
-    return $rtn['errors'];
-}
-function vpsnet_shutdown($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'shutdown', $netid);
-    if( $rtn['success'] )
-    {
-        return 'success';
-    }
-    return $rtn['errors'];
-}
-function vpsnet_rebuild($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'rebuild_network', $netid);
-    if( $rtn['success'] )
-    {
-        return "VPS Queued for Rebuild";
-    }
-    return $rtn['errors'];
-}
-function vpsnet_recover($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'power_on', $netid, '', '', array( 'mode' => 'recovery' ));
-    if( $rtn['success'] )
-    {
-        return "VPS Queued for Power On and Recovery";
-    }
-    return $rtn['errors'];
-}
-function vpsnet_reinstall($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'reinstall', $netid);
-    if( $rtn['success'] )
-    {
-        return "VPS Queued for Power On and Recovery";
-    }
-    return $rtn['errors'];
-}
-function vpsnet_snapshotbackup($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'backups', $netid);
-    if( $rtn['success'] )
-    {
-        if( defined('CLIENTAREA') )
-        {
-            return NULL;
-        }
-        redir("userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&managebackups=1", "clientshosting.php");
-    }
-    else
-    {
-        return $rtn['errors'];
-    }
-}
-function vpsnet_restorebackup($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'backups/' . (int) $_REQUEST['bid'] . '/restore', $netid);
-    if( $rtn['success'] )
-    {
-        return 'success';
-    }
-    return "VPS Must be Powered Off First to Restore a Backup";
-}
-function vpsnet_deletebackup($params)
-{
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return "No VM Found";
-    }
-    $rtn = vpsnet_call($params, 'backups/' . (int) $_REQUEST['bid'], $netid, 'DELETE');
-    if( $rtn['success'] )
-    {
-        if( defined('CLIENTAREA') )
-        {
-            return NULL;
-        }
-        redir("userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&managebackups=1", "clientshosting.php");
-    }
-    else
-    {
-        return $rtn['errors'];
-    }
-}
-function vpsnet_managebackups($params)
-{
-    return "redirect|clientshosting.php?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&managebackups=1";
-}
-function vpsnet_AdminServicesTabFields($params)
-{
-    global $_LANG;
-    $netid = get_query_val('mod_vpsnet', 'value', array( 'relid' => $params['serviceid'], 'setting' => 'netid' ));
-    if( !$netid )
-    {
-        return false;
-    }
-    $vpsinfo = "<style>\n#vpsnetcont {\n    margin: 10px;\n    padding: 10px;\n    background-color: #fff;\n    -moz-border-radius: 10px;\n    -webkit-border-radius: 10px;\n    -o-border-radius: 10px;\n    border-radius: 10px;\n}\n#vpsnetcont table {\n    width: 100%;\n}\n#vpsnetcont table tr th {\n    padding: 4px;\n    background-color: #1A4D80;\n    color: #fff;\n    font-weight: bold;\n    text-align: center;\n    -moz-border-radius: 3px;\n    -webkit-border-radius: 3px;\n    -o-border-radius: 3px;\n    border-radius: 3px;\n}\n#vpsnetcont table tr td {\n    padding: 4px;\n    border-bottom: 1px solid #efefef;\n}\n#vpsnetcont table tr td.fieldlabel {\n    width: 175px;\n    text-align: right;\n    font-weight: bold;\n    background-color: #efefef;\n}\n#vpsnetcont .tools {\n    padding: 10px 0 0 15px;\n}\n</style>\n";
-    if( $_REQUEST['bwgraphs'] )
-    {
-        $rtn = vpsnet_call($params, 'network_graph', $netid, 'GET', 'virtual_machines', "period=hourly");
-        $data = $rtn['response'];
-        $datatable = array(  );
-        $datatable[] = "[\"Time\",\"Upload\",\"Download\"]";
-        foreach( $data as $d )
-        {
-            $datatable[] = "[\"" . date("Y-m-d H:i", strtotime($d['created_at'])) . "\"," . round($d['data_received'] / (1024 * 1024), 2) . ',' . round($d['data_sent'] / (1024 * 1024), 2) . "]";
-        }
-        $vpsinfo .= "<div id=\"vpsnetcont\">\n    <div id=\"bwchart\" style=\"width: 100%; height: 400px;\"></div>\n    </div>";
-        return array( "Bandwidth Graphs" => $vpsinfo );
-    }
-    if( $_REQUEST['managebackups'] )
-    {
-        $rtn = vpsnet_call($params, 'backups', $netid, 'GET');
-        $vpsinfo .= "<div id=\"vpsnetcont\">\nThe list below shows all the backups for your virtual machine, along with the last time each of these backups was run.<br /><br />\n<table cellspacing=\"1\">\n<tr><th>Type</th><th>State</th><th>Date/Time</th><th>Size</th><th>Restore</th><th>Delete</th></tr>";
-        foreach( $rtn['response'] as $backup )
-        {
-            $lastupdated = $backup['updated_at'];
-            $lastupdated = strtotime($lastupdated);
-            $lastupdated = date("F dS, Y H:i", $lastupdated);
-            $vpsinfo .= "\n<tr><td>" . ucfirst($backup['backup_type']) . "</td><td>" . ($backup['built'] ? 'Completed' : 'Pending') . "</td><td>" . $lastupdated . "</td><td>" . ($backup['built'] ? round($backup['backup_size'] / 1024, 1) . " MB" : "Not built yet") . "</td><td><a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=restorebackup&bid=" . $backup['id'] . "\" onclick=\"if (confirm('Are you sure you wish to restore this backup?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/backup.png\" align=\"absmiddle\" /></a></td><td><a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=deletebackup&bid=" . $backup['id'] . "\" onclick=\"if (confirm('Are you sure you wish to delete this backup?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/deletebackup.png\" align=\"absmiddle\" /></a></td></tr>";
-        }
-        $vpsinfo .= "\n</table>\n<div class=\"tools\">\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=snapshotbackup\" onclick=\"if (confirm('Are you sure you want to create a new snapshot?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/backup.png\" align=\"absmiddle\" /> Create a new Snapshot</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&rsyncbackups=1\"><img src=\"../modules/servers/vpsnet/img/restore.png\" align=\"absmiddle\" /> Rsync Backups</a>\n</div>\n</div>";
-        return array( "Manage Backups" => $vpsinfo );
-    }
-    if( $_REQUEST['rsyncbackups'] )
-    {
-        $rtn = vpsnet_call($params, 'backups/rsync_backup', $netid, 'GET');
-        $data = $rtn['response'];
-        $vpsinfo .= "<div id=\"vpsnetcont\">\n<table cellspacing=\"1\">\n<tr><td class=\"fieldlabel\">Username</td><td>" . $data['username'] . "</td></tr>\n<tr><td class=\"fieldlabel\">Password</td><td>" . $data['password'] . "</td></tr>\n<tr><td class=\"fieldlabel\">Quota</td><td>" . $data['quota'] . "</td></tr>\n</table>\n<div class=\"tools\">\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=snapshotbackup\" onclick=\"if (confirm('Are you sure you want to create a new snapshot?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/backup.png\" align=\"absmiddle\" /> Create a new Snapshot</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&rsyncbackups=1\"><img src=\"../modules/servers/vpsnet/img/backup.png\" align=\"absmiddle\" /> Rsync Backups</a>\n</div>\n</div>";
-        return array( "Rsync Backups Info" => $vpsinfo );
-    }
-    $rtn = vpsnet_call($params, '', $netid, 'GET');
-    if( !$rtn['success'] )
-    {
-        return false;
-    }
-    $data = $rtn['response']['virtual_machine'];
-    $running = $data['running'];
-    $pending = $data['power_action_pending'];
-    $runningstatus = $running ? "<img src=\"../modules/servers/vpsnet/img/running.png\" align=\"absmiddle\" /> " . $_LANG['vpsnetrunning'] : "<img src=\"../modules/servers/vpsnet/img/notrunning.png\" align=\"absmiddle\" /> " . $_LANG['vpsnetnotrunning'];
-    if( $pending )
-    {
-        $runningstatus = "<img src=\"../modules/servers/vpsnet/img/notrunning.png\" align=\"absmiddle\" /> " . $_LANG['vpsnetpowercycling'];
-    }
-    $bwused = $data['bandwidth_used'];
-    $bwused = $bwused / 1024 / 1024;
-    $bwused = round($bwused, 2) . 'MB';
-    $cloudid = $data['cloud_id'];
-    $templateid = $data['system_template_id'];
-    $clouddata = vpsnet_call($params, '', $cloudid, 1, 'clouds');
-    $cloudname = $clouddata['response']['label'];
-    $vpsinfo .= "<div id=\"vpsnetcont\">\n<table cellspacing=\"1\">\n<tr><td class=\"fieldlabel\">Hostname</td><td>" . $data['hostname'] . "</td><td class=\"fieldlabel\">Domain Name</td><td>" . $data['domain_name'] . "</td></tr>\n<tr><td class=\"fieldlabel\">Nodes</td><td>" . $data['slices_count'] . "</td><td class=\"fieldlabel\">Cloud</td><td>" . $cloudname . "</td></tr>\n<tr><td class=\"fieldlabel\">Initial Root Password</td><td>" . $data['password'] . "</td><td class=\"fieldlabel\">Backups Enabled</td><td>" . ($data['backups_enabled'] ? "<img src=\"../modules/servers/vpsnet/img/tick.png\" align=\"absmiddle\" /> Yes" : "<img src=\"../modules/servers/vpsnet/img/cross.png\" align=\"absmiddle\" /> No") . "</td></tr>\n<tr><td class=\"fieldlabel\">Status</td><td>" . $runningstatus . "</td><td class=\"fieldlabel\">IP Address</td><td>" . $data['primary_ip_address']['ip_address']['ip_address'] . "</td></tr>\n<tr><td class=\"fieldlabel\">Monthly Bandwidth Used</td><td>" . $bwused . "</td><td class=\"fieldlabel\">Deployed Storage</td><td>" . $data['deployed_disk_size'] . "</td></tr>\n<tr><td class=\"fieldlabel\">Template</td><td>" . $templatelabel . "</td><td class=\"fieldlabel\">Licenses</td><td>None</td></tr>\n</table>\n<div class=\"tools\">";
-    if( $data['power_action_pending'] )
-    {
-        $vpsinfo .= "<img src=\"../modules/servers/vpsnet/img/running.png\" align=\"absmiddle\" /> This VPS is currently running a task. Power Management Options Not Available Until Complete.";
-    }
-    else
-    {
-        if( $running )
-        {
-            $vpsinfo .= "\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=shutdown\" onclick=\"if (confirm('Are you sure you wish to shutdown this VPS?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/shutdown.png\" align=\"absmiddle\" /> Shutdown</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=poweroff\" onclick=\"if (confirm('Are you sure you wish to force power off this VPS?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/poweroff.png\" align=\"absmiddle\" /> Force Power Off</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=reboot\" onclick=\"if (confirm('Are you sure you wish to reboot this VPS?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/reboot.png\" align=\"absmiddle\" /> Graceful Reboot</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=recover\" onclick=\"if (confirm('Are you sure you wish to reboot this VPS in recovery mode? Please note: in recovery mode the login is (root) and the password is (recovery).')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/recovery.png\" align=\"absmiddle\" /> Reboot in Recovery</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=rebuild\" onclick=\"if (confirm('Are you sure you want to rebuilt network for this VPS? Your virtual machine will be rebooted and the network interfaces configuration file on this virtual machine will be regenerated.')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/restart.png\" align=\"absmiddle\" /> Rebuild Network</a>\n";
-        }
-        else
-        {
-            $vpsinfo .= "\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=poweron\" onclick=\"if (confirm('Are you sure you wish to start this VPS?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/startup.png\" align=\"absmiddle\" /> Startup</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=recover\" onclick=\"if (confirm('Are you sure you wish to start this VPS in recovery mode? Please note: in recovery mode the login is (root) and the password is (recovery).')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/recovery.png\" align=\"absmiddle\" /> Startup in Recovery</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=rebuild\" onclick=\"if (confirm('Are you sure you want to rebuilt network for this VPS? Your virtual machine will be rebooted and the network interfaces configuration file on this virtual machine will be regenerated.')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/restart.png\" align=\"absmiddle\" /> Rebuild Network</a>\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=terminate\" onclick=\"if (confirm('Are you sure you wish to delete this VPS? Please note: recovery is only possible for up to 12 hours after deletion, and only your last 3 deleted VPS's will be available for recovery.')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/delete.png\" align=\"absmiddle\" /> Delete VPS</a>&nbsp;&nbsp;\n<a href=\"?userid=" . $_REQUEST['userid'] . "&id=" . $_REQUEST['id'] . "&modop=custom&ac=reinstall\" onclick=\"if (confirm('Are you sure you want to re-install this VPS?')) { return true; } return false;\"><img src=\"../modules/servers/vpsnet/img/restart.png\" align=\"absmiddle\" /> Re-install VPS</a>\n";
-        }
-    }
-    $vpsinfo .= "\n</div>\n</div>\n\n\n";
-    return array( "VPS Overview" => $vpsinfo );
-}
-function vpsnet_ClientAreaCustomButtonArray()
-{
-    $buttonarray = array( "Manage Backups" => 'managebackups', "CPU Graphs" => 'cpugraphs', "Network Graphs" => 'networkgraphs' );
-    return $buttonarray;
-}
-function vpsnet_cpugraphs($params)
-{
-    global $_LANG;
-    $pagearray = array( 'templatefile' => 'cpugraphs', 'breadcrumb' => " > <a href=\"#\">" . $_LANG['vpsnetcpugraphs'] . "</a>", 'vars' => array( 'serviceid' => $params['serviceid'] ) );
-    return $pagearray;
-}
-function vpsnet_networkgraphs($params)
-{
-    global $_LANG;
-    $pagearray = array( 'templatefile' => 'networkgraphs', 'breadcrumb' => " > <a href=\"#\">" . $_LANG['vpsnetnetworkgraphs'] . "</a>", 'vars' => array( 'serviceid' => $params['serviceid'] ) );
-    return $pagearray;
-}
-function vpsnet_call($params, $action, $id, $reqtype = '', $type = 'virtual_machines', $data = '', $nojsonencode = '')
-{
-    $creds = vpsnet_GetCredentials();
-    $url = "https://api.vps.net/" . $type;
-    if( $id )
-    {
-        $url .= '/' . $id;
-    }
-    if( $action )
-    {
-        $url .= '/' . $action;
-    }
-    $url .= ".api10json";
-    if( $reqtype == 'GET' && $data && !is_array($data) )
-    {
-        $url .= "?" . $data;
-    }
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array( "Content-Type: application/json", "Accept: application/json" ));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_USERPWD, $creds['username'] . ":" . $creds['accesshash']);
-    if( $reqtype == 'GET' )
-    {
-        curl_setopt($ch, CURLOPT_HTTPGET, 1);
-    }
-    else
-    {
-        if( $reqtype == 'DELETE' )
-        {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        }
-        else
-        {
-            if( $reqtype == 'PUT' )
-            {
-                curl_setopt($ch, CURLOPT_PUT, true);
-                if( !is_null($data) )
-                {
-                    if( $nojsonencode )
-                    {
-                        curl_setopt($ch, CURLOPT_INFILE, $data);
-                        curl_setopt($ch, CURLOPT_INFILESIZE, strlen($data));
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, array(  ));
-                    }
-                    else
-                    {
-                        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-                    }
-                }
-            }
-            else
-            {
-                curl_setopt($ch, CURLOPT_POST, 1);
-                if( !is_null($data) )
-                {
-                    if( $nojsonencode )
-                    {
-                        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, array(  ));
-                    }
-                    else
-                    {
-                        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-                    }
-                }
-            }
-        }
-    }
-    $rtn = array(  );
-    $rtn['response_body'] = curl_exec($ch);
-    $rtn['info'] = curl_getinfo($ch);
-    $rtn['success'] = '0';
-    if( $rtn['info']['content_type'] == "application/json; charset=utf-8" )
-    {
-        if( $rtn['info']['http_code'] == 200 )
-        {
-            $rtn['response'] = json_decode($rtn['response_body'], true);
-            $rtn['success'] = '1';
-        }
-        else
-        {
-            if( $rtn['info']['http_code'] == 422 )
-            {
-                $rtn['errors'] = json_decode($rtn['response_body'], true);
-            }
-            else
-            {
-                if( $rtn['info']['http_code'] == 406 )
-                {
-                    $rtn['errors'] = array( "Login Failed" );
-                }
-                else
-                {
-                    $rtn['errors'] = json_decode($rtn['response_body'], true);
-                }
-            }
-        }
-    }
-    if( curl_error($ch) )
-    {
-        $rtn['errors'] = array( "Curl Error: " . curl_errno($ch) . " - " . curl_error($ch) );
-    }
-    curl_close($ch);
-    logModuleCall('vpsnet', $action, $url . " - " . json_encode($data), $rtn, $rtn['response']);
-    return $rtn;
-}
-function vpsnet_GetCredentials()
-{
-    return get_query_vals('tblservers', 'id,username,accesshash', array( 'type' => 'vpsnet' ));
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

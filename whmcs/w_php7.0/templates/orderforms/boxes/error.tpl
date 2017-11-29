@@ -2,12 +2,14 @@
 
 <div id="order-boxes">
 
-<div class="errorbox" style="display:block;">{$errortitle}</div>
+    <div class="header-lined">
+        <h1>{$errortitle}</h1>
+    </div>
 
-<p>{$errormsg}</p>
+    <p>{$errormsg}</p>
 
-<p align="center"><br /><a href="javascript:history.go(-1)">&laquo; {$LANG.problemgoback}</a></p>
-
-<br /><br /><br />
+    <p class="text-center">
+        <a href="javascript:history.go(-1)" class="btn btn-default">&laquo; {$LANG.problemgoback}</a>
+    </p>
 
 </div>

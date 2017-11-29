@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,1077 +32,532 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function affordabledomains_splitPhoneNumber($phoneNumber)
-{
-    $phoneNumber = trim($phoneNumber);
-    if( preg_match("/^([0-9]+)\\s+([0-9]+)\\s+([0-9]+)\$/", $phoneNumber, $matches) )
-    {
-        return array( $matches[1], $matches[2], $matches[3] );
-    }
-    if( preg_match("/^([0-9]+)\\s+([0-9]+)\$/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(03)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(04)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(06)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(07)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(09)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(021)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(027)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^(029)([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( 64, $matches[1], $matches[2] );
-    }
-    if( preg_match("/^\\+([0-9]+)\\.([0-9])([0-9]+)/", $phoneNumber, $matches) )
-    {
-        return array( $matches[1], $matches[2], $matches[3] );
-    }
-    return array( '', '', $phoneNumber );
-}
-function affordabledomains_getConfigArray()
-{
-    $configarray = array( 'FriendlyName' => array( 'Type' => 'System', 'Value' => "Affordable Domains" ), 'Username' => array( 'Type' => 'text', 'Size' => '20', 'Description' => "Enter your AffordableDomains.co.nz Username here" ), 'Password' => array( 'Type' => 'password', 'Size' => '20', 'Description' => "Enter your Account Password here" ), 'TestMode' => array( 'Type' => 'yesno' ) );
-    return $configarray;
-}
-function affordabledomains_GetNameservers($params)
-{
-    $username = $params['Username'];
-    $password = $params['Password'];
-    $testmode = $params['TestMode'];
-    $tld = $params['tld'];
-    $sld = $params['sld'];
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $whoisReturn = affordabledomains_whoisNzDomain($params);
-        $values['ns1'] = $whoisReturn['ServerFQDN1'];
-        $values['ns2'] = $whoisReturn['ServerFQDN2'];
-        $values['ns3'] = $whoisReturn['ServerFQDN3'];
-        $values['ns4'] = $whoisReturn['ServerFQDN4'];
-        $values['ns5'] = $whoisReturn['ServerFQDN5'];
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_SaveNameservers($params)
-{
-    $username = $params['Username'];
-    $password = $params['Password'];
-    $testmode = $params['TestMode'];
-    $tld = $params['tld'];
-    $sld = $params['sld'];
-    $nameserver1 = $params['ns1'];
-    $nameserver2 = $params['ns2'];
-    $nameserver3 = $params['ns3'];
-    $nameserver4 = $params['ns4'];
-    $nameserver5 = $params['ns5'];
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $nsSaveReturn = affordabledomains_nsSaveNzDomain($params);
-        $nsSaveReturnArr = split("\\|", $nsSaveReturn);
-        foreach( $nsSaveReturnArr as $nsSaveReturnVal )
-        {
-            if( $nsSaveReturnVal != '' )
-            {
-                $nsSaveStatus = split(":", $nsSaveReturnVal);
-                if( trim($nsSaveStatus[0]) != 'success' )
-                {
-                    $values['error'] = $nsSaveStatus[1];
-                }
-            }
-        }
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_RegisterDomain($params)
-{
-    $username = $params['Username'];
-    $password = $params['Password'];
-    $testmode = $params['TestMode'];
-    $tld = $params['tld'];
-    $sld = $params['sld'];
-    $regperiod = $params['regperiod'];
-    $nameserver1 = $params['ns1'];
-    $nameserver2 = $params['ns2'];
-    $nameserver3 = $params['ns3'];
-    $nameserver4 = $params['ns4'];
-    $nameserver5 = $params['ns5'];
-    $RegistrantFirstName = $params['firstname'];
-    $RegistrantLastName = $params['lastname'];
-    $RegistrantAddress1 = $params['address1'];
-    $RegistrantAddress2 = $params['address2'];
-    $RegistrantCity = $params['city'];
-    $RegistrantStateProvince = $params['state'];
-    $RegistrantPostalCode = $params['postcode'];
-    $RegistrantCountry = $params['country'];
-    $RegistrantEmailAddress = $params['email'];
-    $RegistrantPhone = $params['phonenumber'];
-    $AdminFirstName = $params['adminfirstname'];
-    $AdminLastName = $params['adminlastname'];
-    $AdminAddress1 = $params['adminaddress1'];
-    $AdminAddress2 = $params['adminaddress2'];
-    $AdminCity = $params['admincity'];
-    $AdminStateProvince = $params['adminstate'];
-    $AdminPostalCode = $params['adminpostcode'];
-    $AdminCountry = $params['admincountry'];
-    $AdminEmailAddress = $params['adminemail'];
-    $AdminPhone = $params['adminphonenumber'];
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $registrantPhAr = affordabledomains_splitphonenumber($RegistrantPhone);
-        $adminPhAr = affordabledomains_splitphonenumber($AdminPhone);
-        if( $registrantPhAr[0] == '' )
-        {
-            $values['error'] = "Registrant phone number is in incorrect format.  Please edit the phone number in your profile to be in \"country areacode localnumber\" format (eg \"64 9 1234567\")";
-        }
-        else
-        {
-            if( $adminPhAr[0] == '' )
-            {
-                $values['error'] = "Admin phone number is in incorrect format.  Please edit the phone number in your profile to be in \"country areacode localnumber\" format (eg \"64 9 1234567\")";
-            }
-            else
-            {
-                $params['phonecountrycode'] = $registrantPhAr[0];
-                $params['phoneareacode'] = $registrantPhAr[1];
-                $params['phonelocalcode'] = $registrantPhAr[2];
-                $params['adminphonecountrycode'] = $adminPhAr[0];
-                $params['adminphoneareacode'] = $adminPhAr[1];
-                $params['adminphonelocalcode'] = $adminPhAr[2];
-                $regReturn = affordabledomains_registerNzDomain($params);
-                $regReturnArr = split("\\|", $regReturn);
-                foreach( $regReturnArr as $regReturnVal )
-                {
-                    if( $regReturnVal != '' )
-                    {
-                        $regStatus = split(":", $regReturnVal);
-                        if( trim($regStatus[0]) != 'success' )
-                        {
-                            $values['error'] = $regStatus[1];
-                        }
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_TransferDomain($params)
-{
-    $username = $params['Username'];
-    $password = $params['Password'];
-    $testmode = $params['TestMode'];
-    $tld = $params['tld'];
-    $sld = $params['sld'];
-    $regperiod = $params['regperiod'];
-    $transfersecret = $params['transfersecret'];
-    $nameserver1 = $params['ns1'];
-    $nameserver2 = $params['ns2'];
-    $nameserver3 = $params['ns3'];
-    $nameserver4 = $params['ns4'];
-    $nameserver5 = $params['ns5'];
-    $RegistrantFirstName = $params['firstname'];
-    $RegistrantLastName = $params['lastname'];
-    $RegistrantAddress1 = $params['address1'];
-    $RegistrantAddress2 = $params['address2'];
-    $RegistrantCity = $params['city'];
-    $RegistrantStateProvince = $params['state'];
-    $RegistrantPostalCode = $params['postcode'];
-    $RegistrantCountry = $params['country'];
-    $RegistrantEmailAddress = $params['email'];
-    $RegistrantPhone = $params['phonenumber'];
-    $AdminFirstName = $params['adminfirstname'];
-    $AdminLastName = $params['adminlastname'];
-    $AdminAddress1 = $params['adminaddress1'];
-    $AdminAddress2 = $params['adminaddress2'];
-    $AdminCity = $params['admincity'];
-    $AdminStateProvince = $params['adminstate'];
-    $AdminPostalCode = $params['adminpostcode'];
-    $AdminCountry = $params['admincountry'];
-    $AdminEmailAddress = $params['adminemail'];
-    $AdminPhone = $params['adminphonenumber'];
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $registrantPhAr = affordabledomains_splitphonenumber($RegistrantPhone);
-        if( $registrantPhAr[0] == '' )
-        {
-            $values['error'] = "Registrant phone number is in incorrect format.  Please edit the phone number in your profile to be in \"country areacode localnumber\" format (eg \"64 9 1234567\")";
-        }
-        else
-        {
-            $params['phonecountrycode'] = $registrantPhAr[0];
-            $params['phoneareacode'] = $registrantPhAr[1];
-            $params['phonelocalcode'] = $registrantPhAr[2];
-        }
-        $transReturn = affordabledomains_transNzDomain($params);
-        $transReturnArr = split("\\|", $transReturn);
-        foreach( $transReturnArr as $transReturnVal )
-        {
-            if( $transReturnVal != '' )
-            {
-                $transStatus = split(":", $transReturnVal);
-                if( trim($transStatus[0]) != 'success' )
-                {
-                    $values['error'] = $transStatus[1];
-                }
-            }
-        }
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_RenewDomain($params)
-{
-    $username = $params['Username'];
-    $password = $params['Password'];
-    $testmode = $params['TestMode'];
-    $tld = $params['tld'];
-    $sld = $params['sld'];
-    $regperiod = $params['regperiod'];
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $renewReturn = affordabledomains_renewNzDomain($params);
-        $renewReturnArr = split("\\|", $renewReturn);
-        foreach( $renewReturnArr as $renewReturnVal )
-        {
-            if( $renewReturnVal != '' )
-            {
-                $renewStatus = split(":", $renewReturnVal);
-                if( trim($renewStatus[0]) != 'success' )
-                {
-                    $values['error'] = $renewStatus[1];
-                }
-            }
-        }
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_GetContactDetails($params)
-{
-    $username = $params['Username'];
-    $password = $params['Password'];
-    $testmode = $params['TestMode'];
-    $tld = $params['tld'];
-    $sld = $params['sld'];
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $whoisReturn = affordabledomains_whoisNzDomain($params);
-        if( $whoisReturn['RegistrantName'] != '' )
-        {
-            list($firstname, $lastname) = split(" ", $whoisReturn['RegistrantName'], 2);
-            $values['Registrant']["First Name"] = $firstname;
-            $values['Registrant']["Last Name"] = $lastname;
-            $values['Registrant']['Email'] = $whoisReturn['RegistrantEmail'];
-            $values['Registrant']['Address1'] = $whoisReturn['RegistrantAddress1'];
-            $values['Registrant']['Address2'] = $whoisReturn['RegistrantAddress2'];
-            $values['Registrant']['City'] = $whoisReturn['RegistrantCity'];
-            $values['Registrant']['Province'] = $whoisReturn['RegistrantProvince'];
-            $values['Registrant']['PostalCode'] = $whoisReturn['RegistrantPostalCode'];
-            $regphoneno = '';
-            $regfaxno = '';
-            if( $whoisReturn['RegistrantPhoneLocalNumber'] != '' )
-            {
-                $regphoneno = $whoisReturn['RegistrantPhoneCountryCode'] . " " . $whoisReturn['RegistrantPhoneAreaCode'] . " " . $whoisReturn['RegistrantPhoneLocalNumber'];
-            }
-            $values['Registrant']['Phone'] = $regphoneno;
-            if( $whoisReturn['RegistrantFaxLocalNumber'] != '' )
-            {
-                $regfaxno = $whoisReturn['RegistrantFaxCountryCode'] . " " . $whoisReturn['RegistrantFaxAreaCode'] . " " . $whoisReturn['RegistrantFaxLocalNumber'];
-            }
-            $values['Registrant']['Fax'] = $regfaxno;
-        }
-        if( $whoisReturn['AdminName'] != '' )
-        {
-            list($adminfirstname, $adminlastname) = split(" ", $whoisReturn['AdminName'], 2);
-            $values['Admin']["First Name"] = $adminfirstname;
-            $values['Admin']["Last Name"] = $adminlastname;
-            $values['Admin']['Email'] = $whoisReturn['AdminEmail'];
-            $values['Admin']['Address1'] = $whoisReturn['AdminAddress1'];
-            $values['Admin']['Address2'] = $whoisReturn['AdminAddress2'];
-            $values['Admin']['City'] = $whoisReturn['AdminCity'];
-            $values['Admin']['Province'] = $whoisReturn['AdminProvince'];
-            $values['Admin']['PostalCode'] = $whoisReturn['AdminPostalCode'];
-            $adminphoneno = '';
-            $adminfaxno = '';
-            if( $whoisReturn['AdminPhoneLocalNumber'] != '' )
-            {
-                $adminphoneno = $whoisReturn['AdminPhoneCountryCode'] . " " . $whoisReturn['AdminPhoneAreaCode'] . " " . $whoisReturn['AdminPhoneLocalNumber'];
-            }
-            $values['Admin']['Phone'] = $adminphoneno;
-            if( $whoisReturn['AdminFaxLocalNumber'] != '' )
-            {
-                $adminfaxno = $whoisReturn['AdminFaxCountryCode'] . " " . $whoisReturn['AdminFaxAreaCode'] . " " . $whoisReturn['AdminFaxLocalNumber'];
-            }
-            $values['Admin']['Fax'] = $adminfaxno;
-        }
-        if( $whoisReturn['TechnicalName'] != '' )
-        {
-            list($techfirstname, $techlastname) = split(" ", $whoisReturn['TechnicalName'], 2);
-            $values['Tech']["First Name"] = $techfirstname;
-            $values['Tech']["Last Name"] = $techlastname;
-            $values['Tech']['Email'] = $whoisReturn['TechnicalEmail'];
-            $values['Tech']['Address1'] = $whoisReturn['TechnicalAddress1'];
-            $values['Tech']['Address2'] = $whoisReturn['TechnicalAddress2'];
-            $values['Tech']['City'] = $whoisReturn['TechnicalCity'];
-            $values['Tech']['Province'] = $whoisReturn['TechnicalProvince'];
-            $values['Tech']['PostalCode'] = $whoisReturn['TechnicalPostalCode'];
-            $techphoneno = '';
-            $techfaxno = '';
-            if( $whoisReturn['TechnicalPhoneLocalNumber'] != '' )
-            {
-                $techphoneno = $whoisReturn['TechnicalPhoneCountryCode'] . " " . $whoisReturn['TechnicalPhoneAreaCode'] . " " . $whoisReturn['TechnicalPhoneLocalNumber'];
-            }
-            $values['Tech']['Phone'] = $techphoneno;
-            if( $whoisReturn['TechnicalFaxLocalNumber'] != '' )
-            {
-                $techfaxno = $whoisReturn['TechnicalFaxCountryCode'] . " " . $whoisReturn['TechnicalFaxAreaCode'] . " " . $whoisReturn['TechnicalFaxLocalNumber'];
-            }
-            $values['Tech']['Fax'] = $techfaxno;
-        }
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_SaveContactDetails($params)
-{
-    $whoisReturn = affordabledomains_whoisNzDomain($params);
-    $myparams['username'] = $params['Username'];
-    $myparams['password'] = $params['Password'];
-    $myparams['testmode'] = $params['TestMode'];
-    $myparams['tld'] = $params['tld'];
-    $myparams['sld'] = $params['sld'];
-    $myparams['regfirstname'] = $params['contactdetails']['Registrant']["First Name"];
-    $myparams['reglastname'] = $params['contactdetails']['Registrant']["Last Name"];
-    $myparams['regemail'] = $params['contactdetails']['Registrant']['Email'];
-    $myparams['regaddress1'] = $params['contactdetails']['Registrant']['Address1'];
-    if( !$myparams['regaddress1'] )
-    {
-        $myparams['regaddress1'] = $params['contactdetails']['Registrant']["Address 1"];
-    }
-    $myparams['regaddress2'] = $params['contactdetails']['Registrant']['Address2'];
-    if( !$myparams['regaddress2'] )
-    {
-        $myparams['regaddress2'] = $params['contactdetails']['Registrant']["Address 2"];
-    }
-    $myparams['regcity'] = $params['contactdetails']['Registrant']['City'];
-    $myparams['regprovince'] = $params['contactdetails']['Registrant']['Province'];
-    if( !$myparams['regprovince'] )
-    {
-        $myparams['regprovince'] = $params['contactdetails']['Registrant']['Region'];
-    }
-    $myparams['regpostalcode'] = $params['contactdetails']['Registrant']['PostalCode'];
-    if( !$myparams['regpostalcode'] )
-    {
-        $myparams['regpostalcode'] = $params['contactdetails']['Registrant']['Postcode'];
-    }
-    $myparams['regcountry'] = $whoisReturn['RegistrantCountryCode'];
-    $myparams['adminfirstname'] = $params['contactdetails']['Admin']["First Name"];
-    $myparams['adminlastname'] = $params['contactdetails']['Admin']["Last Name"];
-    $myparams['adminemail'] = $params['contactdetails']['Admin']['Email'];
-    $myparams['adminaddress1'] = $params['contactdetails']['Admin']['Address1'];
-    if( !$myparams['adminaddress1'] )
-    {
-        $myparams['adminaddress1'] = $params['contactdetails']['Admin']["Address 1"];
-    }
-    $myparams['adminaddress2'] = $params['contactdetails']['Admin']['Address2'];
-    if( !$myparams['adminaddress2'] )
-    {
-        $myparams['adminaddress2'] = $params['contactdetails']['Admin']["Address 2"];
-    }
-    $myparams['admincity'] = $params['contactdetails']['Admin']['City'];
-    $myparams['adminprovince'] = $params['contactdetails']['Admin']['Province'];
-    if( !$myparams['adminprovince'] )
-    {
-        $myparams['adminprovince'] = $params['contactdetails']['Admin']['Region'];
-    }
-    $myparams['adminpostalcode'] = $params['contactdetails']['Admin']['PostalCode'];
-    if( !$myparams['adminpostalcode'] )
-    {
-        $myparams['adminpostalcode'] = $params['contactdetails']['Admin']['Postcode'];
-    }
-    $myparams['admincountry'] = $whoisReturn['AdminCountryCode'];
-    $myparams['techfirstname'] = $params['contactdetails']['Tech']["First Name"];
-    $myparams['techlastname'] = $params['contactdetails']['Tech']["Last Name"];
-    $myparams['techemail'] = $params['contactdetails']['Tech']['Email'];
-    $myparams['techaddress1'] = $params['contactdetails']['Tech']['Address1'];
-    if( !$myparams['techaddress1'] )
-    {
-        $myparams['techaddress1'] = $params['contactdetails']['Tech']["Address 1"];
-    }
-    $myparams['techaddress2'] = $params['contactdetails']['Tech']['Address2'];
-    if( !$myparams['techaddress2'] )
-    {
-        $myparams['techaddress2'] = $params['contactdetails']['Tech']["Address 2"];
-    }
-    $myparams['techcity'] = $params['contactdetails']['Tech']['City'];
-    $myparams['techprovince'] = $params['contactdetails']['Tech']['Province'];
-    if( !$myparams['techprovince'] )
-    {
-        $myparams['techprovince'] = $params['contactdetails']['Tech']['Region'];
-    }
-    $myparams['techpostalcode'] = $params['contactdetails']['Tech']['PostalCode'];
-    if( !$myparams['techpostalcode'] )
-    {
-        $myparams['techpostalcode'] = $params['contactdetails']['Tech']['Postcode'];
-    }
-    $myparams['techcountry'] = $whoisReturn['TechnicalCountryCode'];
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $registrantPhAr = affordabledomains_splitphonenumber($params['contactdetails']['Registrant']['Phone']);
-        $adminPhAr = affordabledomains_splitphonenumber($params['contactdetails']['Admin']['Phone']);
-        $techPhAr = affordabledomains_splitphonenumber($params['contactdetails']['Tech']['Phone']);
-        $registrantFxAr = affordabledomains_splitphonenumber($params['contactdetails']['Registrant']['Fax']);
-        $adminFxAr = affordabledomains_splitphonenumber($params['contactdetails']['Admin']['Fax']);
-        $techFxAr = affordabledomains_splitphonenumber($params['contactdetails']['Tech']['Fax']);
-        $myparams['phonecountrycode'] = $registrantPhAr[0];
-        $myparams['phoneareacode'] = $registrantPhAr[1];
-        $myparams['phonelocalcode'] = $registrantPhAr[2];
-        $myparams['adminphonecountrycode'] = $adminPhAr[0];
-        $myparams['adminphoneareacode'] = $adminPhAr[1];
-        $myparams['adminphonelocalcode'] = $adminPhAr[2];
-        $myparams['techphonecountrycode'] = $techPhAr[0];
-        $myparams['techphoneareacode'] = $techPhAr[1];
-        $myparams['techphonelocalcode'] = $techPhAr[2];
-        if( $params['contactdetails']['Registrant']['Fax'] != '' )
-        {
-            $myparams['faxcountrycode'] = $registrantFxAr[0];
-            $myparams['faxareacode'] = $registrantFxAr[1];
-            $myparams['faxlocalcode'] = $registrantFxAr[2];
-        }
-        if( $params['contactdetails']['Admin']['Fax'] != '' )
-        {
-            $myparams['adminfaxcountrycode'] = $adminFxAr[0];
-            $myparams['adminfaxareacode'] = $adminFxAr[1];
-            $myparams['adminfaxlocalcode'] = $adminFxAr[2];
-        }
-        if( $params['contactdetails']['Tech']['Fax'] != '' )
-        {
-            $myparams['techfaxcountrycode'] = $techFxAr[0];
-            $myparams['techfaxareacode'] = $techFxAr[1];
-            $myparams['techfaxlocalcode'] = $techFxAr[2];
-        }
-        $contactReturn = affordabledomains_contactSaveNzDomain($myparams);
-        $contactReturnArr = split("\\|", $contactReturn);
-        foreach( $contactReturnArr as $contactReturnVal )
-        {
-            if( $contactReturnVal != '' )
-            {
-                $contactStatus = split(":", $contactReturnVal);
-                if( trim($contactStatus[0]) != 'success' )
-                {
-                    $values['error'] = $contactStatus[1];
-                }
-            }
-        }
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_GetEPPCode($params)
-{
-    $loginStatus = affordabledomains_login($params);
-    if( $loginStatus == 'success' )
-    {
-        $eppReturn = affordabledomains_getUdaiNzDomain($params);
-        $eppReturnArr = split("\\|", $eppReturn);
-        foreach( $eppReturnArr as $eppReturnVal )
-        {
-            if( $eppReturnVal != '' )
-            {
-                $eppStatus = split(":", $eppReturnVal);
-                if( trim($eppStatus[0]) == 'unsuccess' )
-                {
-                    $values['error'] = $eppStatus[1];
-                }
-                else
-                {
-                    $values['eppcode'] = substr($eppStatus[1], strpos($eppStatus[1], "["), strpos($eppStatus[1], "]"));
-                }
-            }
-        }
-    }
-    else
-    {
-        $values['error'] = $loginStatus;
-    }
-    return $values;
-}
-function affordabledomains_login($params)
-{
-    if( $params['TestMode'] == 'on' )
-    {
-        $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/login.php";
-    }
-    else
-    {
-        $url = "http://www.affordabledomains.co.nz/api/whmcs/login.php";
-    }
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtIP'] = $_SERVER['SERVER_ADDR'];
-    $loginResult = affordabledomains_connect_server($url, $postfields);
-    return $loginResult;
-}
-function affordabledomains_connect_server($url, $postfields)
-{
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 100);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);
-    $data = curl_exec($ch);
-    curl_close($ch);
-    $action = $url;
-    $action = str_replace("http://dev.affordabledomains.co.nz/testlab/api/whmcs/", '', $action);
-    $action = str_replace("http://www.affordabledomains.co.nz/api/whmcs/", '', $action);
-    $action = str_replace(".php", '', $action);
-    logModuleCall('affordabledomains', $action, $postfields, $data, '', array( $postfields['txtLoginUname'], $postfields['txtLoginPwd'] ));
-    return $data;
-}
-function affordabledomains_registerNzDomain($params)
-{
-    $tld = explode(".", $params['tld']);
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/registerNzDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/registerNzDomain.php";
-        }
-    }
-    else
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/registerGlobalDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/registerGlobalDomain.php";
-        }
-    }
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtFName'] = $params['firstname'];
-    $postfields['txtLName'] = $params['lastname'];
-    $postfields['txtAdd1'] = $params['address1'];
-    $postfields['txtAdd2'] = $params['address2'];
-    $postfields['txtCity'] = $params['city'];
-    $postfields['txtProv'] = $params['state'];
-    $postfields['txtPostal'] = $params['postcode'];
-    $postfields['cboCountry'] = $params['country'];
-    $postfields['txtEmail'] = $params['email'];
-    $postfields['txtPh1'] = $params['phonecountrycode'];
-    $postfields['txtPh2'] = $params['phoneareacode'];
-    $postfields['txtPh3'] = $params['phonelocalcode'];
-    $postfields['txtfax1'] = '';
-    $postfields['txtfax2'] = '';
-    $postfields['txtfax3'] = '';
-    $postfields['billFName'] = $params['adminfirstname'];
-    $postfields['billLName'] = $params['adminlastname'];
-    $postfields['billAdd1'] = $params['adminaddress1'];
-    $postfields['billAdd2'] = $params['adminaddress2'];
-    $postfields['billCity'] = $params['admincity'];
-    $postfields['billProv'] = $params['adminstate'];
-    $postfields['billPostal'] = $params['adminpostcode'];
-    $postfields['cboBillCountry'] = $params['admincountry'];
-    $postfields['billEmail'] = $params['adminemail'];
-    $postfields['billPh1'] = $params['adminphonecountrycode'];
-    $postfields['billPh2'] = $params['adminphoneareacode'];
-    $postfields['billPh3'] = $params['adminphonelocalcode'];
-    $postfields['billFax1'] = '';
-    $postfields['billFax2'] = '';
-    $postfields['billFax3'] = '';
-    $postfields['techFName'] = $params['firstname'];
-    $postfields['techLName'] = $params['lastname'];
-    $postfields['techAdd1'] = $params['address1'];
-    $postfields['techAdd2'] = $params['address2'];
-    $postfields['techCity'] = $params['city'];
-    $postfields['techProv'] = $params['state'];
-    $postfields['techPostal'] = $params['postcode'];
-    $postfields['cboTechCountry'] = $params['country'];
-    $postfields['techEmail'] = $params['email'];
-    $postfields['techPh1'] = $params['phonecountrycode'];
-    $postfields['techPh2'] = $params['phoneareacode'];
-    $postfields['techPh3'] = $params['phonelocalcode'];
-    $postfields['techFax1'] = '';
-    $postfields['techFax2'] = '';
-    $postfields['techFax3'] = '';
-    $postfields['txthostname1'] = $params['ns1'];
-    $postfields['txthostname2'] = $params['ns2'];
-    $postfields['txthostname3'] = $params['ns3'];
-    $postfields['txthostname4'] = $params['ns4'];
-    $postfields['txtip1'] = '';
-    $postfields['txtip2'] = '';
-    $postfields['txtip3'] = '';
-    $postfields['txtip4'] = '';
-    $postfields['txtv6ip1'] = '';
-    $postfields['txtv6ip2'] = '';
-    $postfields['txtv6ip3'] = '';
-    $postfields['txtv6ip4'] = '';
-    $postfields['txtdomainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['txtdomainext'] = $params['tld'];
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        $postfields['cboRenew'] = $params['regperiod'] * 12;
-    }
-    else
-    {
-        $postfields['cboRenew'] = $params['regperiod'];
-    }
-    $registerResult = affordabledomains_connect_server($url, $postfields);
-    return $registerResult;
-}
-function affordabledomains_whoisNzDomain($params)
-{
-    $tld = explode(".", $params['tld']);
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/whoisNzDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/whoisNzDomain.php";
-        }
-    }
-    else
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/whoisGlobalDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/whoisGlobalDomain.php";
-        }
-    }
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtdomainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['txtdomainext'] = $params['tld'];
-    $whoisResult = affordabledomains_connect_server($url, $postfields);
-    $xml = new SimpleXMLElement($whoisResult);
-    $resultDomain = $xml->xpath('/DomainsResponse/Domain');
-    if( 0 < count($resultDomain) )
-    {
-        $whoisVal['ServerDomainName'] = $resultDomain[0]['DomainName'];
-        $whoisVal['ServerDomainStatus'] = $resultDomain[0]['Status'];
-    }
-    $resultRegistrant = $xml->xpath('/DomainsResponse/Domain/RegistrantContact');
-    if( 0 < count($resultRegistrant) )
-    {
-        $whoisVal['RegistrantName'] = $resultRegistrant[0]['Name'];
-        $whoisVal['RegistrantEmail'] = $resultRegistrant[0]['Email'];
-    }
-    $resultRegistrantPostalAddress = $xml->xpath('/DomainsResponse/Domain/RegistrantContact/PostalAddress');
-    if( 0 < count($resultRegistrantPostalAddress) )
-    {
-        $whoisVal['RegistrantAddress1'] = $resultRegistrantPostalAddress[0]['Address1'];
-        $whoisVal['RegistrantAddress2'] = $resultRegistrantPostalAddress[0]['Address2'];
-        $whoisVal['RegistrantCity'] = $resultRegistrantPostalAddress[0]['City'];
-        $whoisVal['RegistrantCountryCode'] = $resultRegistrantPostalAddress[0]['CountryCode'];
-        $whoisVal['RegistrantPostalCode'] = $resultRegistrantPostalAddress[0]['PostalCode'];
-        $whoisVal['RegistrantProvince'] = $resultRegistrantPostalAddress[0]['Province'];
-    }
-    $resultRegistrantPhone = $xml->xpath('/DomainsResponse/Domain/RegistrantContact/Phone');
-    if( 0 < count($resultRegistrantPhone) )
-    {
-        $whoisVal['RegistrantPhoneAreaCode'] = $resultRegistrantPhone[0]['AreaCode'];
-        $whoisVal['RegistrantPhoneCountryCode'] = $resultRegistrantPhone[0]['CountryCode'];
-        $whoisVal['RegistrantPhoneLocalNumber'] = $resultRegistrantPhone[0]['LocalNumber'];
-    }
-    $resultRegistrantFax = $xml->xpath('/DomainsResponse/Domain/RegistrantContact/Fax');
-    if( 0 < count($resultRegistrantFax) )
-    {
-        $whoisVal['RegistrantFaxAreaCode'] = $resultRegistrantFax[0]['AreaCode'];
-        $whoisVal['RegistrantFaxCountryCode'] = $resultRegistrantFax[0]['CountryCode'];
-        $whoisVal['RegistrantFaxLocalNumber'] = $resultRegistrantFax[0]['LocalNumber'];
-    }
-    $resultAdmin = $xml->xpath('/DomainsResponse/Domain/AdminContact');
-    if( 0 < count($resultAdmin) )
-    {
-        $whoisVal['AdminName'] = $resultAdmin[0]['Name'];
-        $whoisVal['AdminEmail'] = $resultAdmin[0]['Email'];
-    }
-    $resultAdminPostalAddress = $xml->xpath('/DomainsResponse/Domain/AdminContact/PostalAddress');
-    if( 0 < count($resultAdminPostalAddress) )
-    {
-        $whoisVal['AdminAddress1'] = $resultAdminPostalAddress[0]['Address1'];
-        $whoisVal['AdminAddress2'] = $resultAdminPostalAddress[0]['Address2'];
-        $whoisVal['AdminCity'] = $resultAdminPostalAddress[0]['City'];
-        $whoisVal['AdminCountryCode'] = $resultAdminPostalAddress[0]['CountryCode'];
-        $whoisVal['AdminPostalCode'] = $resultAdminPostalAddress[0]['PostalCode'];
-        $whoisVal['AdminProvince'] = $resultAdminPostalAddress[0]['Province'];
-    }
-    $resultAdminPhone = $xml->xpath('/DomainsResponse/Domain/AdminContact/Phone');
-    if( 0 < count($resultAdminPhone) )
-    {
-        $whoisVal['AdminPhoneAreaCode'] = $resultAdminPhone[0]['AreaCode'];
-        $whoisVal['AdminPhoneCountryCode'] = $resultAdminPhone[0]['CountryCode'];
-        $whoisVal['AdminPhoneLocalNumber'] = $resultAdminPhone[0]['LocalNumber'];
-    }
-    $AdminRegistrarFax = $xml->xpath('/DomainsResponse/Domain/AdminContact/Fax');
-    if( 0 < count($AdminRegistrarFax) )
-    {
-        $whoisVal['AdminFaxAreaCode'] = $AdminRegistrarFax[0]['AreaCode'];
-        $whoisVal['AdminFaxCountryCode'] = $AdminRegistrarFax[0]['CountryCode'];
-        $whoisVal['AdminFaxLocalNumber'] = $AdminRegistrarFax[0]['LocalNumber'];
-    }
-    $resultTechnical = $xml->xpath('/DomainsResponse/Domain/TechnicalContact');
-    if( 0 < count($resultTechnical) )
-    {
-        $whoisVal['TechnicalName'] = $resultTechnical[0]['Name'];
-        $whoisVal['TechnicalEmail'] = $resultTechnical[0]['Email'];
-    }
-    $resultTechnicalPostalAddress = $xml->xpath('/DomainsResponse/Domain/TechnicalContact/PostalAddress');
-    if( 0 < count($resultTechnicalPostalAddress) )
-    {
-        $whoisVal['TechnicalAddress1'] = $resultTechnicalPostalAddress[0]['Address1'];
-        $whoisVal['TechnicalAddress2'] = $resultTechnicalPostalAddress[0]['Address2'];
-        $whoisVal['TechnicalCity'] = $resultTechnicalPostalAddress[0]['City'];
-        $whoisVal['TechnicalCountryCode'] = $resultTechnicalPostalAddress[0]['CountryCode'];
-        $whoisVal['TechnicalPostalCode'] = $resultTechnicalPostalAddress[0]['PostalCode'];
-        $whoisVal['TechnicalProvince'] = $resultAdminPostalAddress[0]['Province'];
-    }
-    $resultTechnicalPhone = $xml->xpath('/DomainsResponse/Domain/TechnicalContact/Phone');
-    if( 0 < count($resultTechnicalPhone) )
-    {
-        $whoisVal['TechnicalPhoneAreaCode'] = $resultTechnicalPhone[0]['AreaCode'];
-        $whoisVal['TechnicalPhoneCountryCode'] = $resultTechnicalPhone[0]['CountryCode'];
-        $whoisVal['TechnicalPhoneLocalNumber'] = $resultTechnicalPhone[0]['LocalNumber'];
-    }
-    $TechnicalRegistrarFax = $xml->xpath('/DomainsResponse/Domain/TechnicalContact/Fax');
-    if( 0 < count($TechnicalRegistrarFax) )
-    {
-        $whoisVal['TechnicalFaxAreaCode'] = $TechnicalRegistrarFax[0]['AreaCode'];
-        $whoisVal['TechnicalFaxCountryCode'] = $TechnicalRegistrarFax[0]['CountryCode'];
-        $whoisVal['TechnicalFaxLocalNumber'] = $TechnicalRegistrarFax[0]['LocalNumber'];
-    }
-    $resultServer = $xml->xpath('/DomainsResponse/Domain/NameServers/Server');
-    if( 0 < count($resultServer) )
-    {
-        $whoisVal['ServerFQDN1'] = $resultServer[0]['FQDN'];
-        $whoisVal['ServerIP4Addr1'] = $resultServer[0]['IP4Addr'];
-        $whoisVal['ServerFQDN2'] = $resultServer[1]['FQDN'];
-        $whoisVal['ServerIP4Addr2'] = $resultServer[1]['IP4Addr'];
-        $whoisVal['ServerFQDN3'] = $resultServer[2]['FQDN'];
-        $whoisVal['ServerIP4Addr3'] = $resultServer[2]['IP4Addr'];
-        $whoisVal['ServerFQDN4'] = $resultServer[3]['FQDN'];
-        $whoisVal['ServerIP4Addr4'] = $resultServer[3]['IP4Addr'];
-    }
-    return $whoisVal;
-}
-function affordabledomains_nsSaveNzDomain($params)
-{
-    $tld = explode(".", $params['tld']);
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/nsSaveNzDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/nsSaveNzDomain.php";
-        }
-    }
-    else
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/nsSaveGlobalDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/nsSaveGlobalDomain.php";
-        }
-    }
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtdomainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['txtdomainext'] = $params['tld'];
-    $postfields['txthostname1'] = $params['ns1'];
-    $postfields['txthostname2'] = $params['ns2'];
-    $postfields['txthostname3'] = $params['ns3'];
-    $postfields['txthostname4'] = $params['ns4'];
-    $postfields['txtip1'] = '';
-    $postfields['txtip2'] = '';
-    $postfields['txtip3'] = '';
-    $postfields['txtip4'] = '';
-    $postfields['txtv6ip1'] = '';
-    $postfields['txtv6ip2'] = '';
-    $postfields['txtv6ip3'] = '';
-    $postfields['txtv6ip4'] = '';
-    $nsSaveResult = affordabledomains_connect_server($url, $postfields);
-}
-function affordabledomains_contactSaveNzDomain($myparams)
-{
-    $tld = explode(".", $myparams['tld']);
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        if( $myparams['testmode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/contactSaveNzDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/contactSaveNzDomain.php";
-        }
-    }
-    else
-    {
-        if( $myparams['testmode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/contactSaveGlobalDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/contactSaveGlobalDomain.php";
-        }
-    }
-    $phonenumber = $myparams['fullphonenumber'];
-    $postfields['txtLoginUname'] = $myparams['username'];
-    $postfields['txtLoginPwd'] = $myparams['password'];
-    $postfields['txtdomainname'] = $myparams['sld'] . "." . $myparams['tld'];
-    $postfields['txtdomainext'] = $myparams['tld'];
-    $postfields['txtFName'] = $myparams['regfirstname'];
-    $postfields['txtLName'] = $myparams['reglastname'];
-    $postfields['txtAdd1'] = $myparams['regaddress1'];
-    $postfields['txtAdd2'] = $myparams['regaddress2'];
-    $postfields['txtCity'] = $myparams['regcity'];
-    $postfields['txtProv'] = $myparams['regprovince'];
-    $postfields['txtPostal'] = $myparams['regpostalcode'];
-    $postfields['cboCountry'] = $myparams['regcountry'];
-    $postfields['txtEmail'] = $myparams['regemail'];
-    $postfields['txtPh1'] = $myparams['phonecountrycode'];
-    $postfields['txtPh2'] = $myparams['phoneareacode'];
-    $postfields['txtPh3'] = $myparams['phonelocalcode'];
-    $postfields['txtfax1'] = $myparams['faxcountrycode'];
-    $postfields['txtfax2'] = $myparams['faxareacode'];
-    $postfields['txtfax3'] = $myparams['faxlocalcode'];
-    $postfields['billFName'] = $myparams['adminfirstname'];
-    $postfields['billLName'] = $myparams['adminlastname'];
-    $postfields['billAdd1'] = $myparams['adminaddress1'];
-    $postfields['billAdd2'] = $myparams['adminaddress2'];
-    $postfields['billCity'] = $myparams['admincity'];
-    $postfields['billProv'] = $myparams['adminprovince'];
-    $postfields['billPostal'] = $myparams['adminpostalcode'];
-    $postfields['cboBillCountry'] = $myparams['admincountry'];
-    $postfields['billEmail'] = $myparams['adminemail'];
-    $postfields['billPh1'] = $myparams['adminphonecountrycode'];
-    $postfields['billPh2'] = $myparams['adminphoneareacode'];
-    $postfields['billPh3'] = $myparams['adminphonelocalcode'];
-    $postfields['billFax1'] = $myparams['adminfaxcountrycode'];
-    $postfields['billFax2'] = $myparams['adminfaxareacode'];
-    $postfields['billFax3'] = $myparams['adminfaxlocalcode'];
-    $postfields['techFName'] = $myparams['techfirstname'];
-    $postfields['techLName'] = $myparams['techlastname'];
-    $postfields['techAdd1'] = $myparams['techaddress1'];
-    $postfields['techAdd2'] = $myparams['techaddress2'];
-    $postfields['techCity'] = $myparams['techcity'];
-    $postfields['techProv'] = $myparams['techprovince'];
-    $postfields['techPostal'] = $myparams['techpostalcode'];
-    $postfields['cboTechCountry'] = $myparams['techcountry'];
-    $postfields['techEmail'] = $myparams['techemail'];
-    $postfields['techPh1'] = $myparams['techphonecountrycode'];
-    $postfields['techPh2'] = $myparams['techphoneareacode'];
-    $postfields['techPh3'] = $myparams['techphonelocalcode'];
-    $postfields['techFax1'] = $myparams['techfaxcountrycode'];
-    $postfields['techFax2'] = $myparams['techfaxareacode'];
-    $postfields['techFax3'] = $myparams['techfaxlocalcode'];
-    $contactSaveResult = affordabledomains_connect_server($url, $postfields);
-    return $contactSaveResult;
-}
-function affordabledomains_renewNzDomain($params)
-{
-    $tld = explode(".", $params['tld']);
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/renewNzDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/renewNzDomain.php";
-        }
-    }
-    else
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/renewGlobalDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/renewGlobalDomain.php";
-        }
-    }
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtdomainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['txtdomainext'] = $params['tld'];
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        $postfields['cboRenew'] = $params['regperiod'] * 12;
-    }
-    else
-    {
-        $postfields['cboRenew'] = $params['regperiod'];
-    }
-    $renewResult = affordabledomains_connect_server($url, $postfields);
-    return $renewResult;
-}
-function affordabledomains_transNzDomain($params)
-{
-    $tld = explode(".", $params['tld']);
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/transNzDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/transNzDomain.php";
-        }
-    }
-    else
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/transGlobalDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/transGlobalDomain.php";
-        }
-    }
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtdomainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['txtdomainext'] = $params['tld'];
-    $postfields['txtUDAI'] = $params['transfersecret'];
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtFName'] = $params['firstname'];
-    $postfields['txtLName'] = $params['lastname'];
-    $postfields['txtCompany'] = $params['companyname'];
-    $postfields['txtAdd1'] = $params['address1'];
-    $postfields['txtAdd2'] = $params['address2'];
-    $postfields['txtCity'] = $params['city'];
-    $postfields['txtProv'] = $params['state'];
-    $postfields['txtPostal'] = $params['postcode'];
-    $postfields['cboCountry'] = $params['country'];
-    $postfields['txtEmail'] = $params['email'];
-    $postfields['txtPh1'] = $params['phonecountrycode'];
-    $postfields['txtPh2'] = $params['phoneareacode'];
-    $postfields['txtPh3'] = $params['phonelocalcode'];
-    $postfields['txtfax1'] = '';
-    $postfields['txtfax2'] = '';
-    $postfields['txtfax3'] = '';
-    $postfields['txthostname1'] = $params['ns1'];
-    $postfields['txthostname2'] = $params['ns2'];
-    $postfields['txthostname3'] = $params['ns3'];
-    $postfields['txthostname4'] = $params['ns4'];
-    $postfields['txtip1'] = '';
-    $postfields['txtip2'] = '';
-    $postfields['txtip3'] = '';
-    $postfields['txtip4'] = '';
-    $postfields['txtv6ip1'] = '';
-    $postfields['txtv6ip2'] = '';
-    $postfields['txtv6ip3'] = '';
-    $postfields['txtv6ip4'] = '';
-    $transResult = affordabledomains_connect_server($url, $postfields);
-    return $transResult;
-}
-function affordabledomains_getUdaiNzDomain($params)
-{
-    $tld = explode(".", $params['tld']);
-    if( $tld[count($tld) - 1] == 'nz' )
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/getUdaiNzDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/getUdaiNzDomain.php";
-        }
-    }
-    else
-    {
-        if( $params['TestMode'] == 'on' )
-        {
-            $url = "http://dev.affordabledomains.co.nz/testlab/api/whmcs/getUdaiGlobalDomain.php";
-        }
-        else
-        {
-            $url = "http://www.affordabledomains.co.nz/api/whmcs/getUdaiGlobalDomain.php";
-        }
-    }
-    $postfields['txtLoginUname'] = $params['Username'];
-    $postfields['txtLoginPwd'] = $params['Password'];
-    $postfields['txtdomainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['txtdomainext'] = $params['tld'];
-    $getUdaiResult = affordabledomains_connect_server($url, $postfields);
-    return $getUdaiResult;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

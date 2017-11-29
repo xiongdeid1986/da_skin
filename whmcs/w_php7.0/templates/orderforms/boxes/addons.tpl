@@ -2,47 +2,79 @@
 
 <div id="order-boxes">
 
-<div class="left">
+    <div class="pull-md-right col-md-9">
 
-<form method="post" action="{$smarty.server.PHP_SELF}">
-<p>{$LANG.ordercategories}: <select name="gid" onchange="submit()">
-{foreach key=num item=productgroup from=$productgroups}
-<option value="{$productgroup.gid}">{$productgroup.name}</option>
-{/foreach}
-<option value="addons" selected>{$LANG.cartproductaddons}</option>
-{if $renewalsenabled}<option value="renewals">{$LANG.domainrenewals}</option>{/if}
-</select></p>
-</form>
+        <div class="header-lined">
+            <h1>{$LANG.cartproductaddons}</h1>
+        </div>
 
-</div>
-<div class="clear"></div>
+    </div>
 
-<table width="90%" align="center" cellspacing="1" cellpadding="5">
-<tr class="orderheadingrow"><td colspan=2></td></tr>
-{foreach from=$addons item=addon}
-<tr class="{cycle values="orderrow1,orderrow2"}"><td align="center">
-<form method="post" action="{$smarty.server.PHP_SELF}?a=add">
-<input type="hidden" name="aid" value="{$addon.id}" />
-<strong>{$addon.name}</strong> - {$addon.description}<br />
-<div align="center">
-<div style="margin:5px;padding:2px;color:#cc0000;">
-{if $addon.free}
-{$LANG.orderfree}
-{else}
-{$addon.recurringamount} {$addon.billingcycle}
-{if $addon.setupfee}+ {$addon.setupfee} {$LANG.ordersetupfee}<br />{/if}
-{/if}
-</div>
-{$LANG.cartproductaddonschoosepackage}: <select name="productid">{foreach from=$addon.productids item=product}
-<option value="{$product.id}">{$product.product}{if $product.domain} - {$product.domain}{/if}</option>
-{/foreach}</select> <input type="submit" value="{$LANG.ordernowbutton} &raquo;" />
-</div>
-</form>
-</td></tr>
-{foreachelse}
-<tr class="orderrow1"><td colspan="2" class="textcenter"><strong>{$LANG.cartproductaddonsnone}</strong></td></tr>
-{/foreach}
-<tr class="orderheadingrow"><td colspan=2></td></tr>
-</table>
+    <div class="col-md-3 pull-md-left sidebar hidden-xs hidden-sm">
+
+        {include file="orderforms/$carttpl/sidebar-categories.tpl"}
+
+    </div>
+
+    <div class="col-md-9 pull-md-right">
+
+        <div class="line-padded visible-xs visible-sm clearfix">
+
+            {include file="orderforms/$carttpl/sidebar-categories-collapsed.tpl"}
+
+        </div>
+
+        <div class="fields-container">
+            {foreach from=$addons item=addon}
+                <div class="field-row clearfix">
+                    <div class="col-xs-12">
+                        <form method="post" action="{$smarty.server.PHP_SELF}?a=add">
+                            <input type="hidden" name="aid" value="{$addon.id}" />
+                            <div class="pull-right">
+                                {if $addon.free}
+                                    {$LANG.orderfree}
+                                {else}
+                                    {$addon.recurringamount} {$addon.billingcycle}
+                                    {if $addon.setupfee}+ {$addon.setupfee} {$LANG.ordersetupfee}<br />{/if}
+                                {/if}
+                            </div>
+                            <strong>{$addon.name}</strong>
+                            <div class="line-padded">
+                                {$addon.description}
+                            </div>
+                            <div class="col-sm-3">
+                                {$LANG.cartproductaddonschoosepackage}:
+                            </div>
+                            <div class="col-sm-6">
+                                <select name="productid" class="form-control">
+                                    {foreach from=$addon.productids item=product}
+                                        <option value="{$product.id}">{$product.product}{if $product.domain} - {$product.domain}{/if}</option>
+                                    {/foreach}
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <input type="submit" value="{$LANG.ordernowbutton} &raquo;" class="btn btn-primary btn-block" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {foreachelse}
+                <div class="field-row clearfix">
+                    <div class="col-xs-12 text-center">
+                        <br />
+                        {$LANG.cartproductaddonsnone}
+                        <br /><br />
+                    </div>
+                </div>
+            {/foreach}
+        </div>
+
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="secure-warning">
+        <img src="assets/img/padlock.gif" align="absmiddle" border="0" alt="Secure Transaction" /> &nbsp;{$LANG.ordersecure} (<strong>{$ipaddress}</strong>) {$LANG.ordersecure2}
+    </div>
 
 </div>

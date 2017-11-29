@@ -4,7 +4,7 @@
  *
  * OpenSRS-PHP
  *
- * Copyright (C) 2000-2004 Colin Viebrock
+ * Copyright (C) 2000-2004 Colin Viebrock 
  *
  **************************************************************************
  *
@@ -494,7 +494,7 @@ class OPS extends PEAR {
      *
      */
 
-    function _convertData(&$array, $indent=0)
+    function _convertData(&$array, $indent=0) 
     {
         $string = '';
         $IND = str_repeat($this->_SPACER,$indent);
@@ -559,7 +559,7 @@ class OPS extends PEAR {
      *
      */
 
-    function _quoteXMLChars($string)
+    function _quoteXMLChars($string) 
     {
         $search  = array ('&', '<', '>', "'", '"');
         $replace = array ('&amp;', '&lt;', '&gt;', '&apos;', '&quot;');
@@ -661,3 +661,5 @@ class OPS extends PEAR {
 
 
 }
+
+

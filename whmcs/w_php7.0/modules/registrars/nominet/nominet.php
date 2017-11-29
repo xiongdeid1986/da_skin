@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,616 +32,353 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-require(ROOTDIR . "/modules/registrars/nominet/class.Nominet.php");
-function nominet_getConfigArray()
-{
-    $configarray = array( 'Description' => array( 'Type' => 'System', 'Value' => "The Official UK Domain Registry Module" ), 'Username' => array( 'Type' => 'text', 'Size' => '25', 'Description' => '' ), 'Password' => array( 'Type' => 'password', 'Size' => '25', 'Description' => '' ), 'TestMode' => array( 'Type' => 'yesno' ), 'AllowClientTAGChange' => array( 'Type' => 'yesno', 'Description' => "Tick to allow clients to change TAGs on domains" ), 'DeleteOnTransfer' => array( 'Type' => 'yesno', 'Description' => "Tick this box if you want the domain to be deleted entirely on RELEASE" ) );
-    return $configarray;
-}
-function nominet_GetNameservers($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $xml = "  <command>\n            <info>\n              <domain:info\n                xmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\">\n                <domain:name hosts=\"all\">" . $nominet->getDomain() . "</domain:name>\n                </domain:info>\n            </info>\n            <clTRID>ABC-12345</clTRID>\n         </command>\n       </epp>";
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-            $x = 1;
-            $values = array(  );
-            $xmldata = $nominet->getResponseArray();
-            foreach( $xmldata['EPP']['RESPONSE']['RESDATA']["DOMAIN:INFDATA"]["DOMAIN:NS"]["DOMAIN:HOSTOBJ"] as $discard => $nsdata )
-            {
-                $values['ns' . $x] = $nsdata;
-                $x++;
-            }
-            return $values;
-        }
-        return array( 'error' => $nominet->getLastError() );
-    }
-    return array( 'error' => $nominet->getLastError() );
-}
-function nominet_SaveNameservers($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $removeNS = array(  );
-        $removeNS = nominet_getnameservers($params);
-        if( 0 < count($removeNS) )
-        {
-            $removeXML = "\n                            <domain:rem>\n                                   <domain:ns>\n                        ";
-            foreach( $removeNS as $rm )
-            {
-                $removeXML .= "<domain:hostObj>" . $rm . "</domain:hostObj>\n                                ";
-            }
-            $removeXML .= " </domain:ns>\n                                      </domain:rem>\n                        ";
-        }
-        else
-        {
-            $removeXML = '';
-        }
-        $ns = array(  );
-        $ns[1] = $params['ns1'];
-        $ns[2] = $params['ns2'];
-        $xml = "  <command>\n                    <update>\n                    <domain:update\n                    xmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\"\n                    xsi:schemaLocation=\"urn:ietf:params:xml:ns:domain-1.0\n                    domain-1.0.xsd\">\n                      <domain:name>" . $nominet->getDomain() . "</domain:name>\n                      <domain:add>\n                        <domain:ns>\n                          <domain:hostObj>" . $params['ns1'] . "</domain:hostObj>\n                          <domain:hostObj>" . $params['ns2'] . "</domain:hostObj>\n               ";
-        if( $params['ns3'] )
-        {
-            $ns[3] = $params['ns3'];
-            $xml .= "<domain:hostObj>" . $params['ns3'] . "</domain:hostObj>\n                    ";
-        }
-        if( $params['ns4'] )
-        {
-            $ns[4] = $params['ns4'];
-            $xml .= "<domain:hostObj>" . $params['ns4'] . "</domain:hostObj>\n                    ";
-        }
-        if( $params['ns5'] )
-        {
-            $ns[5] = $params['ns5'];
-            $xml .= "<domain:hostObj>" . $params['ns5'] . "</domain:hostObj>\n                    ";
-        }
-        $xml .= "</domain:ns>\n                </domain:add>" . $removeXML . "\n               </domain:update>\n             </update>\n           <clTRID>ABC-12345</clTRID>\n         </command>\n        </epp>";
-        nominet_createHost($nominet, $ns);
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-            $x = 1;
-            $values = array(  );
-            $xmldata = $nominet->getResponseArray();
-            foreach( $xmldata['EPP']['RESPONSE']['RESDATA']["DOMAIN:INFDATA"]["DOMAIN:NS"]["DOMAIN:HOSTOBJ"] as $discard => $nsdata )
-            {
-                $values['ns' . $x] = $nsdata;
-                $x++;
-            }
-            return $values;
-        }
-        return array( 'error' => $nominet->getLastError() );
-    }
-    return array( 'error' => $nominet->getLastError() );
-}
-function nominet_getLegalTypeID($LegalType)
-{
-    if( $LegalType == 'Individual' )
-    {
-        $LegalTypeID = 'IND';
-    }
-    else
-    {
-        if( $LegalType == "UK Limited Company" )
-        {
-            $LegalTypeID = 'LTD';
-        }
-        else
-        {
-            if( $LegalType == "UK Public Limited Company" )
-            {
-                $LegalTypeID = 'PLC';
-            }
-            else
-            {
-                if( $LegalType == "UK Partnership" )
-                {
-                    $LegalTypeID = 'PTNR';
-                }
-                else
-                {
-                    if( $LegalType == "Sole Trader" )
-                    {
-                        $LegalTypeID = 'STRA';
-                    }
-                    else
-                    {
-                        if( $LegalType == "UK Limited Liability Partnership" )
-                        {
-                            $LegalTypeID = 'LLP';
-                        }
-                        else
-                        {
-                            if( $LegalType == "UK Industrial/Provident Registered Company" )
-                            {
-                                $LegalTypeID = 'IP';
-                            }
-                            else
-                            {
-                                if( $LegalType == "UK School" )
-                                {
-                                    $LegalTypeID = 'SCH';
-                                }
-                                else
-                                {
-                                    if( $LegalType == "UK Registered Charity" )
-                                    {
-                                        $LegalTypeID = 'RCHAR';
-                                    }
-                                    else
-                                    {
-                                        if( $LegalType == "UK Government Body" )
-                                        {
-                                            $LegalTypeID = 'GOV';
-                                        }
-                                        else
-                                        {
-                                            if( $LegalType == "UK Corporation by Royal Charter" )
-                                            {
-                                                $LegalTypeID = 'CRC';
-                                            }
-                                            else
-                                            {
-                                                if( $LegalType == "UK Statutory Body" )
-                                                {
-                                                    $LegalTypeID = 'STAT';
-                                                }
-                                                else
-                                                {
-                                                    if( $LegalType == "UK Entity (other)" )
-                                                    {
-                                                        $LegalTypeID = 'OTHER';
-                                                    }
-                                                    else
-                                                    {
-                                                        if( $LegalType == "Non-UK Individual (representing self)" )
-                                                        {
-                                                            $LegalTypeID = 'OTHER';
-                                                        }
-                                                        else
-                                                        {
-                                                            if( $LegalType == "Foreign Organization" )
-                                                            {
-                                                                $LegalTypeID = 'FCORP';
-                                                            }
-                                                            else
-                                                            {
-                                                                if( $LegalType == "Other foreign organizations" )
-                                                                {
-                                                                    $LegalTypeID = 'FOTHER';
-                                                                }
-                                                                else
-                                                                {
-                                                                    if( $LegalType == "Non-UK Individual" )
-                                                                    {
-                                                                        $LegalTypeID = 'FIND';
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return $LegalTypeID;
-}
-function nominet_RegisterDomain($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $RegistrantName = $params['additionalfields']["Registrant Name"];
-        if( !$RegistrantName )
-        {
-            $RegistrantName = $params['additionalfields']["Company Name"];
-        }
-        if( !trim($RegistrantName) )
-        {
-            return array( 'error' => "Registrant Name is missing. Please check the contact fields on the domains tab." );
-        }
-        $LegalType = $params['additionalfields']["Legal Type"];
-        $CompanyIDNumber = $params['additionalfields']["Company ID Number"];
-        $WhoisOptOut = $params['additionalfields']["WHOIS Opt-out"];
-        $LegalTypeID = nominet_getlegaltypeid($LegalType);
-        if( !$LegalTypeID )
-        {
-            return array( 'error' => "Legal Type is missing. Please check field on domains tab" );
-        }
-        if( $LegalTypeID != 'IND' )
-        {
-            $WhoisOptOut = '';
-        }
-        $contactID = nominet_createContact($nominet, $params);
-        if( is_array($contactID) )
-        {
-            return $contactID;
-        }
-        $ns = array(  );
-        $ns[1] = $params['ns1'];
-        $ns[2] = $params['ns2'];
-        $xml = "\n            <command>\n              <create>\n                <domain:create\n                 xmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\"\n                 xsi:schemaLocation=\"urn:ietf:params:xml:ns:domain-1.0\n                 domain-1.0.xsd\">\n                   <domain:name>" . $nominet->getDomain() . "</domain:name>\n                   <domain:period unit=\"y\">" . $params['regperiod'] . "</domain:period>\n                     <domain:ns>\n                      <domain:hostObj>" . $ns['1'] . "</domain:hostObj>\n                      <domain:hostObj>" . $ns['2'] . "</domain:hostObj>\n                     ";
-        if( $params['ns3'] )
-        {
-            $ns[3] = $params['ns3'];
-            $xml .= "<domain:hostObj>" . $params['ns3'] . "</domain:hostObj>\n                                            ";
-        }
-        if( $params['ns4'] )
-        {
-            $ns[4] = $params['ns4'];
-            $xml .= "<domain:hostObj>" . $params['ns4'] . "</domain:hostObj>\n                                            ";
-        }
-        if( $params['ns5'] )
-        {
-            $ns[5] = $params['ns5'];
-            $xml .= "<domain:hostObj>" . $params['ns5'] . "</domain:hostObj>\n                                            ";
-        }
-        $xml .= " </domain:ns>\n                     <domain:registrant>" . $contactID . "</domain:registrant>\n                     <domain:authInfo>\n                       <domain:pw></domain:pw>\n                     </domain:authInfo>\n                  </domain:create>\n               </create>\n            <clTRID>ABC-12345</clTRID>\n          </command>\n        </epp>\n            ";
-        nominet_createHost($nominet, $ns);
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-        }
-        else
-        {
-            return array( 'error' => $nominet->getLastError() );
-        }
-    }
-    else
-    {
-        return array( 'error' => $nominet->getLastError() );
-    }
-}
-function nominet_TransferDomain($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $xml = "<command>\n            <info>\n              <domain:info\n                xmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\">\n                <domain:name hosts=\"all\">" . $nominet->getDomain() . "</domain:name>\n                </domain:info>\n            </info>\n            <clTRID>ABC-12345</clTRID>\n         </command>\n       </epp>";
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'success' => true );
-            }
-            return array( 'error' => "Domain already exists at domain registrar" );
-        }
-        return array( 'error' => $nominet->getLastError() );
-    }
-    return array( 'error' => $nominet->getLastError() );
-}
-function nominet_RenewDomain($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $expiry = get_query_val('tbldomains', 'expirydate', array( 'id' => $params['domainid'] ));
-        $xml = "  <command>\n                <renew>\n\t\t  <domain:renew\n\t\t  xmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\"\n\t\t  xsi:schemaLocation=\"urn:ietf:params:xml:ns:domain-1.0\n\t\t  domain-1.0.xsd\">\n                    <domain:name>" . $nominet->getDomain() . "</domain:name>\n                    <domain:curExpDate>" . $expiry . "</domain:curExpDate>\n                    <domain:period unit=\"y\">" . $params['regperiod'] . "</domain:period>\n                  </domain:renew>\n                </renew>\n         <clTRID>ABC-12345</clTRID>\n       </command>\n     </epp>";
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-            return array(  );
-        }
-        return array( 'error' => $nominet->getLastError() );
-    }
-    return array( 'error' => $nominet->getLastError() );
-}
-function nominet_GetContactDetails($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $xml = "  <command>\n            <info>\n              <domain:info\n                xmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\">\n                <domain:name hosts=\"all\">" . $nominet->getDomain() . "</domain:name>\n                </domain:info>\n            </info>\n            <clTRID>ABC-12345</clTRID>\n         </command>\n       </epp>";
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-            $xmldata = $nominet->getResponseArray();
-            $contactID = $xmldata['EPP']['RESPONSE']['RESDATA']["DOMAIN:INFDATA"]["DOMAIN:REGISTRANT"];
-            $xml = "  <command>\n                        <info>\n                        <contact:info xmlns:contact=\"urn:ietf:params:xml:ns:contact-1.0\"\n                          xsi:schemaLocation=\"urn:ietf:params:xml:ns:contact-1.0\n                          contact-1.0.xsd\">\n                            <contact:id>" . $contactID . "</contact:id>\n                          </contact:info>\n                        </info>\n                      <clTRID>ABC-12345</clTRID>\n                    </command>\n                  </epp>";
-            $success = $nominet->call($xml);
-            if( $success )
-            {
-                if( $nominet->isErrorCode() )
-                {
-                    return array( 'error' => $nominet->getErrorDesc() );
-                }
-                $xmldata = $nominet->getResponseArray();
-                $values = array(  );
-                $values['Registrant']["Contact Name"] = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:POSTALINFO"]["CONTACT:NAME"];
-                $streetData = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:POSTALINFO"]["CONTACT:ADDR"]["CONTACT:STREET"];
-                if( !is_array($streetData) )
-                {
-                    $streetData = array( $streetData );
-                }
-                for( $i = 0; $i <= 2; $i++ )
-                {
-                    $values['Registrant']["Street " . ($i + 1)] = isset($streetData[$i]) ? $streetData[$i] : '';
-                }
-                $values['Registrant']['City'] = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:POSTALINFO"]["CONTACT:ADDR"]["CONTACT:CITY"];
-                $values['Registrant']['County'] = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:POSTALINFO"]["CONTACT:ADDR"]["CONTACT:SP"];
-                $values['Registrant']['Postcode'] = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:POSTALINFO"]["CONTACT:ADDR"]["CONTACT:PC"];
-                $values['Registrant']['Country'] = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:POSTALINFO"]["CONTACT:ADDR"]["CONTACT:CC"];
-                $values['Registrant']["Phone Number"] = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:VOICE"];
-                $values['Registrant']["Email Address"] = $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:INFDATA"]["CONTACT:EMAIL"];
-                return $values;
-            }
-            return array( 'error' => $nominet->getLastError() );
-        }
-        return array( 'error' => $nominet->getLastError() );
-    }
-    return array( 'error' => $nominet->getLastError() );
-}
-function nominet_SaveContactDetails($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $xml = "  <command>\n            <info>\n              <domain:info\n                xmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\">\n                <domain:name hosts=\"all\">" . $nominet->getDomain() . "</domain:name>\n                </domain:info>\n            </info>\n            <clTRID>ABC-12345</clTRID>\n         </command>\n       </epp>";
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-            $xmldata = $nominet->getResponseArray();
-            $contactID = $xmldata['EPP']['RESPONSE']['RESDATA']["DOMAIN:INFDATA"]["DOMAIN:REGISTRANT"];
-            $xml = "  <command>\n                        <update>\n                          <contact:update\n                          xmlns:contact=\"urn:ietf:params:xml:ns:contact-1.0\"\n                          xsi:schemaLocation=\"urn:ietf:params:xml:ns:contact-1.0\n                          contact-1.0.xsd\">\n                          <contact:id>" . $contactID . "</contact:id>\n                            <contact:chg>\n                              <contact:postalInfo type=\"loc\">\n                              <contact:name>" . $params['contactdetails']['Registrant']["Contact Name"] . "</contact:name>\n                              <contact:addr>";
-            if( $params['contactdetails']['Registrant']["Street 1"] )
-            {
-                $xml .= "\n                                <contact:street>" . $params['contactdetails']['Registrant']["Street 1"] . "</contact:street>";
-            }
-            if( $params['contactdetails']['Registrant']["Street 2"] )
-            {
-                $xml .= "\n                                <contact:street>" . $params['contactdetails']['Registrant']["Street 2"] . "</contact:street>";
-            }
-            if( $params['contactdetails']['Registrant']["Street 3"] )
-            {
-                $xml .= "\n                                <contact:street>" . $params['contactdetails']['Registrant']["Street 3"] . "</contact:street>";
-            }
-            $xml .= "\n                                <contact:city>" . $params['contactdetails']['Registrant']['City'] . "</contact:city>\n                                <contact:sp>" . $params['contactdetails']['Registrant']['County'] . "</contact:sp>\n                                <contact:pc>" . strtoupper($params['contactdetails']['Registrant']['Postcode']) . "</contact:pc>\n                                <contact:cc>" . $params['contactdetails']['Registrant']['Country'] . "</contact:cc>\n                               </contact:addr>\n                              </contact:postalInfo>\n                            <contact:voice>" . $params['contactdetails']['Registrant']["Phone Number"] . "</contact:voice>\n                            <contact:email>" . $params['contactdetails']['Registrant']["Email Address"] . "</contact:email>\n                            </contact:chg>\n                          </contact:update>\n                         </update>\n                         <clTRID>ABC-12345</clTRID>\n                       </command>\n                     </epp>";
-            $success = $nominet->call($xml);
-            if( $success )
-            {
-                if( $nominet->isErrorCode() )
-                {
-                    return array( 'error' => $nominet->getErrorDesc() );
-                }
-                return array(  );
-            }
-        }
-        else
-        {
-            return array( 'error' => $nominet->getLastError() );
-        }
-    }
-    else
-    {
-        return array( 'error' => $nominet->getLastError() );
-    }
-}
-function nominet_ReleaseDomain($params)
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $transfertag = $params['transfertag'];
-        $xml = "  <command>\n\t        <update>\n\t\t<r:release\n\t\txmlns:r=\"http://www.nominet.org.uk/epp/xml/std-release-1.0\"\n\t\txsi:schemaLocation=\"http://www.nominet.org.uk/epp/xml/std-release-1.0\n\t\tstd-release-1.0.xsd\">\n\t\t<r:domainName>" . $nominet->getDomain() . "</r:domainName>\n\t\t<r:registrarTag>" . $transfertag . "</r:registrarTag>\n\t\t</r:release>\n\t\t</update>\n               <clTRID>ABC-12345</clTRID>\n              </command>\n            </epp>";
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-            if( $nominet->getResultCode() == 1000 )
-            {
-                if( $params['DeleteOnTransfer'] )
-                {
-                    delete_query('tbldomains', array( 'id' => $params['domainid'] ));
-                }
-                else
-                {
-                    update_query('tbldomains', array( 'status' => 'Cancelled' ), array( 'id' => $params['domainid'] ));
-                }
-            }
-        }
-        else
-        {
-            return array( 'error' => $nominet->getLastError() );
-        }
-    }
-    else
-    {
-        return array( 'error' => $nominet->getLastError() );
-    }
-}
-/**
- * Update the status of domains being transfers w/the registrar.
- * Since the old nominetsync.php used the same code for pending domains and active domains,
- * this function restores that functionality.
- *
- * @param array $params from query in domainssync.php
- * @return array ret object which is parsed by domainssync.php
- */
-function nominet_TransferSync($params)
-{
-    return nominet_Sync($params, 'Transfer');
-}
-/**
- * Sync the expiry date of the domain with the Nominet API.
- *
- * On a standard sync, a domain not on the tag can be cancelled and possibly
- * deleted. We do not want to do this on a Transfer sync.
- *
- * @param array $params
- * @param string $type The kind of Sync: Transfer or Active.
- *
- * @return array
- */
-function nominet_Sync($params, $type = 'Active')
-{
-    $nominet = WHMCS_Nominet::init($params);
-    if( $nominet->connectAndLogin() )
-    {
-        $xml = "  <command>\n                <info>\n\t\t<domain:info\n\t\txmlns:domain=\"urn:ietf:params:xml:ns:domain-1.0\">\n                  <domain:name hosts = \"all\">" . $nominet->getDomain() . "</domain:name>\n                </domain:info>\n                </info>\n                <clTRID>ABC-12345</clTRID>\n              </command>\n            </epp>";
-        $success = $nominet->call($xml);
-        if( $success )
-        {
-            if( $nominet->getResultCode() == 2201 && $type == 'Active' )
-            {
-                $return = array(  );
-                if( $params['DeleteOnTransfer'] )
-                {
-                    delete_query('tbldomains', array( 'id' => $params['domainid'] ));
-                    $return['error'] = "Domain Deleted per Nominet Module Configuration";
-                }
-                else
-                {
-                    $return['cancelled'] = true;
-                }
-                return $return;
-            }
-            if( $nominet->isErrorCode() )
-            {
-                return array( 'error' => $nominet->getErrorDesc() );
-            }
-            $xmldata = $nominet->getResponseArray();
-            $expirydate = trim($xmldata['EPP']['RESPONSE']['RESDATA']["DOMAIN:INFDATA"]["DOMAIN:EXDATE"]);
-            $expirydate = substr($expirydate, 0, 10);
-            if( $expirydate )
-            {
-                $rtn = array(  );
-                $rtn['expirydate'] = $expirydate;
-                if( date('Ymd') <= str_replace('-', '', $expirydate) )
-                {
-                    $rtn['active'] = true;
-                }
-                else
-                {
-                    $rtn['expired'] = true;
-                }
-                return $rtn;
-            }
-        }
-        else
-        {
-            return array( 'error' => $nominet->getLastError() );
-        }
-    }
-    else
-    {
-        return array( 'error' => $nominet->getLastError() );
-    }
-}
-function nominet_createContact($nominet, $params)
-{
-    $RegistrantName = $params['additionalfields']["Registrant Name"];
-    $LegalType = $params['additionalfields']["Legal Type"];
-    $CompanyIDNumber = $params['additionalfields']["Company ID Number"];
-    $WhoisOptOut = $params['additionalfields']["WHOIS Opt-out"];
-    $TradingName = $params['additionalfields']["Trading Name"];
-    $LegalTypeID = nominet_getlegaltypeid($LegalType);
-    if( $LegalTypeID != 'IND' )
-    {
-        $WhoisOptOut = '';
-    }
-    $WhoisOptOut = $WhoisOptOut ? 'Y' : 'N';
-    if( $LegalTypeID == 'IND' )
-    {
-        $RegistrantOrgName = '';
-    }
-    else
-    {
-        $RegistrantOrgName = $RegistrantName;
-        $RegistrantName = $params['firstname'] . " " . $params['lastname'];
-    }
-    $street = $params['address1'];
-    $street2 = trim($params['address2']);
-    $street2code = empty($street2) ? '' : "<contact:street>" . $street2 . "</contact:street>";
-    $city = $params['city'];
-    $county = $params['state'];
-    $postcode = $params['postcode'];
-    $country = $params['country'];
-    $phonenumber = $params['fullphonenumber'];
-    $email = $params['email'];
-    $contactID = 'WHMCS' . $params['domainid'] . rand(1000, 9999);
-    if( $RegistrantOrgName )
-    {
-        $RegistrantOrgName = "<contact:org>" . $RegistrantOrgName . "</contact:org>";
-    }
-    $xml = "  <command>\n\t     <create>\n\t     <contact:create\n\t\t     xmlns:contact=\"urn:ietf:params:xml:ns:contact-1.0\"\n\t\t     xsi:schemaLocation=\"urn:ietf:params:xml:ns:contact-1.0\n\t\t     contact-1.0.xsd\">\n\t\t\t     <contact:id>" . $contactID . "</contact:id>\n\t\t\t     <contact:postalInfo type=\"loc\">\n                 <contact:name>" . $RegistrantName . "</contact:name>\n                 " . $RegistrantOrgName . "\n                 <contact:addr>\n\t\t\t\t <contact:street>" . $street . "</contact:street>\n                " . $street2code . "\n\t\t\t\t <contact:city>" . $city . "</contact:city>\n\t\t\t\t <contact:sp>" . $county . "</contact:sp>\n\t\t\t\t <contact:pc>" . $postcode . "</contact:pc>\n\t\t\t\t<contact:cc>" . $country . "</contact:cc>\n\t\t\t\t     </contact:addr>\n\t\t\t     </contact:postalInfo>\n\t\t\t\t     <contact:voice>" . $phonenumber . "</contact:voice>\n\t\t\t\t     <contact:email>" . $email . "</contact:email>\n\t\t\t\t     <contact:authInfo>\n\t\t\t\t <contact:pw>" . substr(sha1(time()), 0, 15) . "</contact:pw>\n\t\t\t\t </contact:authInfo>\n\t\t\t     </contact:create>\n\t\t\t   </create>\n<extension>\n<contact-ext:create\nxmlns:contact-ext=\"http://www.nominet.org.uk/epp/xml/contact-nom-ext-1.0\">\n";
-    if( $TradingName )
-    {
-        $xml .= "<contact-ext:trad-name>" . $TradingName . "</contact-ext:trad-name>\n";
-    }
-    $xml .= "<contact-ext:type>" . $LegalTypeID . "</contact-ext:type>\n";
-    if( isset($CompanyIDNumber) && 0 < strlen($CompanyIDNumber) )
-    {
-        $xml .= "<contact-ext:co-no>" . $CompanyIDNumber . "</contact-ext:co-no>\n";
-    }
-    $xml .= "<contact-ext:opt-out>" . $WhoisOptOut . "</contact-ext:opt-out>\n</contact-ext:create>\n</extension>\n\t\t\t<clTRID>ABC-12345</clTRID>\n\t\t   </command>\n\t\t </epp>\n\t";
-    $success = $nominet->call($xml);
-    if( $success )
-    {
-        if( $nominet->isErrorCode() )
-        {
-            if( $nominet->getResultCode() == 2302 )
-            {
-                $params['contactCreateCount']++;
-                if( 10 < $params['contactCreateCount'] )
-                {
-                    return array( 'error' => "Failed to create contact. Please contact support." );
-                }
-                return nominet_createContact($nominet, $params);
-            }
-            return array( 'error' => $nominet->getErrorDesc() );
-        }
-        $xmldata = $nominet->getResponseArray();
-        return $xmldata['EPP']['RESPONSE']['RESDATA']["CONTACT:CREDATA"]["CONTACT:ID"];
-    }
-    return array( 'error' => $nominet->getLastError() );
-}
-function nominet_createHost($nominet, $ns = array(  ))
-{
-    foreach( $ns as $server )
-    {
-        $xml = "  <command>\n\t        <create>\n\t\t  <host:create xmlns:host=\"urn:ietf:params:xml:ns:host-1.0\"\n\t\t  xsi:schemaLocation=\"urn:ietf:params:xml:ns:host-1.0\n\t\t  host-1.0.xsd\">\n\t\t  ";
-        $xml .= "<host:name>" . $server . "</host:name>\n\t\t  </host:create>\n\t\t</create>\n              <clTRID>ABC-12345</clTRID>\n\t    </command>\n\t  </epp>\n\t  ";
-        $result = $nominet->call($xml);
-    }
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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
+pC+otJK8tPQiDY0X7m==

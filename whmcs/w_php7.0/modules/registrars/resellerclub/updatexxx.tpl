@@ -1,4 +1,8 @@
-{include file="$template/pageheader.tpl" title=$LANG.xxxmembershipidupdate}
+{if file_exists("$template/includes/pageheader.tpl")}
+    {include file="$template/includes/pageheader.tpl" title=$LANG.xxxmembershipidupdate}
+{elseif file_exists("$template/pageheader.tpl")}
+    {include file="$template/pageheader.tpl" title=$LANG.xxxmembershipidupdate}
+{/if}
 {if $success}<div class="alert-message success">
     <p>{$LANG.changessavedsuccessfully}</p>
 </div>{/if}
@@ -10,9 +14,9 @@
     <fieldset class="onecol">
 
         <div class="clearfix">
-            <label for="xxxmemberid">{$LANG.xxxmemberid}</label>
+            <label for="membershipid">{$LANG.xxxmemberid}</label>
             <div class="input">
-                <input type="text" name="membershipid" id="membershipid" value = "{$membershipid}" />
+                <input type="text" name="membershipid" id="membershipid" value="{$membershipid}" />
             </div>
         </div>
         <input type="hidden" name="id" value="{$domainid}" />

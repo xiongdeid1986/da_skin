@@ -46,7 +46,7 @@ function email_RegisterDomain($params) {
 }
 
 function email_TransferDomain($params) {
-    global $CONFIG;
+    global $CONFIG; 
     $command = "Transfer Domain";
     $message = "Domain: ".$params["sld"].".".$params["tld"]."<br>Registration Period: ".$params["regperiod"]."<br>Transfer Secret: ".$params["transfersecret"]."<br>RegistrantFirstName: ".$params["firstname"]."<br>RegistrantLastName: ".$params["lastname"]."<br>RegistrantOrganizationName: ".$params["companyname"]."<br>RegistrantAddress1: ".$params["address1"]."<br>RegistrantAddress2: ".$params["address2"]."<br>RegistrantCity: ".$params["city"]."<br>RegistrantStateProvince: ".$params["state"]."<br>RegistrantCountry: ".$params["country"]."<br>RegistrantPostalCode: ".$params["postcode"]."<br>RegistrantPhone: ".$params["phonenumber"]."<br>RegistrantEmailAddress: ".$params["email"]."";
     $headers = "MIME-Version: 1.0\r\n";

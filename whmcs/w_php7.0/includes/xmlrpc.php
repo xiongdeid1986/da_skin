@@ -35,16 +35,6 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 
-	if(!function_exists('xml_parser_create'))
-	{
-		// For PHP 4 onward, XML functionality is always compiled-in on windows:
-		// no more need to dl-open it. It might have been compiled out on *nix...
-		if(strtoupper(substr(PHP_OS, 0, 3) != 'WIN'))
-		{
-			dl('xml.so');
-		}
-	}
-
 	// Try to be backward compat with php < 4.2 (are we not being nice ?)
 	$phpversion = phpversion();
 	if($phpversion[0] == '4' && $phpversion[2] < 2)
@@ -2316,7 +2306,7 @@ xmlrpc_encode_entitites($this->errstr, $GLOBALS['xmlrpc_internalencoding'], $cha
 					}
 				}
 				// be tolerant to line endings, and extra empty lines
-				$ar = split("\r?\n", trim(substr($data, 0, $pos)));
+				$ar = preg_split("/\r?\n/", trim(substr($data, 0, $pos)));
 				while(list(,$line) = @each($ar))
 				{
 					// take care of multi-line headers and cookies

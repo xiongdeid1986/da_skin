@@ -19,7 +19,7 @@ $reportdata["tableheadings"][] = "Average Rating";
 $adminnames = $ratingstats = array();
 
 $result = select_query("tblticketfeedback","(SELECT CONCAT(firstname,' ',lastname) FROM tbladmins WHERE tbladmins.id=tblticketfeedback.adminid) AS adminname,adminid,rating,COUNT(*)","adminid>0 AND datetime>='".db_make_safe_human_date($fromdate)."' AND datetime<='".db_make_safe_human_date($todate)." 23:59:59' GROUP BY `rating`, `adminid`","adminname","ASC");
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $adminname = $data[0];
     $adminid = $data[1];
     $rating = $data[2];

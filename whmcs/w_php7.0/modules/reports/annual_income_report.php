@@ -20,7 +20,7 @@ $reportdata['tableheadings'] = array(
 $reportvalues = array();
 $query = "SELECT date_format(date,'%m'), date_format(date,'%Y'), SUM(amountin/rate), SUM(fees/rate), SUM(amountout/rate) FROM tblaccounts WHERE date>='" . ($currentyear-2) . "-01-01' GROUP BY date_format(date,'%M %Y') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
 
     $month = (int)$data[0];
     $year = (int)$data[1];
@@ -71,15 +71,15 @@ for ($i = 1; $i <= 12; $i++) {
             ),
             array(
                 'v'=>$reportvalues[$currentyear-2][$i][3],
-                'f'=>formatCurrency($reportvalues[$currentyear-2][$i][3]),
+                'f'=>formatCurrency($reportvalues[$currentyear-2][$i][3])->toFull(),
             ),
             array(
                 'v'=>$reportvalues[$currentyear-1][$i][3],
-                'f'=>formatCurrency($reportvalues[$currentyear-1][$i][3]),
+                'f'=>formatCurrency($reportvalues[$currentyear-1][$i][3])->toFull(),
             ),
             array(
                 'v'=>$reportvalues[$currentyear][$i][3],
-                'f'=>formatCurrency($reportvalues[$currentyear][$i][3]),
+                'f'=>formatCurrency($reportvalues[$currentyear][$i][3])->toFull(),
             ),
         ),
     );

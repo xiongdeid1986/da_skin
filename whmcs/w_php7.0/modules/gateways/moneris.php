@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,661 +32,389 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-if( !defined('WHMCS') )
-{
-    exit( "This file cannot be accessed directly" );
-}
-
-class mpgGlobals
-{
-    public $Globals = array( 'MONERIS_PROTOCOL' => 'https', 'MONERIS_HOST' => "esqa.moneris.com", 'MONERIS_PORT' => '443', 'MONERIS_FILE' => '/gateway2/servlet/MpgRequest', 'API_VERSION' => "MpgApi Version 2.03(php)", 'CLIENT_TIMEOUT' => '60' );
-    public function mpgGlobals($test_mode = false)
-    {
-        if( !$test_mode )
-        {
-            $this->Globals['MONERIS_HOST'] = "www3.moneris.com";
-        }
-    }
-    public function getGlobals()
-    {
-        return $this->Globals;
-    }
-}
-
-class mpgHttpsPost
-{
-    public $api_token = NULL;
-    public $store_id = NULL;
-    public $mpgRequest = NULL;
-    public $mpgResponse = NULL;
-    public function mpgHttpsPost($store_id, $api_token, $mpgRequestOBJ, $test_mode = false)
-    {
-        $this->store_id = $store_id;
-        $this->api_token = $api_token;
-        $this->mpgRequest = $mpgRequestOBJ;
-        $dataToSend = $this->toXML();
-        $g = new mpgGlobals($test_mode);
-        $gArray = $g->getGlobals();
-        $url = $gArray['MONERIS_PROTOCOL'] . "://" . $gArray['MONERIS_HOST'] . ":" . $gArray['MONERIS_PORT'] . $gArray['MONERIS_FILE'];
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToSend);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $gArray['CLIENT_TIMEOUT']);
-        curl_setopt($ch, CURLOPT_USERAGENT, $gArray['API_VERSION']);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $response = curl_exec($ch);
-        curl_close($ch);
-        if( !$response )
-        {
-            $response = "<?xml version=\"1.0\"?><response><receipt>" . "<ReceiptId>Global Error Receipt</ReceiptId>" . "<ReferenceNum>null</ReferenceNum><ResponseCode>null</ResponseCode>" . "<ISO>null</ISO> <AuthCode>null</AuthCode><TransTime>null</TransTime>" . "<TransDate>null</TransDate><TransType>null</TransType><Complete>false</Complete>" . "<Message>null</Message><TransAmount>null</TransAmount>" . "<CardType>null</CardType>" . "<TransID>null</TransID><TimedOut>null</TimedOut>" . "</receipt></response>";
-        }
-        $this->mpgResponse = new mpgResponse($response);
-    }
-    public function getMpgResponse()
-    {
-        return $this->mpgResponse;
-    }
-    public function toXML()
-    {
-        $req = $this->mpgRequest;
-        $reqXMLString = $req->toXML();
-        $xmlString = '';
-        $xmlString .= "<?xml version=\"1.0\"?>" . "<request>" . "<store_id>" . $this->store_id . "</store_id>" . "<api_token>" . $this->api_token . "</api_token>" . $reqXMLString . "</request>";
-        return $xmlString;
-    }
-}
-
-class mpgResponse
-{
-    public $responseData = NULL;
-    public $p = NULL;
-    public $currentTag = NULL;
-    public $purchaseHash = array(  );
-    public $refundHash = NULL;
-    public $correctionHash = array(  );
-    public $isBatchTotals = NULL;
-    public $term_id = NULL;
-    public $receiptHash = array(  );
-    public $ecrHash = array(  );
-    public $CardType = NULL;
-    public $currentTxnType = NULL;
-    public $ecrs = array(  );
-    public $cards = array(  );
-    public $cardHash = array(  );
-    public $ACSUrl = NULL;
-    public function mpgResponse($xmlString)
-    {
-        $this->p = xml_parser_create();
-        xml_parser_set_option($this->p, XML_OPTION_CASE_FOLDING, 0);
-        xml_parser_set_option($this->p, XML_OPTION_TARGET_ENCODING, 'UTF-8');
-        xml_set_object($this->p, $this);
-        xml_set_element_handler($this->p, 'startHandler', 'endHandler');
-        xml_set_character_data_handler($this->p, 'characterHandler');
-        xml_parse($this->p, $xmlString);
-        xml_parser_free($this->p);
-    }
-    public function getMpgResponseData()
-    {
-        return $this->responseData;
-    }
-    public function getAvsResultCode()
-    {
-        return $this->responseData['AvsResultCode'];
-    }
-    public function getCvdResultCode()
-    {
-        return $this->responseData['CvdResultCode'];
-    }
-    public function getRecurSuccess()
-    {
-        return $this->responseData['RecurSuccess'];
-    }
-    public function getCardType()
-    {
-        return $this->responseData['CardType'];
-    }
-    public function getTransAmount()
-    {
-        return $this->responseData['TransAmount'];
-    }
-    public function getTxnNumber()
-    {
-        return $this->responseData['TransID'];
-    }
-    public function getReceiptId()
-    {
-        return $this->responseData['ReceiptId'];
-    }
-    public function getTransType()
-    {
-        return $this->responseData['TransType'];
-    }
-    public function getReferenceNum()
-    {
-        return $this->responseData['ReferenceNum'];
-    }
-    public function getResponseCode()
-    {
-        return $this->responseData['ResponseCode'];
-    }
-    public function getISO()
-    {
-        return $this->responseData['ISO'];
-    }
-    public function getBankTotals()
-    {
-        return $this->responseData['BankTotals'];
-    }
-    public function getMessage()
-    {
-        return $this->responseData['Message'];
-    }
-    public function getAuthCode()
-    {
-        return $this->responseData['AuthCode'];
-    }
-    public function getComplete()
-    {
-        return $this->responseData['Complete'];
-    }
-    public function getTransDate()
-    {
-        return $this->responseData['TransDate'];
-    }
-    public function getTransTime()
-    {
-        return $this->responseData['TransTime'];
-    }
-    public function getTicket()
-    {
-        return $this->responseData['Ticket'];
-    }
-    public function getTimedOut()
-    {
-        return $this->responseData['TimedOut'];
-    }
-    public function getTerminalStatus($ecr_no)
-    {
-        return $this->ecrHash[$ecr_no];
-    }
-    public function getPurchaseAmount($ecr_no, $card_type)
-    {
-        return $this->purchaseHash[$ecr_no][$card_type]['Amount'] == '' ? 0 : $this->purchaseHash[$ecr_no][$card_type]['Amount'];
-    }
-    public function getPurchaseCount($ecr_no, $card_type)
-    {
-        return $this->purchaseHash[$ecr_no][$card_type]['Count'] == '' ? 0 : $this->purchaseHash[$ecr_no][$card_type]['Count'];
-    }
-    public function getRefundAmount($ecr_no, $card_type)
-    {
-        return $this->refundHash[$ecr_no][$card_type]['Amount'] == '' ? 0 : $this->refundHash[$ecr_no][$card_type]['Amount'];
-    }
-    public function getRefundCount($ecr_no, $card_type)
-    {
-        return $this->refundHash[$ecr_no][$card_type]['Count'] == '' ? 0 : $this->refundHash[$ecr_no][$card_type]['Count'];
-    }
-    public function getCorrectionAmount($ecr_no, $card_type)
-    {
-        return $this->correctionHash[$ecr_no][$card_type]['Amount'] == '' ? 0 : $this->correctionHash[$ecr_no][$card_type]['Amount'];
-    }
-    public function getCorrectionCount($ecr_no, $card_type)
-    {
-        return $this->correctionHash[$ecr_no][$card_type]['Count'] == '' ? 0 : $this->correctionHash[$ecr_no][$card_type]['Count'];
-    }
-    public function getTerminalIDs()
-    {
-        return $this->ecrs;
-    }
-    public function getCreditCardsAll()
-    {
-        return array_keys($this->cards);
-    }
-    public function getCreditCards($ecr_no)
-    {
-        return $this->cardHash[$ecr_no];
-    }
-    public function characterHandler($parser, $data)
-    {
-        if( $this->isBatchTotals )
-        {
-            switch( $this->currentTag )
-            {
-                case 'term_id':
-                    $this->term_id = $data;
-                    array_push($this->ecrs, $this->term_id);
-                    $this->cardHash[$data] = array(  );
-                    break;
-                case 'closed':
-                    $ecrHash = $this->ecrHash;
-                    $ecrHash[$this->term_id] = $data;
-                    $this->ecrHash = $ecrHash;
-                    break;
-                case 'CardType':
-                    $this->CardType = $data;
-                    $this->cards[$data] = $data;
-                    array_push($this->cardHash[$this->term_id], $data);
-                    break;
-                case 'Amount':
-                    if( $this->currentTxnType == 'Purchase' )
-                    {
-                        $this->purchaseHash[$this->term_id][$this->CardType]['Amount'] = $data;
-                    }
-                    else
-                    {
-                        if( $this->currentTxnType == 'Refund' )
-                        {
-                            $this->refundHash[$this->term_id][$this->CardType]['Amount'] = $data;
-                        }
-                        else
-                        {
-                            if( $this->currentTxnType == 'Correction' )
-                            {
-                                $this->correctionHash[$this->term_id][$this->CardType]['Amount'] = $data;
-                            }
-                        }
-                    }
-                    break;
-                case 'Count':
-                    if( $this->currentTxnType == 'Purchase' )
-                    {
-                        $this->purchaseHash[$this->term_id][$this->CardType]['Count'] = $data;
-                    }
-                    else
-                    {
-                        if( $this->currentTxnType == 'Refund' )
-                        {
-                            $this->refundHash[$this->term_id][$this->CardType]['Count'] = $data;
-                        }
-                        else
-                        {
-                            if( $this->currentTxnType == 'Correction' )
-                            {
-                                $this->correctionHash[$this->term_id][$this->CardType]['Count'] = $data;
-                            }
-                        }
-                    }
-            }
-            return NULL;
-            break;
-        }
-        $this->responseData[$this->currentTag] .= $data;
-    }
-    public function startHandler($parser, $name, $attrs)
-    {
-        $this->currentTag = $name;
-        if( $this->currentTag == 'BankTotals' )
-        {
-            $this->isBatchTotals = 1;
-        }
-        else
-        {
-            if( $this->currentTag == 'Purchase' )
-            {
-                $this->purchaseHash[$this->term_id][$this->CardType] = array(  );
-                $this->currentTxnType = 'Purchase';
-            }
-            else
-            {
-                if( $this->currentTag == 'Refund' )
-                {
-                    $this->refundHash[$this->term_id][$this->CardType] = array(  );
-                    $this->currentTxnType = 'Refund';
-                }
-                else
-                {
-                    if( $this->currentTag == 'Correction' )
-                    {
-                        $this->correctionHash[$this->term_id][$this->CardType] = array(  );
-                        $this->currentTxnType = 'Correction';
-                    }
-                }
-            }
-        }
-    }
-    public function endHandler($parser, $name)
-    {
-        $this->currentTag = $name;
-        if( $name == 'BankTotals' )
-        {
-            $this->isBatchTotals = 0;
-        }
-        $this->currentTag = '/dev/null';
-    }
-}
-
-class mpgRequest
-{
-    public $txnTypes = array( 'purchase' => array( 'order_id', 'cust_id', 'amount', 'pan', 'expdate', 'crypt_type' ), 'refund' => array( 'order_id', 'amount', 'txn_number', 'crypt_type' ), 'idebit_purchase' => array( 'order_id', 'cust_id', 'amount', 'idebit_track2' ), 'idebit_refund' => array( 'order_id', 'amount', 'txn_number' ), 'ind_refund' => array( 'order_id', 'cust_id', 'amount', 'pan', 'expdate', 'crypt_type' ), 'preauth' => array( 'order_id', 'cust_id', 'amount', 'pan', 'expdate', 'crypt_type' ), 'completion' => array( 'order_id', 'comp_amount', 'txn_number', 'crypt_type' ), 'purchasecorrection' => array( 'order_id', 'txn_number', 'crypt_type' ), 'opentotals' => array( 'ecr_number' ), 'batchclose' => array( 'ecr_number' ), 'cavv_purchase' => array( 'order_id', 'cust_id', 'amount', 'pan', 'expdate', 'cavv' ), 'cavv_preauth' => array( 'order_id', 'cust_id', 'amount', 'pan', 'expdate', 'cavv' ) );
-    public $txnArray = NULL;
-    public function mpgRequest($txn)
-    {
-        if( is_array($txn) )
-        {
-            $txn = $txn[0];
-        }
-        $this->txnArray = $txn;
-    }
-    public function toXML()
-    {
-        $tmpTxnArray = $this->txnArray;
-        $txnArrayLen = count($tmpTxnArray);
-        $txnObj = $tmpTxnArray;
-        $txn = $txnObj->getTransaction();
-        $txnType = array_shift($txn);
-        $tmpTxnTypes = $this->txnTypes;
-        $txnTypeArray = $tmpTxnTypes[$txnType];
-        $txnTypeArrayLen = count($txnTypeArray);
-        $txnXMLString = '';
-        for( $i = 0; $i < $txnTypeArrayLen; $i++ )
-        {
-            $txnXMLString .= "<" . $txnTypeArray[$i] . ">" . $txn[$txnTypeArray[$i]] . "</" . $txnTypeArray[$i] . ">";
-        }
-        $txnXMLString = "<" . $txnType . ">" . $txnXMLString;
-        $recur = $txnObj->getRecur();
-        if( $recur != null )
-        {
-            $txnXMLString .= $recur->toXML();
-        }
-        $avsInfo = $txnObj->getAvsInfo();
-        if( $avsInfo != null )
-        {
-            $txnXMLString .= $avsInfo->toXML();
-        }
-        $cvdInfo = $txnObj->getCvdInfo();
-        if( $cvdInfo != null )
-        {
-            $txnXMLString .= $cvdInfo->toXML();
-        }
-        $custInfo = $txnObj->getCustInfo();
-        if( $custInfo != null )
-        {
-            $txnXMLString .= $custInfo->toXML();
-        }
-        $txnXMLString .= "</" . $txnType . ">";
-        $xmlString = '';
-        $xmlString .= $txnXMLString;
-        return $xmlString;
-    }
-}
-
-class mpgCustInfo
-{
-    public $level3template = array( 'cust_info' => array( 'email', 'instructions', 'billing' => array( 'first_name', 'last_name', 'company_name', 'address', 'city', 'province', 'postal_code', 'country', 'phone_number', 'fax', 'tax1', 'tax2', 'tax3', 'shipping_cost' ), 'shipping' => array( 'first_name', 'last_name', 'company_name', 'address', 'city', 'province', 'postal_code', 'country', 'phone_number', 'fax', 'tax1', 'tax2', 'tax3', 'shipping_cost' ), 'item' => array( 'name', 'quantity', 'product_code', 'extended_amount' ) ) );
-    public $level3data = NULL;
-    public $email = NULL;
-    public $instructions = NULL;
-    public function mpgCustInfo($custinfo = 0, $billing = 0, $shipping = 0, $items = 0)
-    {
-        if( $custinfo )
-        {
-            $this->setCustInfo($custinfo);
-        }
-    }
-    public function setCustInfo($custinfo)
-    {
-        $this->level3data['cust_info'] = array( $custinfo );
-    }
-    public function setEmail($email)
-    {
-        $this->email = $email;
-        $this->setCustInfo(array( 'email' => $email, 'instructions' => $this->instructions ));
-    }
-    public function setInstructions($instructions)
-    {
-        $this->instructions = $instructions;
-        $this->setCustinfo(array( 'email' => $this->email, 'instructions' => $instructions ));
-    }
-    public function setShipping($shipping)
-    {
-        $this->level3data['shipping'] = array( $shipping );
-    }
-    public function setBilling($billing)
-    {
-        $this->level3data['billing'] = array( $billing );
-    }
-    public function setItems($items)
-    {
-        if( !isset($this->level3data['item']) )
-        {
-            $this->level3data['item'] = array( $items );
-        }
-        else
-        {
-            $index = count($this->level3data['item']);
-            $this->level3data['item'][$index] = $items;
-        }
-    }
-    public function toXML()
-    {
-        $xmlString = $this->toXML_low($this->level3template, 'cust_info');
-        return $xmlString;
-    }
-    public function toXML_low($template, $txnType)
-    {
-        for( $x = 0; $x < count($this->level3data[$txnType]); $x++ )
-        {
-            if( 0 < $x )
-            {
-                $xmlString .= "</" . $txnType . "><" . $txnType . ">";
-            }
-            $keys = array_keys($template);
-            for( $i = 0; $i < count($keys); $i++ )
-            {
-                $tag = $keys[$i];
-                if( is_array($template[$keys[$i]]) )
-                {
-                    $data = $template[$tag];
-                    if( !count($this->level3data[$tag]) )
-                    {
-                        continue;
-                    }
-                    $beginTag = "<" . $tag . ">";
-                    $endTag = "</" . $tag . ">";
-                    $xmlString .= $beginTag;
-                    if( is_array($data) )
-                    {
-                        $returnString = $this->toXML_low($data, $tag);
-                        $xmlString .= $returnString;
-                    }
-                    $xmlString .= $endTag;
-                }
-                else
-                {
-                    $tag = $template[$keys[$i]];
-                    $beginTag = "<" . $tag . ">";
-                    $endTag = "</" . $tag . ">";
-                    $data = $this->level3data[$txnType][$x][$tag];
-                    $xmlString .= $beginTag . $data . $endTag;
-                }
-            }
-        }
-        return $xmlString;
-    }
-}
-
-class mpgRecur
-{
-    public $params = NULL;
-    public $recurTemplate = array( 'recur_unit', 'start_now', 'start_date', 'num_recurs', 'period', 'recur_amount' );
-    public function mpgRecur($params)
-    {
-        $this->params = $params;
-        if( !$this->params['period'] )
-        {
-            $this->params['period'] = 1;
-        }
-    }
-    public function toXML()
-    {
-        $xmlString = '';
-        foreach( $this->recurTemplate as $tag )
-        {
-            $xmlString .= "<" . $tag . ">" . $this->params[$tag] . "</" . $tag . ">";
-        }
-        return "<recur>" . $xmlString . "</recur>";
-    }
-}
-
-class mpgTransaction
-{
-    public $txn = NULL;
-    public $custInfo = null;
-    public $avsInfo = null;
-    public $cvdInfo = null;
-    public $recur = null;
-    public function mpgTransaction($txn)
-    {
-        $this->txn = $txn;
-    }
-    public function getCustInfo()
-    {
-        return $this->custInfo;
-    }
-    public function setCustInfo($custInfo)
-    {
-        $this->custInfo = $custInfo;
-        array_push($this->txn, $custInfo);
-    }
-    public function getCvdInfo()
-    {
-        return $this->cvdInfo;
-    }
-    public function setCvdInfo($cvdInfo)
-    {
-        $this->cvdInfo = $cvdInfo;
-    }
-    public function getAvsInfo()
-    {
-        return $this->avsInfo;
-    }
-    public function setAvsInfo($avsInfo)
-    {
-        $this->avsInfo = $avsInfo;
-    }
-    public function getRecur()
-    {
-        return $this->recur;
-    }
-    public function setRecur($recur)
-    {
-        $this->recur = $recur;
-    }
-    public function getTransaction()
-    {
-        return $this->txn;
-    }
-}
-
-class mpgAvsInfo
-{
-    public $params = NULL;
-    public $avsTemplate = array( 'avs_street_number', 'avs_street_name', 'avs_zipcode' );
-    public function mpgAvsInfo($params)
-    {
-        $this->params = $params;
-    }
-    public function toXML()
-    {
-        $xmlString = '';
-        foreach( $this->avsTemplate as $tag )
-        {
-            $xmlString .= "<" . $tag . ">" . $this->params[$tag] . "</" . $tag . ">";
-        }
-        return "<avs_info>" . $xmlString . "</avs_info>";
-    }
-}
-
-class mpgCvdInfo
-{
-    public $params = NULL;
-    public $cvdTemplate = array( 'cvd_indicator', 'cvd_value' );
-    public function mpgCvdInfo($params)
-    {
-        $this->params = $params;
-    }
-    public function toXML()
-    {
-        $xmlString = '';
-        foreach( $this->cvdTemplate as $tag )
-        {
-            $xmlString .= "<" . $tag . ">" . $this->params[$tag] . "</" . $tag . ">";
-        }
-        return "<cvd_info>" . $xmlString . "</cvd_info>";
-    }
-}
-function moneris_config()
-{
-    $configarray = array( 'FriendlyName' => array( 'Type' => 'System', 'Value' => 'Moneris' ), 'store_id' => array( 'FriendlyName' => "Store ID", 'Type' => 'text', 'Size' => '12', 'Description' => "A value that identifies your company when your send a transaction" ), 'api_token' => array( 'FriendlyName' => "API token", 'Type' => 'text', 'Size' => '20', 'Description' => "A unique key that when matched with your store_id creates a secure method of authenticating your store_id" ), 'order_id_format' => array( 'FriendlyName' => "Order ID format", 'Type' => 'text', 'Size' => '20', 'Description' => "Enter the format for the Moneris order_id numbers eg. WHMCS-%s. Token will be replaced with actual invoice id." ), 'testmode' => array( 'FriendlyName' => "Test Environment", 'Type' => 'yesno', 'Description' => "When set, the transaction will be a test transaction only" ) );
-    return $configarray;
-}
-function moneris_capture($params)
-{
-    $txnArray = array( 'type' => 'purchase', 'crypt_type' => 7 );
-    $store_id = $params['testmode'] ? 'store1' : $params['store_id'];
-    $api_token = $params['testmode'] ? 'yesguy' : $params['api_token'];
-    $test_mode = $params['testmode'] ? true : false;
-    $txnArray['order_id'] = sprintf($params['order_id_format'], uniqid($params['invoiceid'] . "."));
-    $txnArray['cust_id'] = $params['clientdetails']['email'];
-    $txnArray['amount'] = $params['amount'];
-    $txnArray['pan'] = $params['cardnum'];
-    $txnArray['expdate'] = substr($params['cardexp'], 2, 2) . substr($params['cardexp'], 0, 2);
-    $mpgTxn = new mpgTransaction($txnArray);
-    $mpgRequest = new mpgRequest($mpgTxn);
-    $mpgHttpPost = new mpgHttpsPost($store_id, $api_token, $mpgRequest, $test_mode);
-    $mpgResponse = $mpgHttpPost->getMpgResponse();
-    $m_result = array( 'CardType' => $mpgResponse->getCardType(), 'TransAmount' => $mpgResponse->getTransAmount(), 'TxnNumber' => $mpgResponse->getTxnNumber(), 'ReceiptId' => $mpgResponse->getReceiptId(), 'TransType' => $mpgResponse->getTransType(), 'ReferenceNum' => $mpgResponse->getReferenceNum(), 'ResponseCode' => $mpgResponse->getResponseCode(), 'ISO' => $mpgResponse->getISO(), 'Message' => $mpgResponse->getMessage(), 'AuthCode' => $mpgResponse->getAuthCode(), 'Complete' => $mpgResponse->getComplete(), 'TransDate' => $mpgResponse->getTransDate(), 'TransTime' => $mpgResponse->getTransTime(), 'Ticket' => $mpgResponse->getTicket(), 'TimedOut' => $mpgResponse->getTimedOut() );
-    $responseCode = 'null' == $mpgResponse->getResponseCode() ? null : (int) $mpgResponse->getResponseCode();
-    if( null === $responseCode )
-    {
-        $result = array( 'status' => 'error', 'rawdata' => $m_result );
-    }
-    else
-    {
-        if( 0 <= $responseCode && $responseCode < 50 )
-        {
-            $result = array( 'status' => 'success', 'transid' => $m_result['TxnNumber'], 'rawdata' => $m_result );
-        }
-        else
-        {
-            $result = array( 'status' => 'declined', 'rawdata' => $m_result );
-        }
-    }
-    return $result;
-}
-function moneris_refund($params)
-{
-    $txnArray = array( 'type' => 'ind_refund', 'crypt_type' => 7 );
-    $store_id = $params['testmode'] ? 'store1' : $params['store_id'];
-    $api_token = $params['testmode'] ? 'yesguy' : $params['api_token'];
-    $test_mode = $params['testmode'] ? true : false;
-    $txnArray['order_id'] = sprintf($params['order_id_format'], uniqid($params['invoiceid'] . "."));
-    $txnArray['cust_id'] = $params['clientdetails']['email'];
-    $txnArray['amount'] = $params['amount'];
-    $txnArray['pan'] = $params['cardnum'];
-    $txnArray['expdate'] = substr($params['cardexp'], 2, 2) . substr($params['cardexp'], 0, 2);
-    $mpgTxn = new mpgTransaction($txnArray);
-    $mpgRequest = new mpgRequest($mpgTxn);
-    $mpgHttpPost = new mpgHttpsPost($store_id, $api_token, $mpgRequest, $test_mode);
-    $mpgResponse = $mpgHttpPost->getMpgResponse();
-    $m_result = array( 'CardType' => $mpgResponse->getCardType(), 'TransAmount' => $mpgResponse->getTransAmount(), 'TxnNumber' => $mpgResponse->getTxnNumber(), 'ReceiptId' => $mpgResponse->getReceiptId(), 'TransType' => $mpgResponse->getTransType(), 'ReferenceNum' => $mpgResponse->getReferenceNum(), 'ResponseCode' => $mpgResponse->getResponseCode(), 'ISO' => $mpgResponse->getISO(), 'Message' => $mpgResponse->getMessage(), 'AuthCode' => $mpgResponse->getAuthCode(), 'Complete' => $mpgResponse->getComplete(), 'TransDate' => $mpgResponse->getTransDate(), 'TransTime' => $mpgResponse->getTransTime(), 'Ticket' => $mpgResponse->getTicket(), 'TimedOut' => $mpgResponse->getTimedOut() );
-    $responseCode = 'null' == $mpgResponse->getResponseCode() ? null : intval($mpgResponse->getResponseCode());
-    if( null === $responseCode )
-    {
-        $result = array( 'status' => 'error', 'rawdata' => $m_result );
-    }
-    else
-    {
-        if( 0 <= $responseCode && $responseCode < 50 )
-        {
-            $result = array( 'status' => 'success', 'transid' => $m_result['TxnNumber'], 'rawdata' => $m_result );
-        }
-        else
-        {
-            $result = array( 'status' => 'declined', 'rawdata' => $m_result );
-        }
-    }
-    return $result;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

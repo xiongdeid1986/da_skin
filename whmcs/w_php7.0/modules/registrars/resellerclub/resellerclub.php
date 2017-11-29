@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,2636 +32,1405 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-/**
- * Provide some module information including the display name and API Version to
- * determine the method of decoding the input values.
- * @return array
- */
-function resellerclub_MetaData()
-{
-    return array( 'DisplayName' => 'ResellerClub', 'APIVersion' => "1.1" );
-}
-function resellerclub_GetConfigArray()
-{
-    $configarray = array( 'Description' => array( 'Type' => 'System', 'Value' => "Don't have a ResellerClub Account yet? Get one here: <a href=\"http://nullrefer.com/?http://go.whmcs.com/86/resellerclub\" target=\"_blank\">www.whmcs.com/partners/resellerclub</a>" ), 'ResellerID' => array( 'Type' => 'text', 'Size' => '20', 'Description' => "You can get this from the LogicBoxes Control Panel in Settings > Personal Information > Primary Profile" ), 'APIKey' => array( 'Type' => 'password', 'Size' => '20', 'Description' => "Your API Key. You can get this from the LogicBoxes Control Panel in Settings -> API" ), 'TestMode' => array( 'Type' => 'yesno' ) );
-    return $configarray;
-}
-function resellerclub_GetNameservers($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'NsDetails';
-    $result = resellerclub_SendCommand('details', 'domains', $postfields, $params, 'GET');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $x = 1;
-    for( $x = 1; $x <= 5; $x++ )
-    {
-        $values['ns' . $x] = $result['ns' . $x];
-    }
-    $values['error'] = $error;
-    return $values;
-}
-function resellerclub_SaveNameservers($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'NsDetails';
-    $nameserver1 = $params['ns1'];
-    $nameserver2 = $params['ns2'];
-    $nameserver3 = $params['ns3'];
-    $nameserver4 = $params['ns4'];
-    $nameserver5 = $params['ns5'];
-    $nslist = $nameserver1 . "&ns=" . $nameserver2;
-    if( $nameserver3 )
-    {
-        $nslist .= "&ns=" . $nameserver3;
-    }
-    if( $nameserver4 )
-    {
-        $nslist .= "&ns=" . $nameserver4;
-    }
-    if( $nameserver5 )
-    {
-        $nslist .= "&ns=" . $nameserver5;
-    }
-    $postfields['ns'] = $nslist;
-    $result = resellerclub_SendCommand('modify-ns', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    return $values;
-}
-function resellerclub_GetRegistrarLock($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $lockstatus = 'unlocked';
-    $result = resellerclub_SendCommand('locks', 'domains', $postfields, $params, 'GET');
-    if( $result['transferlock'] == '1' )
-    {
-        $lockstatus = 'locked';
-    }
-    return $lockstatus;
-}
-function resellerclub_SaveRegistrarLock($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    if( $params['lockenabled'] == 'locked' )
-    {
-        $result = resellerclub_SendCommand('enable-theft-protection', 'domains', $postfields, $params, 'POST');
-    }
-    else
-    {
-        $result = resellerclub_SendCommand('disable-theft-protection', 'domains', $postfields, $params, 'POST');
-    }
-    $values['error'] = $Enom->Values['Err1'];
-    return $values;
-}
-function resellerclub_isCanonIndividual($contacttype, $legalType)
-{
-    $canonindv = false;
-    if( $contacttype == 'CaContact' )
-    {
-        $legal = strtolower($legalType);
-        if( $legal != "canadian citizen" && $legal != "permanent resident of canada" && $legal != "aboriginal peoples" && $legal != "legal representative of a canadian citizen" )
-        {
-            $canonindv = true;
-        }
-    }
-    return $canonindv;
-}
-function resellerclub_RegisterDomain($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    global $CONFIG;
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['username'] = resellerclub_getClientEmail($params['userid']);
-    $result = resellerclub_SendCommand('details', 'customers', $postfields, $params, 'GET');
-    unset($postfields);
-    if( strtoupper($result['response']['status']) == 'ERROR' )
-    {
-        if( !$result['response']['message'] )
-        {
-            $result['response']['message'] = $result['response']['error'];
-        }
-        return array( 'error' => $result['response']['message'] );
-    }
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        $customerid = resellerclub_addCustomer($params);
-    }
-    else
-    {
-        $customerid = $result['customerid'];
-    }
-    if( !$customerid )
-    {
-        return array( 'error' => "Error obtaining customer id" );
-    }
-    if( is_array($customerid) )
-    {
-        return $customerid;
-    }
-    $postfields['name'] = $params['firstname'] . " " . $params['lastname'];
-    $contacttype = resellerclub_ContactType($params);
-    $canonindv = resellerclub_iscanonindividual($contacttype, $params['additionalfields']["Legal Type"]);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['customer-id'] = $customerid;
-    $postfields['no-of-records'] = '10';
-    $postfields['page-no'] = '1';
-    $postfields['status'] = 'Active';
-    $postfields['email'] = $params['email'];
-    $postfields['type'] = $contacttype;
-    $result = resellerclub_SendCommand('search', 'contacts', $postfields, $params, 'GET');
-    unset($postfields);
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    if( strtoupper($result['status']) == 'ERROR' || $result['recsonpage'] == '0' || in_array($params['domainObj']->getLastTLDSegment(), array( 'es', 'ca', 'pro' )) )
-    {
-        $contactid = resellerclub_addContact($params, $customerid, $contacttype, $canonindv);
-    }
-    else
-    {
-        foreach( $result['result'] as $entry => $value )
-        {
-            $contactid = $value["contact.contactid"];
-            if( $contactid )
-            {
-                break;
-            }
-        }
-    }
-    if( !$contactid )
-    {
-        return array( 'error' => "Error obtaining contact id" );
-    }
-    if( is_array($contactid) && $contactid['error'] )
-    {
-        return $contactid;
-    }
-    if( is_array($contactid) )
-    {
-        $additionalid = $contactid['additionalid'];
-        $contactid = $contactid['contactid'];
-    }
-    $contactfields = resellerclub_ContactTLDSpecificFields($params);
-    if( count($contactfields) && $contactfields['product-key'] )
-    {
-        $postfields['auth-userid'] = $params['ResellerID'];
-        $postfields['api-key'] = $params['APIKey'];
-        $postfields['customer-id'] = $customerid;
-        $postfields['contact-id'] = $contactid;
-        $postfields = array_merge($postfields, $contactfields);
-        $result = resellerclub_SendCommand('set-details', 'contacts', $postfields, $params, 'POST');
-    }
-    unset($postfields);
-    if( $params['domainObj']->getLastTLDSegment() == 'coop' )
-    {
-        $sponsorid = resellerclub_addCOOPSponsor($params);
-        if( !$sponsorid )
-        {
-            return array( 'error' => "Unable to add/obtain Sponsor ID" );
-        }
-    }
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['customer-id'] = $customerid;
-    $idnlang = explode("|", $params['additionalfields']["IDN Language"]);
-    $idnlang = $idnlang[0];
-    if( $idnlang && $idnlang != 'NOIDN' )
-    {
-        $postfields['attr-name1'] = 'idnLanguageCode';
-        $postfields['attr-value1'] = $idnlang;
-    }
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $nameserver1 = $params['ns1'];
-    $nameserver2 = $params['ns2'];
-    $nameserver3 = $params['ns3'];
-    $nameserver4 = $params['ns4'];
-    $nameserver5 = $params['ns5'];
-    $nslist = $nameserver1 . "&ns=" . $nameserver2;
-    if( $nameserver3 )
-    {
-        $nslist .= "&ns=" . $nameserver3;
-    }
-    if( $nameserver4 )
-    {
-        $nslist .= "&ns=" . $nameserver4;
-    }
-    if( $nameserver5 )
-    {
-        $nslist .= "&ns=" . $nameserver5;
-    }
-    $postfields['ns'] = $nslist;
-    $postfields['years'] = $params['regperiod'];
-    $postfields['reg-contact-id'] = $contactid;
-    $postfields['admin-contact-id'] = $additionalid ? $additionalid : $contactid;
-    $postfields['tech-contact-id'] = $additionalid ? $additionalid : $contactid;
-    $postfields['billing-contact-id'] = $additionalid ? $additionalid : $contactid;
-    $postfields['invoice-option'] = 'NoInvoice';
-    $postfields['purchase-privacy'] = $params['idprotection'] ? 'true' : 'false';
-    $postfields = array_merge($postfields, resellerclub_DomainTLDSpecificFields($params, $contactid));
-    if( $params['domainObj']->getLastTLDSegment() == 'au' && is_numeric($postfields['attr-value2']) && !resellerclub_validateABN($postfields['attr-value2']) )
-    {
-        return array( 'error' => "Invalid ABN" );
-    }
-    $result = resellerclub_SendCommand('register', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    if( $result['actionstatus'] == 'Failed' )
-    {
-        return array( 'error' => $result['actionstatusdesc'] );
-    }
-    if( $params['domainObj']->getLastTLDSegment() == 'xxx' && $params['additionalfields']["Membership Token/ID"] )
-    {
-        unset($postfields);
-        $postfields['auth-userid'] = $params['ResellerID'];
-        $postfields['api-key'] = $params['APIKey'];
-        $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-        $orderid = resellerclub_getOrderID($postfields, $params);
-        unset($postfields);
-        if( is_numeric($orderid) )
-        {
-            $postfields['auth-userid'] = $params['ResellerID'];
-            $postfields['api-key'] = $params['APIKey'];
-            $postfields['order-id'] = $orderid;
-            $postfields['association-id'] = $params['additionalfields']["Membership Token/ID"];
-            $result = resellerclub_SendCommand('association-details', 'domains/dotxxx', $postfields, $params, 'POST');
-        }
-    }
-    $values = array( 'success' => 'success' );
-    return $values;
-}
-function resellerclub_TransferDomain($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    global $CONFIG;
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $transfersecret = $params['transfersecret'];
-    $postfields['username'] = resellerclub_getClientEmail($params['userid']);
-    $result = resellerclub_SendCommand('details', 'customers', $postfields, $params, 'GET');
-    unset($postfields);
-    if( strtoupper($result['response']['status']) == 'ERROR' )
-    {
-    }
-    else
-    {
-        if( strtoupper($result['status']) == 'ERROR' )
-        {
-            $customerid = resellerclub_addCustomer($params);
-        }
-        else
-        {
-            $customerid = $result['customerid'];
-        }
-    }
-    if( !$customerid )
-    {
-        return array( 'error' => "Error obtaining customer id" );
-    }
-    if( is_array($customerid) )
-    {
-        return $customerid;
-    }
-    $contacttype = resellerclub_ContactType($params);
-    $canonindv = resellerclub_iscanonindividual($contacttype, $params['additionalfields']["Legal Type"]);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['customer-id'] = $customerid;
-    $postfields['no-of-records'] = '10';
-    $postfields['page-no'] = '1';
-    $postfields['status'] = 'Active';
-    $postfields['email'] = $params['email'];
-    $postfields['type'] = $contacttype;
-    $result = resellerclub_SendCommand('search', 'contacts', $postfields, $params, 'GET');
-    unset($postfields);
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    if( strtoupper($result['status']) == 'ERROR' || $result['recsonpage'] == '0' || in_array($params['domainObj']->getLastTLDSegment(), array( 'es', 'ca', 'pro' )) )
-    {
-        $contactid = resellerclub_addContact($params, $customerid, $contacttype, $canonindv);
-    }
-    else
-    {
-        foreach( $result['result'] as $entry => $value )
-        {
-            $contactid = $value["contact.contactid"];
-            if( $contactid )
-            {
-                break;
-            }
-        }
-    }
-    if( !$contactid )
-    {
-        return array( 'error' => "Error obtaining contact id" );
-    }
-    if( is_array($contactid) && $contactid['error'] )
-    {
-        return $contactid;
-    }
-    if( is_array($contactid) )
-    {
-        $additionalid = $contactid['additionalid'];
-        $contactid = $contactid['contactid'];
-    }
-    $contactfields = resellerclub_ContactTLDSpecificFields($params);
-    if( count($contactfields) )
-    {
-        $postfields['auth-userid'] = $params['ResellerID'];
-        $postfields['api-key'] = $params['APIKey'];
-        $postfields['customer-id'] = $customerid;
-        $postfields['contact-id'] = $contactid;
-        $postfields = array_merge($postfields, $contactfields);
-        $result = resellerclub_SendCommand('set-details', 'contacts', $postfields, $params, 'POST');
-    }
-    unset($postfields);
-    if( $params['domainObj']->getLastTLDSegment() == 'coop' )
-    {
-        $sponsorid = resellerclub_addCOOPSponsor($params);
-        if( !$sponsorid )
-        {
-            return array( 'error' => "Unable to add/obtain Sponsor ID" );
-        }
-    }
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['customer-id'] = $customerid;
-    $idnlang = explode("|", $params['additionalfields']["IDN Language"]);
-    $idnlang = $idnlang[0];
-    if( $idnlang && $idnlang != 'NOIDN' )
-    {
-        $postfields['attr-name1'] = 'idnLanguageCode';
-        $postfields['attr-value1'] = $idnlang;
-    }
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $postfields['years'] = $params['regperiod'];
-    if( $transfersecret )
-    {
-        $postfields['auth-code'] = $transfersecret;
-    }
-    $postfields['reg-contact-id'] = $contactid;
-    $postfields['admin-contact-id'] = $additionalid ? $additionalid : $contactid;
-    $postfields['tech-contact-id'] = $additionalid ? $additionalid : $contactid;
-    $postfields['billing-contact-id'] = $additionalid ? $additionalid : $contactid;
-    $postfields['invoice-option'] = 'NoInvoice';
-    $postfields['purchase-privacy'] = $params['idprotection'] ? 'true' : 'false';
-    if( $params['domainObj']->getLastTLDSegment() != 'au' )
-    {
-        $postfields = array_merge($postfields, resellerclub_DomainTLDSpecificFields($params, $contactid));
-    }
-    $result = resellerclub_SendCommand('transfer', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    if( $result['actionstatus'] == 'Failed' )
-    {
-        return array( 'error' => $result['actionstatusdesc'] );
-    }
-    $values = array( 'success' => 'success' );
-    return $values;
-}
-function resellerclub_RenewDomain($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'OrderDetails';
-    $result = resellerclub_SendCommand('details', 'domains', $postfields, $params, 'GET');
-    $expiry = $result['endtime'];
-    if( !$expiry )
-    {
-        return array( 'error' => "Unable to obtain Domain Expiry Date from Registrar" );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $regperiod = $params['regperiod'];
-    $postfields['order-id'] = $orderid;
-    $postfields['years'] = $regperiod;
-    $postfields['exp-date'] = $expiry;
-    $postfields['purchase-privacy'] = $params['idprotection'] ? 'true' : 'false';
-    $postfields['invoice-option'] = 'NoInvoice';
-    $result = resellerclub_SendCommand('renew', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    if( $result['error'] )
-    {
-        return array( 'error' => "Renewal order placed. " . substr($result['error'], 0, 0 - 1) . " if / when sufficient funds are available in the reseller account." );
-    }
-    if( $result['actionstatus'] == 'Failed' )
-    {
-        return array( 'error' => $result['actionstatusdesc'] );
-    }
-    $values = array( 'success' => 'success' );
-    return $values;
-}
-function resellerclub_GetContactDetails($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( !$params['ResellerID'] )
-    {
-        return array( 'error' => "Missing Reseller ID. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    if( !$params['APIKey'] )
-    {
-        return array( 'error' => "Missing API Key. Please navigate to Setup > Domain Registrars to configure." );
-    }
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'ContactIds';
-    $result = resellerclub_SendCommand('details', 'domains', $postfields, $params, 'GET');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $contactid = $result['registrantcontactid'];
-    if( !$contactid )
-    {
-        return array( 'error' => "Error obtaining contact id" );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['contact-id'] = $contactid;
-    $result = resellerclub_SendCommand('details', 'contacts', $postfields, $params, 'GET');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $values['Registrant'] = array( "Full Name" => $result['name'], 'Email' => $result['emailaddr'], "Company Name" => $result['company'], "Address 1" => $result['address1'], "Address 2" => $result['address2'], "Address 3" => $result['address3'], 'City' => $result['city'], 'State' => $result['state'], 'Postcode' => $result['zip'], 'Country' => $result['country'], "Phone Number" => "+" . $result['telnocc'] . "." . $result['telno'] );
-    return $values;
-}
-function resellerclub_SaveContactDetails($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'ContactIds';
-    $result = resellerclub_SendCommand('details', 'domains', $postfields, $params, 'GET');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $contactid = $result['registrantcontactid'];
-    if( !$contactid )
-    {
-        return array( 'error' => "Error obtaining contact id" );
-    }
-    $phonenumber = $params['contactdetails']['Registrant']["Phone Number"];
-    $phonenumber = preg_replace("/[^0-9.]/", '', $phonenumber);
-    $phonenumberparts = explode(".", $phonenumber, 2);
-    if( count($phonenumberparts) == 2 )
-    {
-        $phonecc = $phonenumberparts[0];
-        $phonenumber = $phonenumberparts[1];
-    }
-    else
-    {
-        $phonecc = substr($phonenumber, 0, 2);
-        $phonenumber = substr($phonenumber, 2);
-    }
-    unset($postfields);
-    if( !$params['contactdetails']['Registrant']["Company Name"] )
-    {
-        $params['contactdetails']['Registrant']["Company Name"] = 'N/A';
-    }
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['contact-id'] = $contactid;
-    $postfields['name'] = $params['contactdetails']['Registrant']["Full Name"];
-    $postfields['company'] = $params['contactdetails']['Registrant']["Company Name"];
-    $postfields['email'] = $params['contactdetails']['Registrant']['Email'];
-    $postfields['address-line-1'] = $params['contactdetails']['Registrant']["Address 1"];
-    $postfields['address-line-2'] = $params['contactdetails']['Registrant']["Address 2"];
-    $postfields['address-line-3'] = $params['contactdetails']['Registrant']["Address 3"];
-    $postfields['city'] = $params['contactdetails']['Registrant']['City'];
-    $postfields['state'] = $params['contactdetails']['Registrant']['State'];
-    $postfields['zipcode'] = $params['contactdetails']['Registrant']['Postcode'];
-    $postfields['country'] = $params['contactdetails']['Registrant']['Country'];
-    $postfields['phone-cc'] = $phonecc;
-    $postfields['phone'] = $phonenumber;
-    $result = resellerclub_SendCommand('modify', 'contacts', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-}
-function resellerclub_GetEPPCode($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'OrderDetails';
-    $result = resellerclub_SendCommand('details', 'domains', $postfields, $params, 'GET');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $values['eppcode'] = $result['domsecret'];
-    return $values;
-}
-function resellerclub_RegisterNameserver($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['cns'] = $params['nameserver'];
-    $postfields['ip'] = $params['ipaddress'];
-    $result = resellerclub_SendCommand('add-cns', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    return array(  );
-}
-function resellerclub_ModifyNameserver($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['cns'] = $params['nameserver'];
-    $postfields['old-ip'] = $params['currentipaddress'];
-    $postfields['new-ip'] = $params['newipaddress'];
-    $result = resellerclub_SendCommand('modify-cns-ip', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    return array(  );
-}
-function resellerclub_DeleteNameserver($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['cns'] = $params['nameserver'];
-    $postfields['ip'] = gethostbyname($params['nameserver'] . "." . $postfields['domain-name']);
-    $result = resellerclub_SendCommand('delete-cns-ip', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    return array(  );
-}
-function resellerclub_RequestDelete($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('delete', 'domains', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    if( $result['actionstatus'] == 'Failed' )
-    {
-        return array( 'error' => $result['actionstatusdesc'] );
-    }
-    return array(  );
-}
-function resellerclub_GetDNS($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('activate', 'dns', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $pagenumber = 1;
-    $postfields['no-of-records'] = '50';
-    $postfields['page-no'] = $pagenumber;
-    $typelist = array( 'A', 'MX', 'CNAME', 'TXT', 'AAAA' );
-    $hostrecords = array(  );
-    foreach( $typelist as $type )
-    {
-        $postfields['type'] = $type;
-        $result = resellerclub_SendCommand('search-records', 'dns/manage', $postfields, $params, 'GET');
-        if( strtoupper($result['status']) == 'ERROR' )
-        {
-            if( !$result['message'] )
-            {
-                $result['message'] = $result['error'];
-            }
-            return array( 'error' => $result['message'] );
-        }
-        foreach( $result as $entry => $value )
-        {
-            $host = '';
-            $address = '';
-            $recid = '';
-            $recid = $entry;
-            $host = $value['host'];
-            $address = $value['value'];
-            if( $type == 'MX' )
-            {
-                $priority = $value1['priority'];
-            }
-            if( $host && $address )
-            {
-                $hostrecords[] = array( 'hostname' => htmlentities($host), 'type' => $type, 'address' => htmlentities($address), 'priority' => $priority, 'recid' => $recid );
-            }
-        }
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $testmode = $params['TestMode'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('details', 'domainforward', $postfields, $params, 'GET');
-    if( !$result['status'] && $result['forward'] )
-    {
-        $host = '';
-        $address = '';
-        $recid = '';
-        $hostrecords[] = array( 'hostname' => "@", 'type' => 'URL', 'address' => htmlentities($result['forward']) );
-    }
-    return $hostrecords;
-}
-function resellerclub_SaveDNS($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $hostrecords = resellerclub_getdns($params);
-    $newrecords = $params['dnsrecords'];
-    foreach( $newrecords as $num => $newvalues )
-    {
-        $oldvalues = $hostrecords[$num];
-        $oldhostname = $oldvalues['hostname'];
-        $oldtype = $oldvalues['type'];
-        $oldaddress = $oldvalues['address'];
-        $oldpriority = $oldvalues['priority'];
-        $newhostname = $newvalues['hostname'];
-        $newtype = $newvalues['type'];
-        $newaddress = $newvalues['address'];
-        $newpriority = $newvalues['priority'];
-        if( $newpriority == 'N/A' )
-        {
-            $newpriority = '';
-        }
-        if( !$newhostname || !$newaddress )
-        {
-            if( $oldhostname && $oldaddress )
-            {
-                if( $oldtype != 'URL' && $oldtype != 'FRAME' )
-                {
-                    $postfields['host'] = $oldhostname;
-                    $postfields['value'] = $oldaddress;
-                    $result = resellerclub_SendCommand('delete-record', 'dns/manage', $postfields, $params, 'POST');
-                }
-                else
-                {
-                    $orderid = resellerclub_getOrderID($postfields, $params);
-                    $postfields['order-id'] = $orderid;
-                    $postfields['url-masking'] = 'false';
-                    $postfields['sub-domain-forwarding'] = 'false';
-                    $postfields['path-forwarding'] = 'false';
-                    $postfields['forward-to'] = '';
-                    $result = resellerclub_SendCommand('manage', 'domainforward', $postfields, $params, 'POST');
-                }
-            }
-        }
-        else
-        {
-            if( $oldhostname != $newhostname || $oldtype != $newtype || $oldaddress != $newaddress || $type == 'MX' && $oldpriority != $newpriority )
-            {
-                $postfields['host'] = $newhostname;
-                $ltype = strtolower($newtype);
-                if( $ltype == 'a' )
-                {
-                    $ltype = 'ipv4';
-                }
-                if( $ltype == 'aaaa' )
-                {
-                    $ltype = 'ipv6';
-                }
-                if( $ltype == 'mx' )
-                {
-                    $postfields['priority'] = $newpriority;
-                }
-                if( $ltype == 'url' || $ltype == 'frame' )
-                {
-                    $orderid = resellerclub_getOrderID($postfields, $params);
-                    $postfields['order-id'] = $orderid;
-                    $result = resellerclub_SendCommand('activate', 'domainforward', $postfields, $params, 'POST');
-                    $postfields['url-masking'] = 'true';
-                    $postfields['sub-domain-forwarding'] = 'true';
-                    $postfields['path-forwarding'] = 'true';
-                    $postfields['forward-to'] = WHMCS_Input_Sanitize::decode($newaddress);
-                    $result = resellerclub_SendCommand('manage', 'domainforward', $postfields, $params, 'POST');
-                }
-                else
-                {
-                    if( in_array($ltype, array( 'ipv4', 'ipv6', 'cname', 'mx', 'ns', 'txt', 'srv', 'soa' )) )
-                    {
-                        if( !$oldhostname && !$oldaddress )
-                        {
-                            $postfields['value'] = $newaddress;
-                            $result = resellerclub_SendCommand('add-' . $ltype . '-record', 'dns/manage', $postfields, $params, 'POST');
-                        }
-                        else
-                        {
-                            $postfields['current-value'] = WHMCS_Input_Sanitize::decode($oldaddress);
-                            $postfields['new-value'] = WHMCS_Input_Sanitize::decode($newaddress);
-                            $result = resellerclub_SendCommand('update-' . $ltype . '-record', 'dns/manage', $postfields, $params, 'POST');
-                        }
-                    }
-                }
-                $error = false;
-                if( $result['status'] == 'Failed' || $result['status'] == 'ERROR' )
-                {
-                    if( !$result['msg'] )
-                    {
-                        $result['msg'] == $result['message'];
-                    }
-                    $errormsgs[] = $newtype . "|" . $newhostname . "|" . $newaddress . " - " . $result['msg'];
-                }
-            }
-        }
-    }
-    if( count($errormsgs) )
-    {
-        return array( 'error' => implode("<br />", $errormsgs) );
-    }
-    return array(  );
-}
-function resellerclub_GetEmailForwarding($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('is-ownership-verified', 'mail/domain', $postfields, $params, 'GET');
-    if( $result['response']['isOwnershipVerified'] != 'true' )
-    {
-        unset($postfields);
-        $postfields['auth-userid'] = $params['ResellerID'];
-        $postfields['api-key'] = $params['APIKey'];
-        $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-        $postfields['value'] = "@";
-        $postfields['type'] = 'MX';
-        $postfields['host'] = "mx1.mailhostbox.com";
-        $postfields['priority'] = '100';
-        $result = resellerclub_SendCommand('add-mx-record', 'dns/manage', $postfields, $params, 'POST');
-        $postfields['host'] = "mx2.mailhostbox.com";
-        $result = resellerclub_SendCommand('add-mx-record', 'dns/manage', $postfields, $params, 'POST');
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('activate', 'mail', $postfields, $params, 'POST');
-    $postfields['account-types'] = 'forward_only';
-    $result = resellerclub_SendCommand('search', 'mail/users', $postfields, $params, 'GET');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    foreach( $result['response']['users'] as $entry => $value )
-    {
-        $email = explode("@", $value['emailAddress']);
-        $values[$entry]['prefix'] = $email[0];
-        $values[$entry]['forwardto'] = $value['adminForwards'];
-    }
-    return $values;
-}
-function resellerclub_SaveEmailForwarding($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('activate', 'mail', $postfields, $params, 'POST');
-    $postfields['account-types'] = 'forward_only';
-    foreach( $params['prefix'] as $key => $value )
-    {
-        $email = $params['prefix'][$key] . "@" . $params['sld'] . "." . $params['tld'];
-        $postfields['email'] = $email;
-        $forwardto = $params['forwardto'][$key];
-        $result = resellerclub_SendCommand('search', 'mail/users', $postfields, $params, 'GET');
-        if( strtoupper($result['status']) == 'ERROR' )
-        {
-            if( !$result['message'] )
-            {
-                $result['message'] = $result['error'];
-            }
-            return array( 'error' => $result['message'] );
-        }
-        if( $result['response']['message'] == "No Records found" )
-        {
-            unset($postfields);
-            $postfields['auth-userid'] = $params['ResellerID'];
-            $postfields['api-key'] = $params['APIKey'];
-            $postfields['order-id'] = $orderid;
-            $postfields['email'] = $email;
-            $postfields['forwards'] = $forwardto;
-            $result2 = resellerclub_SendCommand('add-forward-only-account', 'mail/user', $postfields, $params, 'POST');
-        }
-        else
-        {
-            foreach( $result['response']['users'] as $entry => $values )
-            {
-                unset($postfields);
-                $postfields['auth-userid'] = $params['ResellerID'];
-                $postfields['api-key'] = $params['APIKey'];
-                $postfields['order-id'] = $orderid;
-                $postfields['email'] = $email;
-                if( !$forwardto )
-                {
-                    $postfields['forwards'] = $values['adminForwards'];
-                    $result2 = resellerclub_SendCommand('delete', 'mail/user', $postfields, $params, 'POST');
-                }
-                else
-                {
-                    $existingforwards = explode(',', $values['adminForwards']);
-                    $addforwards = explode(',', $forwardto);
-                    $forwards = $removeforwards = '';
-                    foreach( $addforwards as $key => $value )
-                    {
-                        if( !in_array($value, $existingforwards) )
-                        {
-                            $forwards = $value . ',';
-                        }
-                    }
-                    if( $forwards )
-                    {
-                        $forwards = substr($forwards, 0, 0 - 1);
-                        $postfields['forwards'] = $forwards;
-                        $result2 = resellerclub_SendCommand('add-admin-forwards', 'mail/user', $postfields, $params, 'POST');
-                    }
-                    foreach( $existingforwards as $key => $value )
-                    {
-                        if( !in_array($value, $addforwards) )
-                        {
-                            $removeforwards = $value . ',';
-                        }
-                    }
-                    if( $removeforwards )
-                    {
-                        $postfields['forwards'] = $removeforwards;
-                        $result2 = resellerclub_SendCommand('delete-admin-forwards', 'mail/user', $postfields, $params, 'POST');
-                    }
-                }
-                if( strtoupper($result2['status']) == 'ERROR' )
-                {
-                    if( !$result2['message'] )
-                    {
-                        $result2['message'] = $result2['error'];
-                    }
-                    return array( 'error' => $result2['message'] );
-                }
-            }
-        }
-    }
-}
-function resellerclub_ReleaseDomain($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $transfertag = $params['transfertag'];
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['new-tag'] = $transfertag;
-    $result = resellerclub_SendCommand('release', 'domains/uk', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    if( $result['actionstatus'] == 'Failed' )
-    {
-        return array( 'error' => $result['actionstatusdesc'] );
-    }
-    update_query('tbldomains', array( 'status' => 'Cancelled' ), array( 'id' => $params['domainid'] ));
-}
-function resellerclub_IDProtectToggle($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    if( $params['protectenable'] )
-    {
-        $postfields = array(  );
-        $postfields['auth-userid'] = $params['ResellerID'];
-        $postfields['api-key'] = $params['APIKey'];
-        $postfields['order-id'] = $orderid;
-        $postfields['options'] = 'OrderDetails';
-        $privacyProtectEndTime = 0;
-        $result = resellerclub_SendCommand('details', 'domains', $postfields, $params, 'GET');
-        if( strtolower($result['status']) == 'success' )
-        {
-            $privacyProtectEndTime = $result['privacyprotectendtime'];
-        }
-        if( 0 < $privacyProtectEndTime )
-        {
-            $postfields['protect-privacy'] = 'true';
-            $postfields['reason'] = "Customer Request";
-            $action = 'modify-privacy-protection';
-            $idprotect = '0';
-        }
-        else
-        {
-            $postfields['invoice-option'] = 'NoInvoice';
-            $action = 'purchase-privacy';
-            $idprotect = '1';
-        }
-    }
-    else
-    {
-        $postfields['protect-privacy'] = 'false';
-        $postfields['reason'] = "Customer Request";
-        $action = 'modify-privacy-protection';
-        $idprotect = '0';
-    }
-    $result = resellerclub_SendCommand($action, 'domains', $postfields, $params, 'POST');
-    if( strtolower($result['status']) == 'error' )
-    {
-        $returnMsg = $result['message'];
-        if( !$returnMsg )
-        {
-            $returnMsg = $result['error'];
-        }
-        if( !$returnMsg )
-        {
-            $returnMsg = "An unknown error occurred";
-        }
-        return array( 'error' => $returnMsg );
-    }
-    update_query('tbldomains', array( 'idprotection' => $idprotect ), array( 'id' => $params['domainid'] ));
-}
-function resellerclub_AdminCustomButtonArray()
-{
-    $buttonarray = array(  );
-    $params = get_query_vals('tbldomains', '', array( 'id' => $_REQUEST['id'] ));
-    if( $params['type'] == 'Transfer' && $params['status'] == "Pending Transfer" )
-    {
-        $buttonarray["Resend Transfer Approval Email"] = 'resendtransferapproval';
-        $buttonarray["Cancel Domain Transfer"] = 'canceldomaintransfer';
-    }
-    return $buttonarray;
-}
-function resellerclub_resendtransferapproval($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = $values = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('resend-rfa', 'domains', $postfields, $params, 'POST');
-    if( $result['status'] == 'true' )
-    {
-        $values['message'] = "Successfully resent the transfer approval email";
-    }
-    else
-    {
-        $values['error'] = $result['message'];
-    }
-    return $values;
-}
-function resellerclub_canceldomaintransfer()
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = $values = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getOrderID($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $result = resellerclub_SendCommand('cancel-transfer', 'domains', $postfields, $params, 'POST');
-    if( $result['status'] == 'Success' )
-    {
-        $values['message'] = "Successfully cancelled the domain transfer";
-    }
-    else
-    {
-        $values['error'] = $result['message'];
-    }
-    return $values;
-}
-function resellerclub_SendCommand($command, $type, $postfields, $params, $method, $nodecode = false)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( $params['TestMode'] )
-    {
-        $url = "https://test.httpapi.com/api/" . $type . '/' . $command . ".json";
-    }
-    else
-    {
-        $url = "https://httpapi.com/api/" . $type . '/' . $command . ".json";
-    }
-    $ch = curl_init();
-    if( $method == 'GET' )
-    {
-        $url .= "?";
-        foreach( $postfields as $field => $data )
-        {
-            $url .= $field . "=" . rawurlencode($data) . "&";
-        }
-        $url = substr($url, 0, 0 - 1);
-        $postfields['url'] = $url;
-    }
-    else
-    {
-        $postfield = '';
-        foreach( $postfields as $field => $data )
-        {
-            if( $field != 'ns' )
-            {
-                $data = rawurlencode($data);
-            }
-            if( $params['domainObj']->getLastTLDSegment() == 'es' && !$data && $field == 'attr-value2' )
-            {
-                $data = 0;
-            }
-            if( $params['domainObj']->getLastTLDSegment() == 'es' && !$data && $field == 'attr-value3' )
-            {
-                $data = rawurlencode($params['additionalfields']["ID Form Number"]);
-            }
-            $postfield .= $field . "=" . $data . "&";
-        }
-        $postfield = substr($postfield, 0, 0 - 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postfield);
-        $postfields['posteddata'] = $postfield;
-    }
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 100);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $data = curl_exec($ch);
-    if( curl_errno($ch) )
-    {
-        $ip = resellerclub_GetIP();
-        $ip2 = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR'];
-        $result['response']['status'] = 'ERROR';
-        $result['response']['message'] = "CURL Error: " . curl_errno($ch) . " - " . curl_error($ch) . " (IP: " . $ip . " & " . $ip2 . ")";
-    }
-    else
-    {
-        if( $nodecode && is_numeric($data) )
-        {
-            $result = $data;
-        }
-        else
-        {
-            $result = json_decode($data, true);
-        }
-    }
-    curl_close($ch);
-    logModuleCall('logicboxes', $type . '/' . $command, $postfields, $data, $result, array( $params['ResellerID'], $params['APIKey'] ));
-    return $result;
-}
-function resellerclub_getOrderID($postfields, $params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $domain = $postfields['domain-name'];
-    if( isset($GLOBALS['logicboxesorderids'][$domain]) )
-    {
-        $result = $GLOBALS['logicboxesorderids'][$domain];
-    }
-    else
-    {
-        $result = resellerclub_sendcommand('orderid', 'domains', $postfields, $params, 'GET', true);
-        $GLOBALS['logicboxesorderids'][$domain] = $result;
-    }
-    if( is_array($result) )
-    {
-        if( strtoupper($result['response']['status']) == 'ERROR' )
-        {
-            return $result['response']['message'];
-        }
-        if( strtoupper($result['status']) == 'ERROR' )
-        {
-            return $result['message'];
-        }
-    }
-    $orderid = $result;
-    if( !$orderid || is_array($orderid) )
-    {
-        return "Unable to obtain Order-ID";
-    }
-    return $orderid;
-}
-function resellerclub_genLBRandomPW()
-{
-    $letters = 'ABCDEFGHIJKLMNPQRSTUVYXYZabcdefghijklmnopqrstuvwxyz';
-    $numbers = '0123456789';
-    $letterscount = strlen($letters) - 1;
-    $numberscount = strlen($numbers) - 1;
-    $password = '';
-    for( $i = 0; $i < 5; $i++ )
-    {
-        $password .= $letters[rand(0, $letterscount)] . $numbers[rand(0, $numberscount)];
-    }
-    return $password;
-}
-function resellerclub_xml2array($contents, $get_attributes = 1, $priority = 'tag')
-{
-    $parser = xml_parser_create('');
-    xml_parser_set_option($parser, XML_OPTION_TARGET_ENCODING, 'UTF-8');
-    xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, 0);
-    xml_parser_set_option($parser, XML_OPTION_SKIP_WHITE, 1);
-    xml_parse_into_struct($parser, trim($contents), $xml_values);
-    xml_parser_free($parser);
-    if( !$xml_values )
-    {
-        return NULL;
-    }
-    $xml_array = array(  );
-    $parents = array(  );
-    $opened_tags = array(  );
-    $arr = array(  );
-    $current =& $xml_array;
-    $repeated_tag_index = array(  );
-    foreach( $xml_values as $data )
-    {
-        unset($attributes);
-        unset($value);
-        extract($data);
-        $result = array(  );
-        $attributes_data = array(  );
-        if( isset($value) )
-        {
-            if( $priority == 'tag' )
-            {
-                $result = $value;
-            }
-            else
-            {
-                $result['value'] = $value;
-            }
-        }
-        if( isset($attributes) && $get_attributes )
-        {
-            foreach( $attributes as $attr => $val )
-            {
-                if( $priority == 'tag' )
-                {
-                    $attributes_data[$attr] = $val;
-                }
-                else
-                {
-                    $result['attr'][$attr] = $val;
-                }
-            }
-        }
-        if( $type == 'open' )
-        {
-            $parent[$level - 1] =& $current;
-            if( !is_array($current) || !in_array($tag, array_keys($current)) )
-            {
-                $current[$tag] = $result;
-                if( $attributes_data )
-                {
-                    $current[$tag . '_attr'] = $attributes_data;
-                }
-                $repeated_tag_index[$tag . '_' . $level] = 1;
-                $current =& $current[$tag];
-            }
-            else
-            {
-                if( isset($current[$tag][0]) )
-                {
-                    $current[$tag][$repeated_tag_index[$tag . '_' . $level]] = $result;
-                    $repeated_tag_index[$tag . '_' . $level]++;
-                }
-                else
-                {
-                    $current[$tag] = array( $current[$tag], $result );
-                    $repeated_tag_index[$tag . '_' . $level] = 2;
-                    if( isset($current[$tag . '_attr']) )
-                    {
-                        $current[$tag]['0_attr'] = $current[$tag . '_attr'];
-                        unset($current[$tag . '_attr']);
-                    }
-                }
-                $last_item_index = $repeated_tag_index[$tag . '_' . $level] - 1;
-                $current =& $current[$tag][$last_item_index];
-            }
-        }
-        else
-        {
-            if( $type == 'complete' )
-            {
-                if( !isset($current[$tag]) )
-                {
-                    $current[$tag] = $result;
-                    $repeated_tag_index[$tag . '_' . $level] = 1;
-                    if( $priority == 'tag' && $attributes_data )
-                    {
-                        $current[$tag . '_attr'] = $attributes_data;
-                    }
-                }
-                else
-                {
-                    if( isset($current[$tag][0]) && is_array($current[$tag]) )
-                    {
-                        $current[$tag][$repeated_tag_index[$tag . '_' . $level]] = $result;
-                        if( $priority == 'tag' && $get_attributes && $attributes_data )
-                        {
-                            $current[$tag][$repeated_tag_index[$tag . '_' . $level] . '_attr'] = $attributes_data;
-                        }
-                        $repeated_tag_index[$tag . '_' . $level]++;
-                    }
-                    else
-                    {
-                        $current[$tag] = array( $current[$tag], $result );
-                        $repeated_tag_index[$tag . '_' . $level] = 1;
-                        if( $priority == 'tag' && $get_attributes )
-                        {
-                            if( isset($current[$tag . '_attr']) )
-                            {
-                                $current[$tag]['0_attr'] = $current[$tag . '_attr'];
-                                unset($current[$tag . '_attr']);
-                            }
-                            if( $attributes_data )
-                            {
-                                $current[$tag][$repeated_tag_index[$tag . '_' . $level] . '_attr'] = $attributes_data;
-                            }
-                        }
-                        $repeated_tag_index[$tag . '_' . $level]++;
-                    }
-                }
-            }
-            else
-            {
-                if( $type == 'close' )
-                {
-                    $current =& $parent[$level - 1];
-                }
-            }
-        }
-    }
-    return $xml_array;
-}
-function resellerclub_ContactTLDSpecificFields($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    if( $params['domainObj']->getLastTLDSegment() == 'us' )
-    {
-        $purpose = $params['additionalfields']["Application Purpose"];
-        $category = $params['additionalfields']["Nexus Category"];
-        if( $purpose == "Business use for profit" )
-        {
-            $purpose = 'P1';
-        }
-        else
-        {
-            if( $purpose == "Non-profit business" || $purpose == 'Club' || $purpose == 'Association' || $purpose == "Religious Organization" )
-            {
-                $purpose = 'P2';
-            }
-            else
-            {
-                if( $purpose == "Personal Use" )
-                {
-                    $purpose = 'P3';
-                }
-                else
-                {
-                    if( $purpose == "Educational purposes" )
-                    {
-                        $purpose = 'P4';
-                    }
-                    else
-                    {
-                        if( $purpose == "Government purposes" )
-                        {
-                            $purpose = 'P5';
-                        }
-                    }
-                }
-            }
-        }
-        $postfields['attr-name1'] = 'purpose';
-        $postfields['attr-value1'] = $purpose;
-        $postfields['attr-name2'] = 'category';
-        $postfields['attr-value2'] = $category;
-        $postfields['product-key'] = 'domus';
-    }
-    else
-    {
-        if( $params['domainObj']->getLastTLDSegment() == 'uk' )
-        {
-            if( $params['additionalfields']["Registrant Name"] )
-            {
-                $postfields['name'] = $params['additionalfields']["Registrant Name"];
-            }
-        }
-        else
-        {
-            if( $params['domainObj']->getLastTLDSegment() == 'ca' )
-            {
-                if( $params['additionalfields']["Legal Type"] == 'Corporation' )
-                {
-                    $legaltype = 'CCO';
-                }
-                else
-                {
-                    if( $params['additionalfields']["Legal Type"] == "Canadian Citizen" )
-                    {
-                        $legaltype = 'CCT';
-                    }
-                    else
-                    {
-                        if( $params['additionalfields']["Legal Type"] == "Permanent Resident of Canada" )
-                        {
-                            $legaltype = 'RES';
-                        }
-                        else
-                        {
-                            if( $params['additionalfields']["Legal Type"] == 'Government' )
-                            {
-                                $legaltype = 'GOV';
-                            }
-                            else
-                            {
-                                if( $params['additionalfields']["Legal Type"] == "Canadian Educational Institution" )
-                                {
-                                    $legaltype = 'EDU';
-                                }
-                                else
-                                {
-                                    if( $params['additionalfields']["Legal Type"] == "Canadian Unincorporated Association" )
-                                    {
-                                        $legaltype = 'ASS';
-                                    }
-                                    else
-                                    {
-                                        if( $params['additionalfields']["Legal Type"] == "Canadian Hospital" )
-                                        {
-                                            $legaltype = 'HOP';
-                                        }
-                                        else
-                                        {
-                                            if( $params['additionalfields']["Legal Type"] == "Partnership Registered in Canada" )
-                                            {
-                                                $legaltype = 'PRT';
-                                            }
-                                            else
-                                            {
-                                                if( $params['additionalfields']["Legal Type"] == "Trade-mark registered in Canada" )
-                                                {
-                                                    $legaltype = 'TDM';
-                                                }
-                                                else
-                                                {
-                                                    $legaltype = 'CCO';
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                $postfields['attr-name1'] = 'CPR';
-                $postfields['attr-value1'] = $legaltype;
-                $postfields['attr-name2'] = 'AgreementVersion';
-                $postfields['attr-value2'] = "2.0";
-                $postfields['attr-name3'] = 'AgreementValue';
-                $postfields['attr-value3'] = 'y';
-                $postfields['product-key'] = 'dotca';
-            }
-            else
-            {
-                if( $params['domainObj']->getLastTLDSegment() == 'es' )
-                {
-                    $ltypearray = explode("|", $params['additionalfields']["Legal Entity Type"]);
-                    $legaltype = $ltypearray[0];
-                    if( !$legaltype )
-                    {
-                        $legaltype = '1';
-                    }
-                    if( $legaltype == '1' )
-                    {
-                        $postfields['company'] = 'N/A';
-                    }
-                    $params['additionalfields']["ID Form Type"] = explode("|", $params['additionalfields']["ID Form Type"]);
-                    $idtype = $params['additionalfields']["ID Form Type"][0];
-                    $idnumber = $params['additionalfields']["ID Form Number"];
-                    $postfields['attr-name1'] = 'es_form_juridica';
-                    $postfields['attr-value1'] = $legaltype;
-                    $postfields['attr-name2'] = 'es_tipo_identificacion';
-                    $postfields['attr-value2'] = $idtype;
-                    $postfields['attr-name3'] = 'es_identificacion';
-                    $postfields['attr-value3'] = $idnumber;
-                    $postfields['product-key'] = 'dotes';
-                }
-                else
-                {
-                    if( $params['domainObj']->getLastTLDSegment() == 'asia' )
-                    {
-                        $postfields['attr-name1'] = 'locality';
-                        $postfields['attr-value1'] = $params['country'];
-                        $postfields['attr-name2'] = 'legalentitytype';
-                        $postfields['attr-value2'] = $params['additionalfields']["Legal Type"];
-                        $postfields['attr-name3'] = 'identform';
-                        $postfields['attr-value3'] = $params['additionalfields']["Identity Form"];
-                        $postfields['attr-name4'] = 'identnumber';
-                        $postfields['attr-value4'] = $params['additionalfields']["Identity Number"];
-                        $postfields['product-key'] = 'dotasia';
-                    }
-                    else
-                    {
-                        if( $params['domainObj']->getLastTLDSegment() == 'ru' )
-                        {
-                            $postfields['attr-name1'] = 'contract-type';
-                            $postfields['attr-value1'] = $params['additionalfields']["Contact Type"];
-                            if( $postfields['attr-value1'] == 'ORG' )
-                            {
-                                $postfields['attr-name3'] = 'org-r';
-                                $postfields['attr-value3'] = $params['companyname'];
-                                $postfields['attr-name6'] = 'kpp';
-                                $postfields['attr-value6'] = $params['additionalfields']["Tax Payer Number"];
-                                $postfields['attr-name7'] = 'code';
-                                $postfields['attr-value7'] = $params['additionalfields']["Taxpayer Identification Number"];
-                            }
-                            else
-                            {
-                                $postfields['attr-name2'] = 'birth-date';
-                                $postfields['attr-value2'] = $params['additionalfields']["Birth Date"];
-                                $postfields['attr-name4'] = 'person-r';
-                                $postfields['attr-value4'] = $params['firstname'] . " " . $params['lastname'];
-                                $postfields['attr-name8'] = 'passport';
-                                $postfields['attr-value8'] = $params['additionalfields']["Passport Information"];
-                            }
-                            $postfields['attr-name5'] = 'address-r';
-                            $postfields['attr-value5'] = $params['address1'] . " " . $params['city'] . " " . $params['fullstate'] . " " . $params['country'] . " " . $params['postcode'];
-                        }
-                        else
-                        {
-                            if( $params['domainObj']->getLastTLDSegment() == 'pro' )
-                            {
-                                $postfields['attr-name1'] = 'profession';
-                                $postfields['attr-value1'] = $params['additionalfields']['Profession'];
-                                $postfields['product-key'] = 'dotpro';
-                            }
-                            else
-                            {
-                                if( $params['domainObj']->getLastTLDSegment() == 'nl' )
-                                {
-                                    $postfields['attr-name1'] = 'legalForm';
-                                    $postfields['attr-value1'] = $params['companyname'] ? 'ANDERS' : 'PERSOON';
-                                    $postfields['product-key'] = 'dotnl';
-                                }
-                                else
-                                {
-                                    if( $params['domainObj']->getLastTLDSegment() == 'tel' )
-                                    {
-                                        $postfields['attr-name1'] = 'whois-type';
-                                        if( $params['additionalfields']["Legal Type"] == "Natural Person" )
-                                        {
-                                            $postfields['attr-value1'] = 'Natural';
-                                        }
-                                        else
-                                        {
-                                            if( $params['additionalfields']["Legal Type"] == "Legal Person" )
-                                            {
-                                                $postfields['attr-value1'] = 'Legal';
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return $postfields;
-}
-function resellerclub_DomainTLDSpecificFields($params, $contactid)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    if( in_array($params['domainObj']->getLastTLDSegment(), array( 'es', 'de' )) )
-    {
-        $postfields['purchase-privacy'] = '0';
-    }
-    else
-    {
-        if( $params['domainObj']->getLastTLDSegment() == 'asia' )
-        {
-            $postfields['attr-name1'] = 'cedcontactid';
-            $postfields['attr-value1'] = $contactid;
-        }
-        else
-        {
-            if( in_array($params['domainObj']->getLastTLDSegment(), array( 'uk', 'eu', 'nz', 'ru' )) )
-            {
-                $postfields['admin-contact-id'] = '-1';
-                $postfields['tech-contact-id'] = '-1';
-                $postfields['billing-contact-id'] = '-1';
-            }
-            else
-            {
-                if( in_array($params['domainObj']->getLastTLDSegment(), array( 'ca', 'nl' )) )
-                {
-                    $postfields['billing-contact-id'] = '-1';
-                }
-                else
-                {
-                    if( $params['domainObj']->getLastTLDSegment() == 'cn' )
-                    {
-                        $postfields['attr-name1'] = 'cnhosting';
-                        $postfields['attr-value1'] = $params['additionalfields']['cnhosting'] ? 'true' : 'false';
-                        $postfields['attr-name2'] = 'cnhostingclause';
-                        $postfields['attr-value2'] = $params['additionalfields']['cnhregisterclause'] ? 'yes' : 'no';
-                    }
-                    else
-                    {
-                        if( $params['domainObj']->getLastTLDSegment() == 'au' )
-                        {
-                            $postfields['attr-name1'] = 'id-type';
-                            $postfields['attr-name2'] = 'id';
-                            $postfields['attr-name3'] = 'policyReason';
-                            $postfields['attr-name4'] = 'isAUWarranty';
-                            $postfields['attr-value4'] = 'true';
-                            $postfields['attr-value5'] = '';
-                            $postfields['attr-value6'] = '';
-                            $postfields['attr-value7'] = '';
-                            $val4 = $params['additionalfields']["Eligibility ID"];
-                            switch( $params['additionalfields']["Eligibility ID Type"] )
-                            {
-                                case "Australian Company Number (ACN)":
-                                    $val5 = 'ACN';
-                                    break;
-                                case "ACT Business Number":
-                                    $val5 = "ACT BN";
-                                    break;
-                                case "NSW Business Number":
-                                    $val5 = "NSW BN";
-                                    break;
-                                case "NT Business Number":
-                                    $val5 = "NT BN";
-                                    break;
-                                case "QLD Business Number":
-                                    $val5 = "QLD BN";
-                                    break;
-                                case "SA Business Number":
-                                    $val5 = "SA BN";
-                                    break;
-                                case "TAS Business Number":
-                                    $val5 = "TAS BN";
-                                    break;
-                                case "VIC Business Number":
-                                    $val5 = "VIC BN";
-                                    break;
-                                case "WA Business Number":
-                                    $val5 = "WA BN";
-                                    break;
-                                case "Trademark (TM)":
-                                    $val5 = 'TM';
-                                    break;
-                                case "Australian Business Number (ABN)":
-                                    $val5 = 'ABN';
-                                    break;
-                                case "Australian Registered Body Number (ARBN)":
-                                    $val5 = 'ARBN';
-                                    break;
-                                case "Other - Used to record an Incorporated Association number":
-                                    $val5 = 'Other';
-                                    break;
-                                default:
-                                    $val5 = 'ABN';
-                                    break;
-                            }
-                            if( $params['additionalfields']["Eligibility Reason"] == "Domain name is an Exact Match Abbreviation or Acronym of your Entity or Trading Name." )
-                            {
-                                $postfields['attr-value3'] = '1';
-                            }
-                            else
-                            {
-                                $postfields['attr-value3'] = '2';
-                                $postfields['attr-value4'] = 'true';
-                            }
-                            $postfields['attr-value1'] = $val5;
-                            $postfields['attr-value2'] = $val4;
-                            if( $val5 == 'TM' || $val5 == 'Other' )
-                            {
-                                $postfields['attr-name5'] = 'eligibilityType';
-                                $postfields['attr-value5'] = $val5 == 'Other' ? 'Other' : "Trademark Owner";
-                            }
-                            $regnamevals = array( "VIC BN", "NSW BN", "SA BN", "NT BN", "WA BN", "TAS BN", "ACT BN", "QLD BN", 'TM', 'Other' );
-                            if( $val5 == 'TM' )
-                            {
-                                $postfields['attr-name6'] = 'eligibilityName';
-                                $postfields['attr-value6'] = $params['additionalfields']["Eligibility Name"];
-                            }
-                            if( in_array($val5, $regnamevals) )
-                            {
-                                $postfields['attr-name7'] = 'registrantName';
-                                $postfields['attr-value7'] = $params['additionalfields']["Registrant Name"];
-                            }
-                        }
-                        else
-                        {
-                            if( $params['domainObj']->getLastTLDSegment() == 'tel' )
-                            {
-                                $postfields['attr-name2'] = 'publish';
-                                $postfields['attr-value2'] = $params['additionalfields']["WHOIS Opt-out"] ? 'Y' : 'N';
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return $postfields;
-}
-function resellerclub_Sync($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getorderid($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'All';
-    $result = resellerclub_sendcommand('details', 'domains', $postfields, $params, 'GET');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $expirytime = $currentstatus = '';
-    $expirytime = $result['endtime'];
-    $currentstatus = $result['currentstatus'];
-    if( $expirytime )
-    {
-        $returndata = array(  );
-        if( $currentstatus == 'Active' )
-        {
-            $returndata['active'] = true;
-        }
-        else
-        {
-            if( $currentstatus == 'Expired' )
-            {
-                $returndata['expired'] = true;
-            }
-        }
-        $returndata['expirydate'] = date('Y-m-d', $expirytime);
-        return $returndata;
-    }
-    return array( 'error' => "No expiry date returned" );
-}
-function resellerclub_TransferSync($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getorderid($postfields, $params);
-    if( !is_numeric($orderid) )
-    {
-        return array( 'error' => $orderid );
-    }
-    unset($postfields);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['order-id'] = $orderid;
-    $postfields['options'] = 'All';
-    $result = resellerclub_sendcommand('details', 'domains', $postfields, $params, 'GET');
-    if( $result['status'] == 'ERROR' )
-    {
-        return array( 'error' => $result['message'] );
-    }
-    $expirytime = $currentstatus = '';
-    $expirytime = $result['endtime'];
-    $currentstatus = $result['currentstatus'];
-    if( $expirytime )
-    {
-        $returndata = array(  );
-        if( $currentstatus == 'Active' )
-        {
-            $returndata['active'] = true;
-        }
-        else
-        {
-            if( $currentstatus == 'Expired' )
-            {
-                $returndata['expired'] = true;
-            }
-        }
-        $returndata['expirydate'] = date('Y-m-d', $expirytime);
-        return $returndata;
-    }
-    return array( 'error' => "No expiry date returned" );
-}
-function resellerclub_DomainSync($registrar)
-{
-    $lcregistrar = strtolower($registrar);
-    $cronreport = $registrar . " Domain Sync Report<br>\n---------------------------------------------------<br>\n";
-    $params = getRegistrarConfigOptions($lcregistrar);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $testmode = $params['TestMode'];
-    $queryresult = select_query('tbldomains', 'id,domain,status', "registrar='" . $lcregistrar . "' AND (status='Pending Transfer' OR status='Active')");
-    while( $data = mysqli_fetch_array($queryresult) )
-    {
-        $domainid = $data['id'];
-        $domainname = $data['domain'];
-        $status = $data['status'];
-        $postfields['domain-name'] = $domainname;
-        $orderid = resellerclub_getorderid($postfields, $params);
-        if( !is_numeric($orderid) )
-        {
-            $cronreport .= "Error for " . $domainname . ": " . $orderid . "<br>\n";
-        }
-        else
-        {
-            unset($postfields);
-            $postfields['auth-userid'] = $params['ResellerID'];
-            $postfields['api-key'] = $params['APIKey'];
-            $postfields['order-id'] = $orderid;
-            $postfields['options'] = 'All';
-            $result = resellerclub_sendcommand('details', 'domains', $postfields, $params, 'GET');
-            if( $result['status'] == 'ERROR' )
-            {
-                $cronreport .= "Error for " . $domainname . ": " . $result['message'] . "<br>\n";
-            }
-            else
-            {
-                $expirytime = $currentstatus = '';
-                $expirytime = $result['endtime'];
-                $currentstatus = $result['currentstatus'];
-                if( $expirytime )
-                {
-                    $updateqry = array(  );
-                    if( $currentstatus == 'Active' )
-                    {
-                        $updateqry['status'] = 'Active';
-                    }
-                    $expirydate = date('Y-m-d', $expirytime);
-                    $updateqry['expirydate'] = $expirydate;
-                    if( count($updateqry) )
-                    {
-                        update_query('tbldomains', $updateqry, array( 'id' => $domainid ));
-                    }
-                    if( $status == "Pending Transfer" && $currentstatus == 'Active' )
-                    {
-                        sendMessage("Domain Transfer Completed", $domainid);
-                        $cronreport .= "Processed Domain Transfer Completion of " . $domainname . " - Updated expiry to " . fromMySQLDate($expirydate) . "<br>\n";
-                    }
-                    else
-                    {
-                        $cronreport .= "Updated " . $domainname . " expiry to " . fromMySQLDate($expirydate) . "<br>\n";
-                    }
-                }
-                else
-                {
-                    $cronreport .= "Error for " . $domainname . ": No expiry date returned<br>\n";
-                }
-            }
-        }
-    }
-    echo $cronreport;
-    logActivity($registrar . " Domain Sync Run");
-    sendAdminNotification('system', "WHMCS " . $registrar . " Domain Syncronisation Report", $cronreport);
-}
-function resellerclub_GetIP()
-{
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://www.whmcs.com/getip/");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $contents = curl_exec($ch);
-    curl_close($ch);
-    return $contents;
-}
-function resellerclub_Language($language)
-{
-    $language = strtolower($language);
-    $allowedlanguages = array( 'ar', 'by', 'bg', 'ch', 'nl', 'en', 'fi', 'fr', 'de', 'ID', 'it', 'ja', 'me', 'mn', 'pt', 'ru', 'sk', 'sl', 'e1', 'es', 'tr' );
-    switch( $language )
-    {
-        case 'arabic':
-            $language = 'ar';
-            break;
-        case 'bulgarian':
-            $language = 'bg';
-            break;
-        case 'chinese':
-            $language = 'zh';
-            break;
-        case 'dutch':
-            $language = 'nl';
-            break;
-        case 'finnish':
-            $language = 'fi';
-            break;
-        case 'german':
-            $language = 'de';
-            break;
-        case 'italian':
-            $language = 'it';
-            break;
-        case 'japanese':
-            $language = 'ja';
-            break;
-        case 'portuguese-br':
-            break;
-        case 'portuguese-pt':
-            $language = 'pt';
-            break;
-        case 'russian':
-            $language = 'ru';
-            break;
-        case 'spanish':
-            $language = 'es';
-            break;
-        case 'turkish':
-            $language = 'tr';
-            break;
-        case 'english':
-            break;
-        default:
-            $language = 'en';
-            break;
-    }
-    if( !in_array($language, $allowedlanguages) )
-    {
-        $language = 'en';
-    }
-    if( strlen($language) == 2 )
-    {
-        return $language;
-    }
-    return 'en';
-}
-function resellerclub_ClientAreaCustomButtonArray($params)
-{
-    global $_LANG;
-    $buttonarray = array(  );
-    if( $_SESSION['uid'] )
-    {
-        $xxxcount = get_query_val('tbldomains', "count(*)", array( 'userid' => $_SESSION['uid'], 'status' => 'Active', 'domain' => array( 'sqltype' => 'LIKE', 'value' => ".xxx" ) ));
-        if( $xxxcount )
-        {
-            $buttonarray[$_LANG['xxxmembershipidupdate']] = 'UpdateXXX';
-        }
-    }
-    return $buttonarray;
-}
-function resellerclub_UpdateXXX($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( $params['domainObj']->getLastTLDSegment() == 'xxx' )
-    {
-        return array( 'error' => "Incorrect TLD" );
-    }
-    if( $_POST['membershipid'] && $params['domainObj']->getLastTLDSegment() == 'xxx' )
-    {
-        unset($postfields);
-        $postfields['auth-userid'] = $params['ResellerID'];
-        $postfields['api-key'] = $params['APIKey'];
-        $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-        $orderid = resellerclub_getorderid($postfields, $params);
-        unset($postfields);
-        if( is_numeric($orderid) )
-        {
-            $postfields['auth-userid'] = $params['ResellerID'];
-            $postfields['api-key'] = $params['APIKey'];
-            $postfields['order-id'] = $orderid;
-            $postfields['association-id'] = $_POST['membershipid'];
-            $result = resellerclub_sendcommand('association-details', 'domains/dotxxx', $postfields, $params, 'POST');
-            if( strtoupper($result['status']) == 'ERROR' )
-            {
-                $error = $result['message'];
-            }
-            if( $result['actionstatus'] == 'Failed' )
-            {
-                $error = true;
-            }
-            if( $error && $result['actionstatusdesc'] )
-            {
-                $error = $result['actionstatusdesc'];
-            }
-            foreach( $result['hashtable']['entry'] as $id => $values )
-            {
-                if( $values['string'][0] == 'actionstatus' && $values['string'][1] == 'Failed' )
-                {
-                    $error = true;
-                }
-                if( $values['string'][0] == 'actionstatusdesc' && $error == true )
-                {
-                    $error = $values['string'][1];
-                }
-            }
-            if( !$error )
-            {
-                $memberid = update_query('tbldomainsadditionalfields', array( 'value' => $_POST['membershipid'] ), array( 'name' => "Membership Token/ID", 'domainid' => $params['domainid'] ));
-                $success = true;
-            }
-        }
-        else
-        {
-            $error = $orderid;
-        }
-    }
-    $postfields = array(  );
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['domain-name'] = resellerclub_getDomainName($params['domainObj']);
-    $orderid = resellerclub_getorderid($postfields, $params);
-    $memberid = get_query_val('tbldomainsadditionalfields', 'value', array( 'name' => "Membership Token/ID", 'domainid' => $params['domainid'] ));
-    $retarray = array( 'templatefile' => 'updatexxx', 'vars' => array( 'order-id' => $orderid, 'domain' => $postfields['domain-name'], 'membershipid' => $memberid ) );
-    if( $error )
-    {
-        $retarray['vars']['error'] = $error;
-    }
-    if( $success )
-    {
-        $retarray['vars']['success'] = $success;
-    }
-    return $retarray;
-}
-function resellerclub_validateABN($abn)
-{
-    $abnarray = str_split($abn);
-    $weights = array( 10, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19 );
-    $abnarray[0] -= 1;
-    foreach( $abnarray as $id => $num )
-    {
-        $abnarray[$id] = $abnarray[$id] * $weights[$id];
-        $abnsum += $abnarray[$id];
-    }
-    if( $abnsum % 89 )
-    {
-        return false;
-    }
-    return true;
-}
-function resellerclub_ContactType($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    if( $params['domainObj']->getLastTLDSegment() == 'uk' )
-    {
-        $contacttype = 'UkContact';
-    }
-    else
-    {
-        if( $params['domainObj']->getLastTLDSegment() == 'eu' )
-        {
-            $contacttype = 'EuContact';
-        }
-        else
-        {
-            if( $params['domainObj']->getLastTLDSegment() == 'cn' )
-            {
-                $contacttype = 'CnContact';
-            }
-            else
-            {
-                if( $params['domainObj']->getLastTLDSegment() == 'co' )
-                {
-                    $contacttype = 'CoContact';
-                }
-                else
-                {
-                    if( $params['domainObj']->getLastTLDSegment() == 'ca' )
-                    {
-                        $contacttype = 'CaContact';
-                    }
-                    else
-                    {
-                        if( $params['domainObj']->getLastTLDSegment() == 'es' )
-                        {
-                            $contacttype = 'EsContact';
-                        }
-                        else
-                        {
-                            if( $params['domainObj']->getLastTLDSegment() == 'de' )
-                            {
-                                $contacttype = 'DeContact';
-                            }
-                            else
-                            {
-                                if( $params['domainObj']->getLastTLDSegment() == 'ru' )
-                                {
-                                    $contacttype = 'RuContact';
-                                }
-                                else
-                                {
-                                    if( $params['domainObj']->getLastTLDSegment() == 'nl' )
-                                    {
-                                        $contacttype = 'NlContact';
-                                    }
-                                    else
-                                    {
-                                        if( $params['domainObj']->getLastTLDSegment() == 'tel' )
-                                        {
-                                            $contacttype = 'Contact';
-                                        }
-                                        else
-                                        {
-                                            $contacttype = 'Contact';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return $contacttype;
-}
-function resellerclub_addCustomer($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    global $CONFIG;
-    require(ROOTDIR . "/includes/countriescallingcodes.php");
-    if( !function_exists('getClientsDetails') )
-    {
-        require(ROOTDIR . "/includes/clientfunctions.php");
-    }
-    $clientdetails = foreignChrReplace(getClientsDetails($params['userid']));
-    $language = $clientdetails['language'] ? $clientdetails['language'] : $CONFIG['Language'];
-    $language = resellerclub_language($language);
-    $clientdetails = WHMCS_Input_Sanitize::decode($clientdetails);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['username'] = $clientdetails['email'];
-    $postfields['passwd'] = resellerclub_genlbrandompw();
-    $postfields['name'] = $clientdetails['firstname'] . " " . $clientdetails['lastname'];
-    $companyname = $clientdetails['companyname'];
-    if( !$companyname )
-    {
-        $companyname = 'N/A';
-    }
-    $postfields['company'] = $companyname;
-    $postfields['address-line-1'] = substr($clientdetails['address1'], 0, 64);
-    if( 64 < $clientdetails['address1'] )
-    {
-        $postfields['address-line-2'] = substr($clientdetails['address1'] . ", " . $clientdetails['address2'], 64, 128);
-    }
-    else
-    {
-        $postfields['address-line-2'] = substr($clientdetails['address2'], 0, 64);
-    }
-    $postfields['city'] = $clientdetails['city'];
-    if( $params['country'] != 'US' )
-    {
-        $postfields['state'] = $clientdetails['state'];
-    }
-    else
-    {
-        $postfields['state'] = convertStateToCode($clientdetails['state'], $clientdetails['country']);
-    }
-    $postfields['zipcode'] = $clientdetails['postcode'];
-    $postfields['country'] = $clientdetails['country'];
-    $phonenumber = $clientdetails['phonenumber'];
-    $phonenumber = preg_replace("/[^0-9]/", '', $phonenumber);
-    $countrycode = $clientdetails['country'];
-    $countrycode = $countrycallingcodes[$countrycode];
-    $postfields['phone-cc'] = $countrycode;
-    $postfields['phone'] = $phonenumber;
-    $postfields['lang-pref'] = $language;
-    $result = resellerclub_sendcommand('signup', 'customers', $postfields, $params, 'POST');
-    unset($postfields);
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $customerid = $result;
-    return $customerid;
-}
-function resellerclub_addContact($params, $customerid, $contacttype, $canonindv = false)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    require(ROOTDIR . "/includes/countriescallingcodes.php");
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['customer-id'] = $customerid;
-    $postfields['email'] = $params['email'];
-    if( $canonindv )
-    {
-        $postfields['name'] = $params['companyname'];
-        $postfields['company'] = 'N/A';
-    }
-    else
-    {
-        $postfields['name'] = $params['firstname'] . " " . $params['lastname'];
-        $companyname = $params['companyname'];
-        if( !$companyname )
-        {
-            $companyname = 'N/A';
-        }
-        $postfields['company'] = $companyname;
-    }
-    $postfields['address-line-1'] = substr($params['address1'], 0, 64);
-    if( 64 < $params['address1'] )
-    {
-        $postfields['address-line-2'] = substr($params['address1'] . ", " . $params['address2'], 64, 128);
-    }
-    else
-    {
-        $postfields['address-line-2'] = substr($params['address2'], 0, 64);
-    }
-    $postfields['city'] = $params['city'];
-    if( $params['country'] != 'US' )
-    {
-        $postfields['state'] = $params['fullstate'];
-    }
-    else
-    {
-        $postfields['state'] = $params['state'];
-    }
-    $postfields['zipcode'] = $params['postcode'];
-    $postfields['country'] = $params['country'];
-    $phonenumber = $params['phonenumber'];
-    $phonenumber = preg_replace("/[^0-9]/", '', $phonenumber);
-    $countrycode = $params['country'];
-    $countrycode = $countrycallingcodes[$countrycode];
-    $postfields['phone-cc'] = $countrycode;
-    $postfields['phone'] = $phonenumber;
-    $postfields['type'] = $contacttype;
-    $postfields = array_merge($postfields, resellerclub_contacttldspecificfields($params));
-    $result = resellerclub_sendcommand('add', 'contacts', $postfields, $params, 'POST');
-    if( strtoupper($result['status']) == 'ERROR' )
-    {
-        if( !$result['message'] )
-        {
-            $result['message'] = $result['error'];
-        }
-        return array( 'error' => $result['message'] );
-    }
-    $contactid = $result;
-    if( $params['domainObj']->getLastTLDSegment() == 'es' )
-    {
-        $postfields['company'] = 'N/A';
-        $params['additionalfields']["Contact ID Form Type"] = explode("|", $params['additionalfields']["Contact ID Form Type"]);
-        $idtype = $params['additionalfields']["Contact ID Form Type"][0];
-        $idnumber = $params['additionalfields']["Contact ID Form Number"];
-        $postfields['attr-name1'] = 'es_form_juridica';
-        $postfields['attr-value1'] = '1';
-        $postfields['attr-name2'] = 'es_tipo_identificacion';
-        $postfields['attr-value2'] = $idtype;
-        $postfields['attr-name3'] = 'es_identificacion';
-        $postfields['attr-value3'] = $idnumber;
-        $postfields['product-key'] = 'dotes';
-        $result = resellerclub_sendcommand('add', 'contacts', $postfields, $params, 'POST');
-        if( strtoupper($result['status']) == 'ERROR' )
-        {
-            if( !$result['message'] )
-            {
-                $result['message'] = $result['error'];
-            }
-            return array( 'error' => $result['message'] );
-        }
-        $additionalid = $result;
-    }
-    else
-    {
-        if( $params['domainObj']->getLastTLDSegment() == 'ca' )
-        {
-            $postfields['name'] = $params['firstname'] . " " . $params['lastname'];
-            $companyname = $params['companyname'];
-            if( !$companyname )
-            {
-                $companyname = 'N/A';
-            }
-            $postfields['company'] = $companyname;
-            $postfields['attr-name1'] = 'CPR';
-            $postfields['attr-value1'] = 'CCT';
-            $result = resellerclub_sendcommand('add', 'contacts', $postfields, $params, 'POST');
-            if( strtoupper($result['status']) == 'ERROR' )
-            {
-                if( !$result['message'] )
-                {
-                    $result['message'] = $result['error'];
-                }
-                return array( 'error' => $result['message'] );
-            }
-            $additionalid = $result;
-        }
-    }
-    unset($postfields);
-    return array( 'contactid' => $contactid, 'additionalid' => $additionalid );
-}
-function resellerclub_getClientEmail($userid)
-{
-    return get_query_val('tblclients', 'email', array( 'id' => $userid ));
-}
-function resellerclub_addCOOPSponsor($params)
-{
-    $params = injectDomainObjectIfNecessary($params);
-    $postfields['auth-userid'] = $params['ResellerID'];
-    $postfields['api-key'] = $params['APIKey'];
-    $postfields['customer-id'] = $customerid;
-    $postfields['name'] = $params['additionalfields']["Contact Name"];
-    $postfields['email'] = $params['additionalfields']["Contact Email"];
-    $postfields['company'] = $params['additionalfields']["Contact Company"];
-    $postfields['address-line-1'] = $params['additionalfields']["Address 1"];
-    if( $params['additionalfields']["Address 2"] )
-    {
-        $postfields['address-line-2'] = $params['additionalfields']["Address 2"];
-    }
-    $postfields['city'] = $params['additionalfields']['City'];
-    $postfields['state'] = $params['additionalfields']['State'];
-    $postfields['zipcode'] = $params['additionalfields']["ZIP Code"];
-    $postfields['country'] = $params['additionalfields']['Country'];
-    $postfields['phone-cc'] = $params['additionalfields']["Phone CC"];
-    $postfields['phone'] = $params['additionalfields']['Phone'];
-    $result = resellerclub_sendcommand('add-sponsor', 'contacts/coop', $postfields, $params, 'POST');
-    return $result;
-}
-/**
- * Obtain the domain in full standard format - sld.tld with the IDN encoded
- * sld if appropriate.
- *
- * @param WHMCS_Domains_Domain $domain
- * @return string the full domain name
- */
-function resellerclub_getDomainName($domain)
-{
-    $sld = $domain->getSLD();
-    $tld = $domain->getTLD();
-    if( $domain->isIDN() )
-    {
-        $sld = $domain->getIDNSecondLevel();
-    }
-    return $sld . "." . $tld;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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
+GpKHBnAXfdIWyUmGpG==

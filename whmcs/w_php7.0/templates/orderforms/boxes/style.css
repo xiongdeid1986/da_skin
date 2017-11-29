@@ -1,57 +1,52 @@
 #order-boxes {
     margin: 0;
-    padding: 20px 0;
+    padding: 0 0 40px 0;
 }
 
-#order-boxes h1 {
-    font-size: 1.4em;
-    color: #666;
+#order-boxes .line-padded {
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
 
-#order-boxes .textcenter {
-    text-align: center;
+#order-boxes .form-inline-always .form-control {
+    display: inline-block;
+    width: auto;
+    vertical-align: middle;
 }
 
-#order-boxes .errorbox {
-    margin:0 0 10px;
-    padding:10px;
-    background-color:#FFBFBF;
-    border: 1px solid #cc0000;
-    text-align:center;
-    color:#7F0000;
+#order-boxes .fields-container {
+    border-top: 10px solid #5AB9F1;
+    border-bottom: 10px solid #5AB9F1;
 }
 
-#order-boxes table {
-    width: 100%;
+#order-boxes .fields-container .field-row {
+    padding: 10px 8px;
 }
 
-#order-boxes table tr td {
-    padding: 5px;
-}
-
-#order-boxes table tr.orderheadingrow {
-    background-color: #5AB9F1;
-    color: #ffffff;
-}
-
-#order-boxes table tr.orderrow1 {
+#order-boxes .fields-container .field-row:nth-child(odd) {
     background-color: #E8F0F9;
     color: #000000;
 }
 
-#order-boxes table tr.orderrow2 {
+#order-boxes .fields-container .field-row:nth-child(even) {
     background-color: #D6E4F6;
     color: #000000;
 }
 
-#order-boxes table tr td.leftcol {
-    padding: 5px 15px;
-    width: 30%;
+#order-boxes .product-radio {
+    padding-left: 40px;
 }
 
-#order-boxes .center90 {
-    margin: 0 auto;
-    width: 90%;
+#order-boxes .product-radio input[type=radio] {
+    margin-left: -30px;
+}
+
+#order-boxes .large-text {
+    font-size: 1.4em;
+}
+
+#order-boxes table.styled {
+    width: 100%;
 }
 
 #order-boxes table.styled tr th {
@@ -64,25 +59,30 @@
 
 #order-boxes table.styled tr td {
     padding: 5px;
-    text-align: center;
     border-bottom: 1px solid #ccc;
+    font-size: 0.9em;
 }
 
-#order-boxes table tr.carttableconfig td {
+#order-boxes table.styled tr td.leftcol {
+    padding: 5px 15px;
+    width: 30%;
+}
+
+#order-boxes table.styled tr.carttableconfig td {
     background-color: #efefef;
-    font-size: 10px;
+    font-size: 0.8em;
     padding: 2px;
 }
 
-#order-boxes table tr.carttablesummary td {
+#order-boxes table.styled tr.carttablesummary td {
     background-color: #E8F0F9;
     color: #222222;
     height: 20px;
-    font-size: 12px;
+    font-size: 1.0em;
     font-weight: bold;
 }
 
-#order-boxes table tr.carttablesummary td.left {
+#order-boxes table.styled tr.carttablesummary td.left {
     padding: 5px 15px;
     text-align: right;
 }
@@ -95,20 +95,13 @@
     color: #cc0000;
 }
 
-#order-boxes div.left {
-    float:left;
-    margin: 0 0 20px 0;
-    padding: 0;
-}
-#order-boxes div.right {
-    float:right;
-    margin: 0 0 20px 0;
-    padding: 0;
-}
-#order-boxes div.clear {
-    clear:both;
-}
-
-#order-boxes .hidden {
-    display: none;
+#order-boxes .secure-warning {
+    margin: 20px 0 20px 0;
+    padding: 7px;
+    border-top: 4px solid #EBE8CD;
+    border-bottom: 4px solid #EBE8CD;
+    background-color: #F1EFDC;
+    font-size: 0.9em;
+    text-align: center;
+    color: #000;
 }

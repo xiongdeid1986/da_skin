@@ -1,8 +1,8 @@
 <div id="prodconfigcontainer">
-<script type="text/javascript" src="includes/jscript/jqueryui.js"></script>
+<script type="text/javascript" src="{$BASE_PATH_JS}/jquery-ui.min.js"></script>
 <script type="text/javascript" src="templates/orderforms/{$carttpl}/js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="templates/orderforms/{$carttpl}/style.css" />
-<link rel="stylesheet" type="text/css" href="includes/jscript/css/ui.all.css" />
+<link rel="stylesheet" type="text/css" href="{$BASE_PATH_CSS}/jquery-ui.min.css" />
 
 <div id="order-modern">
 
@@ -11,22 +11,81 @@
 <input type="hidden" name="configure" value="true" />
 <input type="hidden" name="i" value="{$i}" />
 
-{if !$firstconfig || $firstconfig && !$domain}<h1>{$LANG.orderconfigure}</h1>{/if}
+{if !$firstconfig || $firstconfig && !$domain}
+    <div class="title-bar">
+        <h1>{$LANG.orderconfigure}</h1>
+    </div>
+{/if}
 
 <div id="configproducterror" class="errorbox"></div>
 
-<div class="prodconfigcol1">
+<div class="row">
+<div class="col-md-8">
 
 {if $pricing.type eq "recurring"}
 <h3>{$LANG.cartchoosecycle}</h3>
 <div class="billingcycle">
 <table width="100%" cellspacing="0" cellpadding="0" class="configtable">
-{if $pricing.monthly}<tr><td class="radiofield"><input type="radio" name="billingcycle" id="cycle1" value="monthly"{if $billingcycle eq "monthly"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" /></td><td class="fieldarea"><label for="cycle1">{$pricing.monthly}</label></td></tr>{/if}
-{if $pricing.quarterly}<tr><td class="radiofield"><input type="radio" name="billingcycle" id="cycle2" value="quarterly"{if $billingcycle eq "quarterly"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" /></td><td class="fieldarea"><label for="cycle2">{$pricing.quarterly}</label></td></tr>{/if}
-{if $pricing.semiannually}<tr><td class="radiofield"><input type="radio" name="billingcycle" id="cycle3" value="semiannually"{if $billingcycle eq "semiannually"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" /></td><td class="fieldarea"><label for="cycle3">{$pricing.semiannually}</label></td></tr>{/if}
-{if $pricing.annually}<tr><td class="radiofield"><input type="radio" name="billingcycle" id="cycle4" value="annually"{if $billingcycle eq "annually"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" /></td><td class="fieldarea"><label for="cycle4">{$pricing.annually}</label></td></tr>{/if}
-{if $pricing.biennially}<tr><td class="radiofield"><input type="radio" name="billingcycle" id="cycle5" value="biennially"{if $billingcycle eq "biennially"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" /></td><td class="fieldarea"><label for="cycle5">{$pricing.biennially}</label></td></tr>{/if}
-{if $pricing.triennially}<tr><td class="radiofield"><input type="radio" name="billingcycle" id="cycle6" value="triennially"{if $billingcycle eq "triennially"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" /></td><td class="fieldarea"><label for="cycle6">{$pricing.triennially}</label></td></tr>{/if}
+    {if $pricing.monthly}
+        <tr>
+            <td class="radiofield">
+                <input type="radio" name="billingcycle" id="cycle1" value="monthly"{if $billingcycle eq "monthly"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" />
+            </td>
+            <td class="fieldarea">
+                <label for="cycle1" class="radio-inline">{$pricing.monthly}</label>
+            </td>
+        </tr>
+    {/if}
+    {if $pricing.quarterly}
+        <tr>
+            <td class="radiofield">
+                <input type="radio" name="billingcycle" id="cycle2" value="quarterly"{if $billingcycle eq "quarterly"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" />
+            </td>
+            <td class="fieldarea">
+                <label for="cycle2" class="radio-inline">{$pricing.quarterly}</label>
+            </td>
+        </tr>
+    {/if}
+    {if $pricing.semiannually}
+        <tr>
+            <td class="radiofield">
+                <input type="radio" name="billingcycle" id="cycle3" value="semiannually"{if $billingcycle eq "semiannually"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" />
+            </td>
+            <td class="fieldarea">
+                <label for="cycle3" class="radio-inline">{$pricing.semiannually}</label>
+            </td>
+        </tr>
+    {/if}
+    {if $pricing.annually}
+        <tr>
+            <td class="radiofield">
+                <input type="radio" name="billingcycle" id="cycle4" value="annually"{if $billingcycle eq "annually"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" />
+            </td>
+            <td class="fieldarea">
+                <label for="cycle4" class="radio-inline">{$pricing.annually}</label>
+            </td>
+        </tr>
+    {/if}
+    {if $pricing.biennially}
+        <tr>
+            <td class="radiofield">
+                <input type="radio" name="billingcycle" id="cycle5" value="biennially"{if $billingcycle eq "biennially"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" />
+            </td>
+            <td class="fieldarea">
+                <label for="cycle5" class="radio-inline">{$pricing.biennially}</label>
+            </td>
+        </tr>
+    {/if}
+    {if $pricing.triennially}
+        <tr>
+            <td class="radiofield">
+                <input type="radio" name="billingcycle" id="cycle6" value="triennially"{if $billingcycle eq "triennially"} checked{/if} onclick="{if $configurableoptions}updateConfigurableOptions({$i}, this.value){else}recalctotals(){/if}" />
+            </td>
+            <td class="fieldarea">
+                <label for="cycle6" class="radio-inline">{$pricing.triennially}</label>
+            </td>
+        </tr>
+    {/if}
 </table>
 </div>
 {/if}
@@ -50,17 +109,17 @@
 {foreach from=$configurableoptions item=configoption}
 <tr><td class="fieldlabel">{$configoption.optionname}</td><td class="fieldarea">
 {if $configoption.optiontype eq 1}
-<select name="configoption[{$configoption.id}]" onchange="recalctotals()">
+<select name="configoption[{$configoption.id}]" onchange="recalctotals()" class="form-control">
 {foreach key=num2 item=options from=$configoption.options}
 <option value="{$options.id}"{if $configoption.selectedvalue eq $options.id} selected="selected"{/if}>{$options.name}</option>
 {/foreach}
 </select>
 {elseif $configoption.optiontype eq 2}
 {foreach key=num2 item=options from=$configoption.options}
-<label><input type="radio" name="configoption[{$configoption.id}]" value="{$options.id}"{if $configoption.selectedvalue eq $options.id} checked="checked"{/if} onclick="recalctotals()" /> {$options.name}</label><br />
+<label class="radio-inline"><input type="radio" name="configoption[{$configoption.id}]" value="{$options.id}"{if $configoption.selectedvalue eq $options.id} checked="checked"{/if} onclick="recalctotals()" /> {$options.name}</label><br />
 {/foreach}
 {elseif $configoption.optiontype eq 3}
-<label><input type="checkbox" name="configoption[{$configoption.id}]" value="1"{if $configoption.selectedqty} checked{/if} onclick="recalctotals()" /> {$configoption.options.0.name}</label>
+<label class="checkbox-inline"><input type="checkbox" name="configoption[{$configoption.id}]" value="1"{if $configoption.selectedqty} checked{/if} onclick="recalctotals()" /> {$configoption.options.0.name}</label>
 {elseif $configoption.optiontype eq 4}
 {if $configoption.qtymaximum}
 {literal}
@@ -91,7 +150,7 @@
 <table width="90%"><tr><td width="30" id="confoplabel{$configoption.id}" class="configoplabel">{if $configoption.selectedqty}{$configoption.selectedqty}{else}{$configoption.qtyminimum}{/if}</td><td><div id="slider{$configoption.id}"></div></td></tr></table>
 <input type="hidden" name="configoption[{$configoption.id}]" id="confop{$configoption.id}" value="{if $configoption.selectedqty}{$configoption.selectedqty}{else}{$configoption.qtyminimum}{/if}" />
 {else}
-<input type="text" name="configoption[{$configoption.id}]" value="{$configoption.selectedqty}" size="5" onkeyup="recalctotals()" /> x {$configoption.options.0.name}
+<input type="text" name="configoption[{$configoption.id}]" value="{$configoption.selectedqty}" size="5" onkeyup="recalctotals()" class="form-control" /> x {$configoption.options.0.name}
 {/if}
 {/if}
 </td></tr>
@@ -105,7 +164,7 @@
 <div class="addons">
 <table width="100%" cellspacing="0" cellpadding="0" class="configtable">
 {foreach from=$addons item=addon}
-<tr><td class="radiofield"><input type="checkbox" name="addons[{$addon.id}]" id="a{$addon.id}"{if $addon.status} checked{/if} onclick="recalctotals()" /></td><td class="fieldarea"><label for="a{$addon.id}"><strong>{$addon.name}</strong> - {$addon.pricing}<br />{$addon.description}</label></td></tr>
+<tr><td class="radiofield"><input type="checkbox" name="addons[{$addon.id}]" id="a{$addon.id}"{if $addon.status} checked{/if} onclick="recalctotals()" /></td><td class="fieldarea"><label for="a{$addon.id}" class="checkbox-inline"><strong>{$addon.name}</strong> - {$addon.pricing}<br />{$addon.description}</label></td></tr>
 {/foreach}
 </table>
 </div>
@@ -123,21 +182,24 @@
 {/if}
 
 </div>
-<div class="prodconfigcol2">
+<div class="col-md-4">
+    <div>
+        <div id="cartLoader" class="pull-right">
+            <i class="fa fa-fw fa-refresh fa-spin"></i>
+        </div>
+        <h3>{$LANG.ordersummary}</h3>
+    </div>
+    <div class="ordersummary" id="producttotal"></div>
+</div>
 
-<h3>{$LANG.ordersummary}</h3>
-<div class="ordersummary" id="producttotal"></div>
-
-<div class="checkoutbuttons">
-<input type="button" value="{$LANG.checkout} &raquo;" class="checkout" onclick="addtocart();" /><br />
-<input type="button" value="{$LANG.continueshopping}" onclick="addtocart('{$productinfo.gid}');" /><br />
-<input type="button" value="{$LANG.viewcart}" onclick="window.location='cart.php?a=view'" />
+<div class="text-center">
+    <button type="button" id="btnCompleteProductConfig" class="btn btn-primary btn-lg" onclick="addtocart();">{$LANG.continue} &nbsp;<i class="fa fa-arrow-circle-right"></i></button><br /><br />
+    <a href="cart.php?a=view" class="btn btn-default"><i class="fa fa-shopping-cart"></i> {$LANG.viewcart}</a>
 </div>
 
 </div>
-<div class="clear"></div>
 
-<script language="javascript">recalctotals();</script>
+<script>recalctotals();</script>
 
 </form>
 

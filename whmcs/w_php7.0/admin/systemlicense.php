@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,109 +32,21 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-define('ADMINAREA', true);
-require('../init.php');
-$aInt          = new WHMCS_Admin('Main Homepage');
-$aInt->title   = $aInt->lang('license', 'title');
-$aInt->sidebar = 'help';
-$aInt->icon    = 'support';
-ob_start();
-$licensing = WHMCS_License::getinstance();
-if($licensing->isClientLimitsEnabled()) {
-	$warningMsg = '';
-	if($licensing->isNearClientLimit()) {
-		$clientLimit = $licensing->getClientLimit();
-		if($licensing->getNumberOfActiveClients() < $clientLimit) {
-			$warningMsg = "You are nearing your license's client allotment.";
-		} else {
-			if($clientLimit == $licensing->getNumberOfActiveClients()) {
-				$warningMsg = "You are at your license's client allotment.";
-			} else {
-				$warningMsg = "You have exceeded your license's client allotment.";
-			}
-		}
-		$warningMsg = "<div style=\"background-color:#FFBFBF;padding:10px;margin:20px;text-align:center;color:#7F0000;font-size:16px;\">WARNING: " . htmlentities($warningMsg) . "</div>";
-	}
-	echo "<table class=\"form\" width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"3\"><tr><td>";
-	echo $warningMsg;
-	echo "<table width=\"50%\" bgcolor=\"#cccccc\" cellspacing=\"1\" cellpadding=\"10\" align=\"center\">" . "<tr bgcolor=\"#fff\"><td align=\"right\" width=\"50%\">Current Client Limit</td><td align=\"center\">" . $licensing->getTextClientLimit($aInt) . "</td></tr>" . "<tr bgcolor=\"#fff\"><td align=\"right\" width=\"50%\">Number of Active Clients</td><td align=\"center\">" . $licensing->getTextNumberOfActiveClients() . "</td></tr>" . "</table>";
-	echo "<p>Licenses for WHMCS operate on a tiered structure based upon the number of Active clients within the installation.  <br />An active client is classed as one with any active or suspended products or services (including addons and domains).</p><p>If you have any questions, please <a href=\"http://nullrefer.com/?https://www.whmcs.com/support/\" target=\"_blank\">contact our support team</a>.</p>";
-	$rawLicenseData = array(
-		'action' => "upgrade request",
-		'licensekey' => $whmcs->get_license_key(),
-		'activeclients' => $licensing->getNumberOfActiveClients()
-	);
-	$licenseData    = $licensing->encryptMemberData($rawLicenseData);
-	echo "<p align=\"center\"><a href=\"http://nullrefer.com/?https://www.whmcs.com/members/managelicense.php?license_data=" . $licenseData . "\" class=\"btn\">Upgrade/Downgrade License</a></p><br />";
-	echo "</td></tr></table><div style='margin-bottom: 20px; margin-top: 20px'>&nbsp;</div>";
-}
-echo "
-<table class=\"form\" width=\"100%\" border=\"0\" cellspacing=\"2\" cellpadding=\"3\">
-<tr><td width=\"20%\" class=\"fieldlabel\">";
-echo $aInt->lang('license', 'regto');
-echo "</td><td class=\"fieldarea\">";
-echo $licensing->getKeyData('registeredname');
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'key');
-echo "</td><td class=\"fieldarea\">";
-echo $whmcs->get_license_key();
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'type');
-echo "</td><td class=\"fieldarea\">";
-echo $licensing->getKeyData('productname');
-if($licensing->isClientLimitsEnabled()) {
-	echo " (" . $licensing->getTextClientLimit($aInt) . " Client Limit)";
-}
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'validdomain');
-echo "</td><td class=\"fieldarea\">";
-echo (count($licensing->getKeyData('validdomains')) ? implode('<br />', $licensing->getKeyData('validdomains')) : 'None');
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'validip');
-echo "</td><td class=\"fieldarea\">";
-echo (count($licensing->getKeyData('validips')) ? implode('<br />', $licensing->getKeyData('validips')) : 'None');
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'validdir');
-echo "</td><td class=\"fieldarea\">";
-echo (count($licensing->getKeyData('validdirs')) ? implode('<br />', $licensing->getKeyData('validdirs')) : 'None');
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'brandingremoval');
-echo "</td><td class=\"fieldarea\">";
-echo $licensing->getBrandingRemoval() ? 'Yes' : 'No';
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'addons');
-echo "</td><td class=\"fieldarea\">";
-echo count($licensing->getActiveAddons()) ? implode("<br />", $licensing->getActiveAddons()) : 'None';
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'created');
-echo "</td><td class=\"fieldarea\">";
-echo date("l, jS F Y", strtotime($licensing->getKeyData('regdate')));
-echo "</td></tr>
-<tr><td class=\"fieldlabel\">";
-echo $aInt->lang('license', 'expires');
-echo "</td><td class=\"fieldarea\">";
-echo $licensing->getExpiryDate(true);
-echo "</td></tr>
-</table>
-
-<p>";
-/*
-echo $aInt->lang('license', 'reissue1');
-echo " <a href=\"http://nullrefer.com/?http://docs.whmcs.com/Licensing\">docs.whmcs.com/Licensing</a> ";
-echo $aInt->lang('license', 'reissue2');
-echo "</p>
-
-";
-*/
-$content = ob_get_contents();
-ob_end_clean();
-$aInt->content = $content;
-$aInt->display();
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+HR+cPw1wpmvaxZCX0RHQBPXFq2T+XYYkPa9nSCkugYhkKOwxNIVzgmOe2E4Fnay4ZJ8wZRcfQQzy
+/rAYb8fxoabNT49YtN0uJWlrSG5PEbjhsmyB9YJomj6Pdkma7/3rRTI3Tvh0uiEujXisZhDO2sAS
+DROjLuv92xdIrabDobrbboFzbFZ+OGb8Ukynmz3XC2sakeZTu3gnBgplaGEuEqbetHj8aGEgadne
+0CApsSQI+L3VEyj5mZyZB/VbEuuWqdlMB29HAr9LCQwXNGTBpNod1h2WjeKFIjD2prG5JsjKv1Ez
+aFMIu6sNR8dJ33bM5axEnPajiL7/p5KaK08em6YD3WnJBysy5fq9r2vIfeKEJ7CiN875y4Q5REkp
+7j23oO/Z1g8CQ25RNqr1hWZZGGMbkeaCz11CKkOuQ9dcyq3EOYWFyRbiw81hH+s34rHVwGOslS5k
+V4vrvBkqC06MuOzdLlblHzXB6IDJ9Nko8d88Wg8K25YeH5Mn0dO6crWa+yJgiLGdU2Q/XETcvzj+
+IWGQ5Fj2hVzSHDZr46NGe6APcm+81dbA6vbgw5pMz6skDb6HLFaA0qPLqf1aV6k/8zNdq0hqsZF6
+UbYiTHsExuRPJN3+UunkuXlpBTVVU2omN+AKZwaTfsDvSVNZG8ED34P7PCdIGbVV7hcvShvqWchK
+CYcmT/d76kp2chgNGfhayUyl5j4zy57FzxyL624NfS/ajKrsHYfl/ILoSfRupH03kvXc9xHLNDlR
+eirIA+7LCvIQRhljJrGdgpIZj1kOSYRPCCeYh9HDB+9J/ts4ZwouEmZmtPgsgWW3ZDFP5KljtKnu
+jSN+NOgzl7TmkWnlkDat5Fr2aHzAYpdZRBeHODXqaWPtfUDugL+jemfrx5gA++UhwhOPgfyPkdA5
+7IP0JP9TwPwEKqNL1bK35SvpDhroZcmbMn9fISJ7sJ8rSyhMNkC6kq6BRuf0MjWxrzW5d2UVP/2U
+eMFNTsgEmYe59G3MmuZR8z/dN9LwwhiJRytGEyCAmQdq3rwGvsxBCz65DfUytKHSUWOtxEcctooP
+54hpJGxyHuaQayo5+p32DSMrWLTuDTp5OdmFka5Bo8zCLKE9rrYzmG7Qbxc5cFnZA1QrB5y2PYzu
+xHIU2thfWqOOJL7AAE1O0qIDLO1gwAPTDsru

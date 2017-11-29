@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,430 +32,366 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function updateCCDetails($userid, $cardtype, $cardnum, $cardcvv, $cardexp, $cardstart, $cardissue, $noremotestore = '', $fullclear = '')
-{
-    global $CONFIG;
-    global $_LANG;
-    global $cc_encryption_hash;
-    $gatewayid = get_query_val('tblclients', 'gatewayid', array( 'id' => $userid ));
-    if( $fullclear )
-    {
-        update_query('tblclients', array( 'cardtype' => '', 'cardlastfour' => '', 'cardnum' => '', 'expdate' => '', 'startdate' => '', 'issuenumber' => '', 'gatewayid' => '' ), array( 'id' => $userid ));
-    }
-    $cardnum = ccFormatNumbers($cardnum);
-    $cardexp = ccFormatNumbers($cardexp);
-    $cardstart = ccFormatNumbers($cardstart);
-    $cardissue = ccFormatNumbers($cardissue);
-    $cardexp = ccFormatDate($cardexp);
-    $cardstart = ccFormatDate($cardstart);
-    $cardcvv = ccFormatNumbers($cardcvv);
-    if( $cardtype )
-    {
-        $errormessage = checkCreditCard($cardnum, $cardtype);
-        if( !$cardexp || strlen($cardexp) != 4 )
-        {
-            $errormessage .= "<li>" . $_LANG['creditcardenterexpirydate'];
-        }
-        else
-        {
-            if( substr($cardexp, 0, 2) < date('m') && '20' . substr($cardexp, 2) <= date('Y') )
-            {
-                $errormessage .= "<li>" . $_LANG['creditcardexpirydateinvalid'];
-            }
-        }
-    }
-    if( $errormessage )
-    {
-        return $errormessage;
-    }
-    if( !$userid )
-    {
-        return '';
-    }
-    if( $noremotestore )
-    {
-        return '';
-    }
-    if( $CONFIG['CCNeverStore'] )
-    {
-        return '';
-    }
-    $remotestored = false;
-    $result = select_query('tblpaymentgateways', "gateway,(SELECT id FROM tblinvoices WHERE paymentmethod=gateway AND userid='" . (int) $userid . "' ORDER BY id DESC LIMIT 0,1) AS invoiceid", "setting='type' AND (value='CC' OR value='OfflineCC')");
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $gateway = $data['gateway'];
-        $invoiceid = $data['invoiceid'];
-        if( $invoiceid )
-        {
-            if( !isValidforPath($gateway) )
-            {
-                exit( "Invalid Gateway Module Name" );
-            }
-            require_once(ROOTDIR . '/modules/gateways/' . $gateway . ".php");
-            if( function_exists($gateway . '_storeremote') )
-            {
-                $rparams = getCCVariables($invoiceid);
-                $rparams['cardtype'] = $cardtype;
-                $rparams['cardnum'] = $cardnum;
-                $rparams['cardcvv'] = $cardcvv;
-                $rparams['cardexp'] = $cardexp;
-                $rparams['cardstart'] = $cardstart;
-                $rparams['cardissuenum'] = $cardissue;
-                $rparams['gatewayid'] = $gatewayid;
-                $action = 'create';
-                if( $rparams['gatewayid'] )
-                {
-                    if( $rparams['cardnum'] )
-                    {
-                        $action = 'update';
-                    }
-                    else
-                    {
-                        $action = 'delete';
-                    }
-                }
-                $rparams['action'] = $action;
-                $captureresult = call_user_func($gateway . '_storeremote', $rparams);
-                $result = select_query('tblpaymentgateways', 'value', array( 'gateway' => $rparams['paymentmethod'], 'setting' => 'name' ));
-                $data = mysqli_fetch_array($result);
-                $gatewayname = $data['value'] . " Remote Storage";
-                $debugdata = is_array($captureresult['rawdata']) ? array_merge(array( 'UserID' => $rparams['clientdetails']['userid'] ), $captureresult['rawdata']) : "UserID => " . $rparams['clientdetails']['userid'] . "\n" . $captureresult['rawdata'];
-                if( $captureresult['status'] == 'success' )
-                {
-                    if( isset($captureresult['gatewayid']) )
-                    {
-                        update_query('tblclients', array( 'gatewayid' => $captureresult['gatewayid'] ), array( 'id' => $userid ));
-                    }
-                    if( $action == 'delete' )
-                    {
-                        update_query('tblclients', array( 'cardtype' => '', 'cardlastfour' => '', 'cardnum' => '', 'expdate' => '', 'startdate' => '', 'issuenumber' => '', 'gatewayid' => '' ), array( 'id' => $userid ));
-                    }
-                    logTransaction($gatewayname, $debugdata, 'Success');
-                    $remotestored = true;
-                }
-                else
-                {
-                    logTransaction($gatewayname, $debugdata, ucfirst($captureresult['status']));
-                    return "<li>Remote Transaction Failure. Please Contact Support.";
-                }
-            }
-        }
-    }
-    $cchash = md5($cc_encryption_hash . $userid);
-    $cardlastfour = substr($cardnum, 0 - 4);
-    if( $remotestored )
-    {
-        $cardnum = '';
-    }
-    update_query('tblclients', array( 'cardtype' => $cardtype, 'cardlastfour' => $cardlastfour, 'cardnum' => array( 'type' => 'AES_ENCRYPT', 'text' => $cardnum, 'hashkey' => $cchash ), 'expdate' => array( 'type' => 'AES_ENCRYPT', 'text' => $cardexp, 'hashkey' => $cchash ), 'startdate' => array( 'type' => 'AES_ENCRYPT', 'text' => $cardstart, 'hashkey' => $cchash ), 'issuenumber' => array( 'type' => 'AES_ENCRYPT', 'text' => $cardissue, 'hashkey' => $cchash ) ), array( 'id' => $userid ));
-    logActivity("Updated Stored Credit Card Details - User ID: " . $userid, $userid);
-    run_hook('CCUpdate', array( 'userid' => $userid, 'cardtype' => $cardtype, 'cardnum' => $cardnum, 'cardcvv' => $cardcvv, 'expdate' => $cardexp, 'cardstart' => $cardstart, 'issuenumber' => $cardissue ));
-}
-function ccFormatNumbers($val)
-{
-    return preg_replace("/[^0-9]/", '', $val);
-}
-function ccFormatDate($date)
-{
-    if( strlen($date) == 3 )
-    {
-        $date = '0' . $date;
-    }
-    if( strlen($date) == 5 )
-    {
-        $date = '0' . $date;
-    }
-    if( strlen($date) == 6 )
-    {
-        $date = substr($date, 0, 2) . substr($date, 0 - 2);
-    }
-    return $date;
-}
-function getCCDetails($userid)
-{
-    global $cc_encryption_hash;
-    global $_LANG;
-    $cchash = md5($cc_encryption_hash . $userid);
-    $result = select_query('tblclients', "cardtype,cardlastfour,AES_DECRYPT(cardnum,'" . $cchash . "') as cardnum,AES_DECRYPT(expdate,'" . $cchash . "') as expdate,AES_DECRYPT(issuenumber,'" . $cchash . "') as issuenumber,AES_DECRYPT(startdate,'" . $cchash . "') as startdate,gatewayid", array( 'id' => $userid ));
-    $data = mysqli_fetch_array($result);
-    $carddata = array(  );
-    $carddata['cardtype'] = $data['cardtype'];
-    $carddata['cardlastfour'] = $data['cardlastfour'];
-    $carddata['cardnum'] = $data['cardlastfour'] ? "************" . $data['cardlastfour'] : $_LANG['nocarddetails'];
-    $carddata['fullcardnum'] = $data['cardnum'];
-    $carddata['expdate'] = $data['expdate'] ? substr($data['expdate'], 0, 2) . '/' . substr($data['expdate'], 2, 2) : '';
-    $carddata['startdate'] = $data['startdate'] ? substr($data['startdate'], 0, 2) . '/' . substr($data['startdate'], 2, 2) : '';
-    $carddata['issuenumber'] = $data['issuenumber'];
-    $carddata['gatewayid'] = $data['gatewayid'];
-    return $carddata;
-}
-function getCCVariables($invoiceid)
-{
-    global $whmcs;
-    $invoice = new WHMCS_Invoice($invoiceid);
-    $invoiceexists = $invoice->loadData();
-    if( !$invoiceexists )
-    {
-        return false;
-    }
-    $cc_encryption_hash = $whmcs->get_hash();
-    $userid = $invoice->getData('userid');
-    $cchash = md5($cc_encryption_hash . $userid);
-    $result = select_query('tblclients', "cardtype,cardlastfour,AES_DECRYPT(cardnum,'" . $cchash . "') as cardnum,AES_DECRYPT(expdate,'" . $cchash . "') as expdate,AES_DECRYPT(issuenumber,'" . $cchash . "') as issuenumber,AES_DECRYPT(startdate,'" . $cchash . "') as startdate,gatewayid", array( 'id' => $userid ));
-    $data = mysqli_fetch_array($result);
-    $cardtype = $data['cardtype'];
-    $cardnum = $data['cardnum'];
-    $cardexp = $data['expdate'];
-    $startdate = $data['startdate'];
-    $issuenumber = $data['issuenumber'];
-    $gatewayid = $data['gatewayid'];
-    $result = select_query('tblclients', "bankname,banktype,AES_DECRYPT(bankcode,'" . $cchash . "') as bankcode,AES_DECRYPT(bankacct,'" . $cchash . "') as bankacct", array( 'id' => $userid ));
-    $data = mysqli_fetch_array($result);
-    $bankname = $data['bankname'];
-    $banktype = $data['banktype'];
-    $bankcode = $data['bankcode'];
-    $bankacct = $data['bankacct'];
-    try
-    {
-        $params = $invoice->initialiseGatewayAndParams();
-    }
-    catch( Exception $e )
-    {
-        logActivity("Failed to initialise payment gateway module: " . $e->getMessage());
-        throw new WHMCS_Exception_Fatal("Could not initialise payment gateway. Please contact support.");
-    }
-    $params = array_merge($params, $invoice->getGatewayInvoiceParams());
-    $params['cardtype'] = $cardtype;
-    $params['cardnum'] = $cardnum;
-    $params['cardexp'] = $cardexp;
-    $params['cardstart'] = $startdate;
-    $params['cardissuenum'] = $issuenumber;
-    if( $banktype )
-    {
-        $params['bankname'] = $bankname;
-        $params['banktype'] = $banktype;
-        $params['bankcode'] = $bankcode;
-        $params['bankacct'] = $bankacct;
-    }
-    $params['disableautocc'] = $params['clientdetails']['disableautocc'];
-    $params['gatewayid'] = $gatewayid;
-    return $params;
-}
-function captureCCPayment($invoiceid, $cccvv = '', $passedparams = false)
-{
-    global $params;
-    if( !$passedparams )
-    {
-        $params = getccvariables($invoiceid);
-    }
-    if( $cccvv )
-    {
-        $params['cccvv'] = $cccvv;
-    }
-    if( $params['paymentmethod'] == 'offlinecc' )
-    {
-        return false;
-    }
-    if( $params['amount'] <= 0 )
-    {
-        $gatewayname = get_query_val('tblpaymentgateways', 'value', array( 'gateway' => $params['paymentmethod'], 'setting' => 'name' ));
-        logTransaction($gatewayname, '', "No Amount Due");
-        return false;
-    }
-    if( !$params['cardnum'] && !$params['gatewayid'] && !$params['cccvv'] )
-    {
-        sendMessage("Credit Card Payment Due", $invoiceid);
-    }
-    else
-    {
-        $gateway = new WHMCS_Module_Gateway();
-        $gateway->load($params['paymentmethod']);
-        $captureresult = $gateway->call('capture', $params);
-        if( is_array($captureresult) )
-        {
-            $result = select_query('tblpaymentgateways', 'value', array( 'gateway' => $params['paymentmethod'], 'setting' => 'name' ));
-            $data = mysqli_fetch_array($result);
-            $gatewayname = $data['value'];
-            logTransaction($gatewayname, $captureresult['rawdata'], ucfirst($captureresult['status']));
-            if( $captureresult['status'] == 'success' )
-            {
-                addInvoicePayment($params['invoiceid'], $captureresult['transid'], $params['originalamount'], $captureresult['fee'], $params['paymentmethod'], 'on');
-                sendMessage("Credit Card Payment Confirmation", $params['invoiceid']);
-                return true;
-            }
-            sendMessage("Credit Card Payment Failed", $params['invoiceid']);
-        }
-        else
-        {
-            if( $captureresult == 'success' )
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-function ccProcessing()
-{
-    global $whmcs;
-    global $cron;
-    $chargedate = date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $whmcs->get_config('CCProcessDaysBefore'), date('Y')));
-    $chargedates = array(  );
-    if( !$whmcs->get_config('CCAttemptOnlyOnce') )
-    {
-        for( $i = 1; $i <= $whmcs->get_config('CCRetryEveryWeekFor'); $i++ )
-        {
-            $chargedates[] = "tblinvoices.duedate='" . date('Ymd', mktime(0, 0, 0, date('m'), date('d') - $i * 7 + $whmcs->get_config('CCProcessDaysBefore'), date('Y'))) . "'";
-        }
-    }
-    $qrygateways = array(  );
-    $result = select_query('tblpaymentgateways', 'gateway', array( 'setting' => 'type', 'value' => 'CC' ));
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $qrygateways[] = "tblinvoices.paymentmethod='" . db_escape_string($data['gateway']) . "'";
-    }
-    if( count($qrygateways) )
-    {
-        $z = $y = 0;
-        $query = "SELECT tblinvoices.* FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE (tblinvoices.status='Unpaid') AND (" . implode(" OR ", $qrygateways) . ") AND tblclients.disableautocc='' AND (tblinvoices.duedate='" . $chargedate . "'";
-        if( !$whmcs->get_config('CCAttemptOnlyOnce') )
-        {
-            if( 0 < count($chargedates) )
-            {
-                $query .= " OR " . implode(" OR ", $chargedates);
-            }
-            else
-            {
-                $query .= " OR tblinvoices.duedate<'" . $chargedate . "'";
-            }
-        }
-        $query .= ")";
-        $result = full_query($query);
-        while( $data = mysqli_fetch_array($result) )
-        {
-            if( is_object($cron) )
-            {
-                $cron->logActivityDebug("Processing Capture for Invoice #" . $data['id']);
-            }
-            else
-            {
-                logActivity("Processing Capture for Invoice #" . $data['id']);
-            }
-            if( captureccpayment($data['id']) )
-            {
-                $z++;
-                if( is_object($cron) )
-                {
-                    $cron->logActivityDebug("Capture Successful");
-                }
-                else
-                {
-                    logActivity("Capture Successful");
-                }
-            }
-            else
-            {
-                $y++;
-                if( is_object($cron) )
-                {
-                    $cron->logActivityDebug("Capture Failed");
-                }
-                else
-                {
-                    logActivity("Capture Failed");
-                }
-            }
-        }
-        if( is_object($cron) )
-        {
-            $cron->logActivity("Credit Card Payments Processed (" . $z . " Captured, " . $y . " Failed)", true);
-            $cron->emailLog($z . " Credit Card Payments Processed (" . $y . " Failed)");
-        }
-        else
-        {
-            logActivity("Credit Card Payments Processed (" . $z . " Captured, " . $y . " Failed)");
-        }
-        return $z . " Captured, " . $y . " Failed";
-    }
-    return false;
-}
-function checkCreditCard($cardnumber, $cardname)
-{
-    global $_LANG;
-    $cards = array( array( 'name' => 'Visa', 'length' => '13,16', 'prefixes' => '4', 'checkdigit' => true ), array( 'name' => 'MasterCard', 'length' => '16', 'prefixes' => '51,52,53,54,55', 'checkdigit' => true ), array( 'name' => "Diners Club", 'length' => '14', 'prefixes' => '300,301,302,303,304,305,36,38', 'checkdigit' => true ), array( 'name' => "Carte Blanche", 'length' => '14', 'prefixes' => '300,301,302,303,304,305,36,38', 'checkdigit' => true ), array( 'name' => "American Express", 'length' => '15', 'prefixes' => '34,37', 'checkdigit' => true ), array( 'name' => 'Discover', 'length' => '16', 'prefixes' => '6011', 'checkdigit' => true ), array( 'name' => 'JCB', 'length' => '15,16', 'prefixes' => '3,1800,2131', 'checkdigit' => true ), array( 'name' => 'Discover', 'length' => '16', 'prefixes' => '6011', 'checkdigit' => true ), array( 'name' => 'Enroute', 'length' => '15', 'prefixes' => '2014,2149', 'checkdigit' => true ) );
-    $ccErrorNo = 0;
-    $cardType = 0 - 1;
-    for( $i = 0; $i < sizeof($cards); $i++ )
-    {
-        if( strtolower($cardname) == strtolower($cards[$i]['name']) )
-        {
-            $cardType = $i;
-            break;
-        }
-    }
-    if( strlen($cardnumber) == 0 )
-    {
-        return "<li>" . $_LANG['creditcardenternumber'];
-    }
-    if( $cards[$cardType] )
-    {
-        $cardNo = $cardnumber;
-        if( $cards[$cardType]['checkdigit'] )
-        {
-            $checksum = 0;
-            $mychar = '';
-            $j = 1;
-            for( $i = strlen($cardNo) - 1; 0 <= $i; $i-- )
-            {
-                $calc = $cardNo[$i] * $j;
-                if( 9 < $calc )
-                {
-                    $checksum = $checksum + 1;
-                    $calc = $calc - 10;
-                }
-                $checksum = $checksum + $calc;
-                if( $j == 1 )
-                {
-                    $j = 2;
-                }
-                else
-                {
-                    $j = 1;
-                }
-            }
-            if( $checksum % 10 != 0 )
-            {
-                return "<li>" . $_LANG['creditcardnumberinvalid'];
-            }
-        }
-        $prefixes = explode(',', $cards[$cardType]['prefixes']);
-        $PrefixValid = false;
-        foreach( $prefixes as $prefix )
-        {
-            if( substr($cardNo, 0, strlen($prefix)) == $prefix )
-            {
-                $PrefixValid = true;
-                break;
-            }
-        }
-        if( !$PrefixValid )
-        {
-            return "<li>" . $_LANG['creditcardnumberinvalid'];
-        }
-        $LengthValid = false;
-        $lengths = explode(',', $cards[$cardType]['length']);
-        foreach( $lengths as $length )
-        {
-            if( strlen($cardNo) == $length )
-            {
-                $LengthValid = true;
-                break;
-            }
-        }
-        if( !$LengthValid )
-        {
-            return "<li>" . $_LANG['creditcardnumberinvalid'];
-        }
-    }
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

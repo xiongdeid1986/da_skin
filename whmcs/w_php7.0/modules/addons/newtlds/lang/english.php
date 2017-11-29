@@ -3,7 +3,7 @@
 $_ADDONLANG['intro'] = "This is the New TLDs Addon from eNom.";
 $_ADDONLANG['description'] = "Earn commissions offering New TLDs services to your customers.  This addon includes eNom's New TLDs Watchlist and order processing for New TLDs launch phases including: Sunrise, Landrush, and Pre-Registration. Learn more at http://www.enom.com/r/01.aspx";
 $_ADDONLANG['documentation'] = "Want more information? <a href=\"http://www.enom.com/r/01.aspx\" target=\"_blank\">Learn More</a>";
-$_ADDONLANG['pagetitle'] = "New TLDs";
+$_ADDONLANG['pagetitle'] = "New TLDs"; 
 $_ADDONLANG['noemail'] = "You have no email for some reason!";
 $_ADDONLANG['nosalt'] = "Why did you make the salt empty?";
 $_ADDONLANG['notloggedin'] = "You must be logged in to view this page, <a href=\"/clientarea.php\">please login</a>and then return here!";

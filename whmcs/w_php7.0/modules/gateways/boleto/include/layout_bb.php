@@ -37,7 +37,7 @@ if (!defined("WHMCS"))
     <title><?php echo $dadosboleto["identificacao"]; ?></title>
     <meta http-equiv="Content-Type" content="text/html; charset=windows-1252" />
     <meta name="generator" content="Bluefish 1.0.4"/>
-
+    
 <style type="text/css">
 <!--
 .ti {font: 9px Arial, Helvetica, sans-serif}
@@ -150,7 +150,7 @@ table.header {
     margin-top: 20px;
     margin-bottom: 10px;
     border-bottom: 2px navy solid;
-
+    
 }
 
 table.header td.field_cod_banco {
@@ -175,7 +175,7 @@ table.header div.field_cod_banco {
 table.header td.linha_digitavel {
     width: 464px;
     text-align: right;
-    font: bold 15px Arial;
+    font: bold 15px Arial; 
     color: navy
 }
 
@@ -503,39 +503,39 @@ div.barcode {
             <address><?php echo $dadosboleto["endereco"]; ?><br></address>
             <address><?php echo $dadosboleto["cidade_uf"]; ?></address>
         </div>  <!-- id="instr_header" -->
-
+        
         <div id="instr_content">
             <p>
-                O pagamento deste boleto tamb&eacute;m poder&aacute; ser efetuado
+                O pagamento deste boleto tamb&eacute;m poder&aacute; ser efetuado 
                 nos terminais de Auto-Atendimento BB.
             </p>
-
+            
             <h2>Instru&ccedil;&otilde;es</h2>
             <ol>
             <li>
-                Imprima em impressora jato de tinta (ink jet) ou laser, em
-                qualidade normal ou alta. N&atilde;o use modo econ&ocirc;mico.
+                Imprima em impressora jato de tinta (ink jet) ou laser, em 
+                qualidade normal ou alta. N&atilde;o use modo econ&ocirc;mico. 
                 <p class="notice">Por favor, configure margens esquerda e direita
                 para 17mm.</p>
             </li>
             <li>
                 Utilize folha A4 (210 x 297 mm) ou Carta (216 x 279 mm) e margens
-                m&iacute;nimas &agrave; esquerda e &agrave; direita do
+                m&iacute;nimas &agrave; esquerda e &agrave; direita do 
                 formul&aacute;rio.
             </li>
             <li>
-                Corte na linha indicada. N&atilde;o rasure, risque, fure ou dobre
+                Corte na linha indicada. N&atilde;o rasure, risque, fure ou dobre 
                 a regi&atilde;o onde se encontra o c&oacute;digo de barras
             </li>
             </ol>
         </div>  <!-- id="instr_content" -->
     </div>  <!-- id="instructions" -->
-
+    
     <div id="boleto">
         <div class="cut">
             <p>Corte na linha pontilhada</p>
         </div>
-
+            
         <table class="header" cellspacing="0" cellpadding="0">
         <tbody>
         <tr>
@@ -605,7 +605,7 @@ div.barcode {
         </tbody>
         </table>
 
-
+      
         <table class="line" cellspacing="0" cellpadding="0">
         <tbody>
         <tr class="titulos">
@@ -616,19 +616,19 @@ div.barcode {
         </tr>
         </tbody>
         </table>
-
+        
         <div class="footer">
             <p>Autentica&ccedil;&atilde;o mec&acirc;nica</p>
         </div>
 
-
-
+        
+        
         <div class="cut">
             <p>Corte na linha pontilhada</p>
         </div>
 
 
-
+        
         <table class="header" cellspacing="0" cellpadding="0">
         <tbody>
         <tr>
@@ -652,7 +652,7 @@ div.barcode {
         </tr>
         </tbody>
         </table>
-
+        
         <table class="line" cellspacing="0" cellpadding="0">
         <tbody>
         <tr class="titulos">
@@ -707,8 +707,8 @@ div.barcode {
         </tr>
         </tbody>
         </table>
-
-
+        
+        
         <table class="line" cellspacing="0" cellpadding="0">
         <tbody>
         <tr><td class="last_line" rowspan="6">
@@ -733,7 +733,7 @@ div.barcode {
             </tbody>
             </table>
         </td></tr>
-
+        
         <tr><td>
             <table class="line" cellspacing="0" cellpadding="0">
             <tbody>
@@ -746,7 +746,7 @@ div.barcode {
             </tbody>
             </table>
         </td></tr>
-
+        
         <tr><td>
             <table class="line" cellspacing="0" cellpadding="0">
             <tbody>
@@ -800,8 +800,8 @@ div.barcode {
         </td></tr>
         </tbody>
         </table>
-
-
+        
+        
         <table class="line" cellspacing="0" cellPadding="0">
         <tbody>
         <tr class="titulos">
@@ -815,8 +815,8 @@ div.barcode {
             </td>
         </tr>
         </tbody>
-        </table>
-
+        </table>        
+        
         <table class="line" cellspacing="0" cellpadding="0">
         <tbody>
         <tr class="titulos">
@@ -827,7 +827,7 @@ div.barcode {
             <td class="cod_baixa">C&oacute;d. baixa</td>
         </tr>
         </tbody>
-        </table>
+        </table>        
 
         <div class="footer">
             <p>Autentica&ccedil;&atilde;o mec&acirc;nica</p>

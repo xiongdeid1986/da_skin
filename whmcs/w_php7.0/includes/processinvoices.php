@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,1150 +32,674 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function createInvoices($func_userid = '', $noemails = '', $nocredit = '', $specificitems = '')
-{
-    global $whmcs;
-    global $cron;
-    global $CONFIG;
-    global $_LANG;
-    global $invoicecount;
-    global $invoiceid;
-    global $continuous_invoicing_active_only;
-    $continvoicegen = $whmcs->get_config('ContinuousInvoiceGeneration');
-    $invoicedate = date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateInvoiceDaysBefore'], date('Y')));
-    $invoicedatemonthly = $CONFIG['CreateInvoiceDaysBeforeMonthly'] ? date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateInvoiceDaysBeforeMonthly'], date('Y'))) : $invoicedate;
-    $invoicedatequarterly = $CONFIG['CreateInvoiceDaysBeforeQuarterly'] ? date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateInvoiceDaysBeforeQuarterly'], date('Y'))) : $invoicedate;
-    $invoicedatesemiannually = $CONFIG['CreateInvoiceDaysBeforeSemiAnnually'] ? date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateInvoiceDaysBeforeSemiAnnually'], date('Y'))) : $invoicedate;
-    $invoicedateannually = $CONFIG['CreateInvoiceDaysBeforeAnnually'] ? date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateInvoiceDaysBeforeAnnually'], date('Y'))) : $invoicedate;
-    $invoicedatebiennially = $CONFIG['CreateInvoiceDaysBeforeBiennially'] ? date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateInvoiceDaysBeforeBiennially'], date('Y'))) : $invoicedate;
-    $invoicedatetriennially = $CONFIG['CreateInvoiceDaysBeforeTriennially'] ? date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateInvoiceDaysBeforeTriennially'], date('Y'))) : $invoicedate;
-    $domaininvoicedate = 0 < $whmcs->get_config('CreateDomainInvoiceDaysBefore') ? date('Ymd', mktime(0, 0, 0, date('m'), date('d') + $CONFIG['CreateDomainInvoiceDaysBefore'], date('Y'))) : $invoicedate;
-    $matchfield = $continvoicegen ? 'nextinvoicedate' : 'nextduedate';
-    $statusfilter = "'Pending','Active'";
-    if( !$continuous_invoicing_active_only )
-    {
-        $statusfilter .= ",'Suspended'";
-    }
-    $hostingquery = "domainstatus IN (" . $statusfilter . ") AND billingcycle!='Free' AND billingcycle!='Free Account' AND nextduedate!='00000000' AND nextinvoicedate!='00000000' AND ((billingcycle='Monthly' AND " . $matchfield . "<='" . $invoicedatemonthly . "') OR (billingcycle='Quarterly' AND " . $matchfield . "<='" . $invoicedatequarterly . "') OR (billingcycle='Semi-Annually' AND " . $matchfield . "<='" . $invoicedatesemiannually . "') OR (billingcycle='Annually' AND " . $matchfield . "<='" . $invoicedateannually . "') OR (billingcycle='Biennially' AND " . $matchfield . "<='" . $invoicedatebiennially . "') OR (billingcycle='Triennially' AND " . $matchfield . "<='" . $invoicedatetriennially . "') OR (billingcycle='One Time'))";
-    $domainquery = "(donotrenew='' OR `status`='Pending') AND `status` IN (" . $statusfilter . ") AND " . $matchfield . "<='" . $domaininvoicedate . "'";
-    $hostingaddonsquery = "tblhostingaddons.billingcycle!='Free' AND tblhostingaddons.billingcycle!='Free Account' AND tblhostingaddons.status IN (" . $statusfilter . ") AND tblhostingaddons.nextduedate!='00000000' AND tblhostingaddons.nextinvoicedate!='00000000' AND ((tblhostingaddons.billingcycle='Monthly' AND tblhostingaddons." . $matchfield . "<='" . $invoicedatemonthly . "') OR (tblhostingaddons.billingcycle='Quarterly' AND tblhostingaddons." . $matchfield . "<='" . $invoicedatequarterly . "') OR (tblhostingaddons.billingcycle='Semi-Annually' AND tblhostingaddons." . $matchfield . "<='" . $invoicedatesemiannually . "') OR (tblhostingaddons.billingcycle='Annually' AND tblhostingaddons." . $matchfield . "<='" . $invoicedateannually . "') OR (tblhostingaddons.billingcycle='Biennially' AND tblhostingaddons." . $matchfield . "<='" . $invoicedatebiennially . "') OR (tblhostingaddons.billingcycle='Triennially' AND tblhostingaddons." . $matchfield . "<='" . $invoicedatetriennially . "') OR (tblhostingaddons.billingcycle='One Time'))";
-    $i = 0;
-    $billableitemqry = '';
-    if( $func_userid != '' )
-    {
-        $hostingquery .= " AND userid=" . (int) $func_userid;
-        $domainquery .= " AND userid=" . (int) $func_userid;
-        $hostingaddonsquery .= " AND tblhosting.userid=" . (int) $func_userid;
-        $billableitemqry = " AND userid=" . (int) $func_userid;
-    }
-    if( is_array($specificitems) )
-    {
-        $hostingquery = $domainquery = $hostingaddonsquery = '';
-        if( $specificitems['products'] )
-        {
-            $hostingquery .= "(id IN (" . db_build_in_array($specificitems['products']) . ") AND billingcycle!='Free' AND billingcycle!='Free Account')";
-        }
-        if( $specificitems['addons'] )
-        {
-            $hostingaddonsquery .= "tblhostingaddons.id IN (" . db_build_in_array($specificitems['addons']) . ") AND tblhostingaddons.billingcycle!='Free' AND tblhostingaddons.billingcycle!='Free Account'";
-        }
-        if( $specificitems['domains'] )
-        {
-            $domainquery .= "id IN (" . db_build_in_array($specificitems['domains']) . ")";
-        }
-    }
-    $AddonsArray = $AddonSpecificIDs = array(  );
-    $gateways = new WHMCS_Gateways();
-    if( $hostingquery )
-    {
-        $servicecount = 0;
-        $cancellationreqids = array(  );
-        $result = select_query('tblcancelrequests', "DISTINCT relid", '');
-        while( $data = mysqli_fetch_array($result) )
-        {
-            $cancellationreqids[] = $data[0];
-        }
-        $result = select_query('tblhosting', "tblhosting.id,tblhosting.userid,tblhosting.nextduedate,tblhosting.nextinvoicedate,tblhosting.billingcycle,tblhosting.regdate,tblhosting.firstpaymentamount,tblhosting.amount,tblhosting.domain,tblhosting.paymentmethod,tblhosting.packageid,tblhosting.promoid,tblhosting.domainstatus", $hostingquery, 'domain', 'ASC');
-        $totalservicerows = mysqli_num_rows($result);
-        while( $data = mysqli_fetch_array($result) )
-        {
-            $id = $serviceid = $data['id'];
-            if( !in_array($serviceid, $cancellationreqids) )
-            {
-                $userid = $data['userid'];
-                $nextduedate = $data[$matchfield];
-                $billingcycle = $data['billingcycle'];
-                $status = $data['domainstatus'];
-                $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Hosting', 'relid' => $serviceid, 'duedate' => $nextduedate ));
-                $contblock = false;
-                if( !$num_rows && $continvoicegen && $status == 'Pending' )
-                {
-                    $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Hosting', 'relid' => $serviceid ));
-                    $contblock = true;
-                }
-                if( $num_rows == 0 )
-                {
-                    $regdate = $data['regdate'];
-                    $amount = $regdate == $nextduedate ? $data['firstpaymentamount'] : $data['amount'];
-                    $domain = $data['domain'];
-                    $paymentmethod = $data['paymentmethod'];
-                    if( !$paymentmethod || !$gateways->isActiveGateway($paymentmethod) )
-                    {
-                        $paymentmethod = ensurePaymentMethodIsSet($userid, $id, 'tblhosting');
-                    }
-                    $pid = $data['packageid'];
-                    $promoid = $data['promoid'];
-                    $productdetails = getInvoiceProductDetails($id, $pid, $regdate, $nextduedate, $billingcycle, $domain, $userid);
-                    $description = $productdetails['description'];
-                    $tax = $productdetails['tax'];
-                    $recurringcycles = $productdetails['recurringcycles'];
-                    $recurringfinished = false;
-                    if( $recurringcycles )
-                    {
-                        $num_rows3 = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Hosting', 'relid' => $id ));
-                        if( $recurringcycles <= $num_rows3 )
-                        {
-                            update_query('tblhosting', array( 'domainstatus' => 'Completed' ), array( 'id' => $id ));
-                            run_hook('ServiceRecurringCompleted', array( 'serviceid' => $id, 'recurringinvoices' => $num_rows3 ));
-                            $recurringfinished = true;
-                        }
-                    }
-                    if( !$recurringfinished )
-                    {
-                        $promovals = getInvoiceProductPromo($amount, $promoid, $userid, $id);
-                        if( isset($promovals['description']) )
-                        {
-                            $amount -= $promovals['amount'];
-                        }
-                        insert_query('tblinvoiceitems', array( 'userid' => $userid, 'type' => 'Hosting', 'relid' => $id, 'description' => $description, 'amount' => $amount, 'taxed' => $tax, 'duedate' => $nextduedate, 'paymentmethod' => $paymentmethod ));
-                        if( isset($promovals['description']) )
-                        {
-                            insert_query('tblinvoiceitems', array( 'userid' => $userid, 'type' => 'PromoHosting', 'relid' => $id, 'description' => $promovals['description'], 'amount' => $promovals['amount'], 'taxed' => $tax, 'duedate' => $nextduedate, 'paymentmethod' => $paymentmethod ));
-                        }
-                    }
-                }
-                else
-                {
-                    if( !$contblock && $continvoicegen && $billingcycle != "One Time" )
-                    {
-                        update_query('tblhosting', array( 'nextinvoicedate' => getInvoicePayUntilDate($nextduedate, $billingcycle, true) ), array( 'id' => $id ));
-                    }
-                }
-            }
-            if( $hostingaddonsquery )
-            {
-                $result3 = select_query('tblhostingaddons', "tblhostingaddons.*,tblhostingaddons.regdate AS addonregdate,tblhosting.userid,tblhosting.domain", $hostingaddonsquery . " AND tblhostingaddons.hostingid='" . $id . "'", "tblhostingaddons`.`name", 'ASC', '', "tblhosting ON tblhosting.id=tblhostingaddons.hostingid");
-                while( $data = mysqli_fetch_array($result3) )
-                {
-                    $id = $data['id'];
-                    $userid = $data['userid'];
-                    $nextduedate = $data[$matchfield];
-                    $status = $data['status'];
-                    $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Addon', 'relid' => $id, 'duedate' => $nextduedate ));
-                    $contblock = false;
-                    if( !$num_rows && $continvoicegen && $status == 'Pending' )
-                    {
-                        $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Addon', 'relid' => $id ));
-                        $contblock = true;
-                    }
-                    if( $num_rows == 0 )
-                    {
-                        $hostingid = $serviceid = $data['hostingid'];
-                        $addonid = $data['addonid'];
-                        $domain = $data['domain'];
-                        $regdate = $data['addonregdate'];
-                        $name = $data['name'];
-                        $setupfee = $data['setupfee'];
-                        $amount = $data['recurring'];
-                        $paymentmethod = $data['paymentmethod'];
-                        $billingcycle = $data['billingcycle'];
-                        $tax = $data['tax'];
-                        if( !$name )
-                        {
-                            if( isset($AddonsArray[$addonid]) )
-                            {
-                                $name = $AddonsArray[$addonid];
-                            }
-                            else
-                            {
-                                $AddonsArray[$addonid] = $name = get_query_val('tbladdons', 'name', array( 'id' => $addonid ));
-                            }
-                        }
-                        if( !$paymentmethod || !$gateways->isActiveGateway($paymentmethod) )
-                        {
-                            $paymentmethod = ensurePaymentMethodIsSet($userid, $id, 'tblhostingaddons');
-                        }
-                        $tax = $CONFIG['TaxEnabled'] && $tax ? '1' : '0';
-                        $invoicepayuntildate = getInvoicePayUntilDate($nextduedate, $billingcycle);
-                        $paydates = '';
-                        if( $billingcycle != "One Time" )
-                        {
-                            $paydates = "(" . fromMySQLDate($nextduedate) . " - " . fromMySQLDate($invoicepayuntildate) . ")";
-                        }
-                        $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Addon', 'relid' => $id, 'duedate' => $nextduedate ));
-                        if( $num_rows == 0 )
-                        {
-                            if( !in_array($serviceid, $cancellationreqids) )
-                            {
-                                if( $regdate == $nextduedate )
-                                {
-                                    $amount = $amount + $setupfee;
-                                }
-                                if( $domain )
-                                {
-                                    $domain = "(" . $domain . ") ";
-                                }
-                                $description = $_LANG['orderaddon'] . " " . $domain . "- " . $name . " " . $paydates;
-                                insert_query('tblinvoiceitems', array( 'userid' => $userid, 'type' => 'Addon', 'relid' => $id, 'description' => $description, 'amount' => $amount, 'taxed' => $tax, 'duedate' => $nextduedate, 'paymentmethod' => $paymentmethod ));
-                                $AddonSpecificIDs[] = $id;
-                            }
-                        }
-                        else
-                        {
-                            if( !$contblock && $continvoicegen )
-                            {
-                                update_query('tblhostingaddons', array( 'nextinvoicedate' => getInvoicePayUntilDate($nextduedate, $billingcycle, true) ), array( 'id' => $id ));
-                            }
-                        }
-                    }
-                }
-            }
-            $servicecount++;
-            if( is_object($cron) )
-            {
-                $cron->logActivityDebug("Invoicing Loop Service ID " . $serviceid . " - " . $servicecount . " of " . $totalservicerows);
-            }
-        }
-    }
-    if( $hostingaddonsquery )
-    {
-        $addoncount = 0;
-        if( count($AddonSpecificIDs) )
-        {
-            $hostingaddonsquery .= " AND tblhostingaddons.id NOT IN (" . db_build_in_array($AddonSpecificIDs) . ")";
-        }
-        $result = select_query('tblhostingaddons', "tblhostingaddons.*,tblhostingaddons.regdate AS addonregdate,tblhosting.userid,tblhosting.domain", $hostingaddonsquery, "tblhostingaddons`.`name", 'ASC', '', "tblhosting ON tblhosting.id=tblhostingaddons.hostingid");
-        $totaladdonrows = mysqli_num_rows($result);
-        while( $data = mysqli_fetch_array($result) )
-        {
-            $id = $data['id'];
-            $userid = $data['userid'];
-            $nextduedate = $data[$matchfield];
-            $status = $data['status'];
-            $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Addon', 'relid' => $id, 'duedate' => $nextduedate ));
-            $contblock = false;
-            if( !$num_rows && $continvoicegen && $status == 'Pending' )
-            {
-                $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Addon', 'relid' => $id ));
-                $contblock = true;
-            }
-            if( $num_rows == 0 )
-            {
-                $hostingid = $serviceid = $data['hostingid'];
-                $addonid = $data['addonid'];
-                $domain = $data['domain'];
-                $regdate = $data['addonregdate'];
-                $name = $data['name'];
-                $setupfee = $data['setupfee'];
-                $amount = $data['recurring'];
-                $paymentmethod = $data['paymentmethod'];
-                if( !$paymentmethod || !$gateways->isActiveGateway($paymentmethod) )
-                {
-                    $paymentmethod = ensurePaymentMethodIsSet($userid, $id, 'tblhostingaddons');
-                }
-                $billingcycle = $data['billingcycle'];
-                $tax = $data['tax'];
-                if( !$name )
-                {
-                    if( $AddonsArray[$addonid] )
-                    {
-                        $name = $AddonsArray[$addonid];
-                    }
-                    else
-                    {
-                        $AddonsArray[$addonid] = $name = get_query_val('tbladdons', 'name', array( 'id' => $addonid ));
-                    }
-                }
-                $tax = $CONFIG['TaxEnabled'] && $tax ? '1' : '0';
-                $invoicepayuntildate = getInvoicePayUntilDate($nextduedate, $billingcycle);
-                $paydates = '';
-                if( $billingcycle != "One Time" )
-                {
-                    $paydates = "(" . fromMySQLDate($nextduedate) . " - " . fromMySQLDate($invoicepayuntildate) . ")";
-                }
-                if( !in_array($serviceid, $cancellationreqids) )
-                {
-                    if( $regdate == $nextduedate )
-                    {
-                        $amount = $amount + $setupfee;
-                    }
-                    if( $domain )
-                    {
-                        $domain = "(" . $domain . ") ";
-                    }
-                    $description = $_LANG['orderaddon'] . " " . $domain . "- " . $name . " " . $paydates;
-                    insert_query('tblinvoiceitems', array( 'userid' => $userid, 'type' => 'Addon', 'relid' => $id, 'description' => $description, 'amount' => $amount, 'taxed' => $tax, 'duedate' => $nextduedate, 'paymentmethod' => $paymentmethod ));
-                }
-            }
-            else
-            {
-                if( !$contblock && $continvoicegen )
-                {
-                    update_query('tblhostingaddons', array( 'nextinvoicedate' => getInvoicePayUntilDate($nextduedate, $billingcycle, true) ), array( 'id' => $id ));
-                }
-            }
-            $addoncount++;
-            if( is_object($cron) )
-            {
-                $cron->logActivityDebug("Invoicing Loop Addon ID " . $id . " - " . $addoncount . " of " . $totaladdonrows);
-            }
-        }
-    }
-    if( $domainquery )
-    {
-        $domaincount = 0;
-        $result = select_query('tbldomains', '', $domainquery, 'domain', 'ASC');
-        $totaldomainrows = mysqli_num_rows($result);
-        while( $data = mysqli_fetch_array($result) )
-        {
-            $id = $data['id'];
-            $userid = $data['userid'];
-            $nextduedate = $data[$matchfield];
-            $status = $data['status'];
-            $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", "userid='" . $userid . "' AND type IN ('Domain','DomainRegister','DomainTransfer') AND relid='" . $id . "' AND duedate='" . $nextduedate . "'");
-            $contblock = false;
-            if( !$num_rows && $continvoicegen && $status == 'Pending' )
-            {
-                $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", "userid='" . $userid . "' AND type IN ('Domain','DomainRegister','DomainTransfer') AND relid='" . $id . "'");
-                $contblock = true;
-            }
-            if( $num_rows == 0 )
-            {
-                $type = $data['type'];
-                $domain = $data['domain'];
-                $registrationperiod = $data['registrationperiod'];
-                $regdate = $data['registrationdate'];
-                $expirydate = $data['expirydate'];
-                $paymentmethod = $data['paymentmethod'];
-                if( !$paymentmethod || !$gateways->isActiveGateway($paymentmethod) )
-                {
-                    $paymentmethod = ensurePaymentMethodIsSet($userid, $id, 'tbldomains');
-                }
-                $dnsmanagement = $data['dnsmanagement'];
-                $emailforwarding = $data['emailforwarding'];
-                $idprotection = $data['idprotection'];
-                $promoid = $data['promoid'];
-                getUsersLang($userid);
-                if( $expirydate == '0000-00-00' )
-                {
-                    $expirydate = $nextduedate;
-                }
-                if( $regdate == $nextduedate )
-                {
-                    $amount = $data['firstpaymentamount'];
-                    if( $type == 'Transfer' )
-                    {
-                        $domaindesc = $_LANG['domaintransfer'];
-                    }
-                    else
-                    {
-                        $domaindesc = $_LANG['domainregistration'];
-                        $type = 'Register';
-                    }
-                }
-                else
-                {
-                    $amount = $data['recurringamount'];
-                    $domaindesc = $_LANG['domainrenewal'];
-                    $type = '';
-                }
-                $tax = $CONFIG['TaxEnabled'] && $CONFIG['TaxDomains'] ? '1' : '0';
-                $domaindesc .= " - " . $domain . " - " . $registrationperiod . " " . $_LANG['orderyears'];
-                if( $type != 'Transfer' )
-                {
-                    $domaindesc .= " (" . fromMySQLDate($expirydate) . " - " . fromMySQLDate(getInvoicePayUntilDate($expirydate, $registrationperiod)) . ")";
-                }
-                if( $dnsmanagement )
-                {
-                    $domaindesc .= "\n + " . $_LANG['domaindnsmanagement'];
-                }
-                if( $emailforwarding )
-                {
-                    $domaindesc .= "\n + " . $_LANG['domainemailforwarding'];
-                }
-                if( $idprotection )
-                {
-                    $domaindesc .= "\n + " . $_LANG['domainidprotection'];
-                }
-                $promo_description = $promo_amount = 0;
-                if( $promoid )
-                {
-                    $data = get_query_vals('tblpromotions', '', array( 'id' => $promoid ));
-                    $promo_id = $data['id'];
-                    if( $promo_id )
-                    {
-                        $promo_code = $data['code'];
-                        $promo_type = $data['type'];
-                        $promo_recurring = $data['recurring'];
-                        $promo_value = $data['value'];
-                        if( $promo_recurring || !$promo_recurring && $regdate == $nextduedate )
-                        {
-                            if( $promo_type == 'Percentage' )
-                            {
-                                $promo_amount = round($amount / (1 - $promo_value / 100), 2) - $amount;
-                                $promo_value .= "%";
-                            }
-                            else
-                            {
-                                if( $promo_type == "Fixed Amount" )
-                                {
-                                    $promo_amount = $promo_value;
-                                    $currency = getCurrency($userid);
-                                    $promo_value = formatCurrency($promo_value);
-                                }
-                            }
-                            $amount += $promo_amount;
-                            $promo_recurring = $promo_recurring ? $_LANG['recurring'] : $_LANG['orderpaymenttermonetime'];
-                            $promo_description = $_LANG['orderpromotioncode'] . ": " . $promo_code . " - " . $promo_value . " " . $promo_recurring . " " . $_LANG['orderdiscount'];
-                            $promo_amount *= 0 - 1;
-                        }
-                    }
-                }
-                insert_query('tblinvoiceitems', array( 'userid' => $userid, 'type' => 'Domain' . $type, 'relid' => $id, 'description' => $domaindesc, 'amount' => $amount, 'taxed' => $tax, 'duedate' => $nextduedate, 'paymentmethod' => $paymentmethod ));
-                if( $promo_description )
-                {
-                    insert_query('tblinvoiceitems', array( 'userid' => $userid, 'type' => 'PromoDomain', 'relid' => $id, 'description' => $promo_description, 'amount' => $promo_amount, 'taxed' => $tax, 'duedate' => $nextduedate, 'paymentmethod' => $paymentmethod ));
-                }
-            }
-            else
-            {
-                if( !$contblock && $continvoicegen )
-                {
-                    $year = substr($nextduedate, 0, 4);
-                    $month = substr($nextduedate, 5, 2);
-                    $day = substr($nextduedate, 8, 2);
-                    $new_time = mktime(0, 0, 0, $month, $day, $year + $registrationperiod);
-                    $nextinvoicedate = date('Ymd', $new_time);
-                    update_query('tbldomains', array( 'nextinvoicedate' => $nextinvoicedate ), array( 'id' => $id ));
-                }
-            }
-            getUsersLang(0);
-            $domaincount++;
-            if( is_object($cron) )
-            {
-                $cron->logActivityDebug("Invoicing Loop Domain ID " . $id . " - " . $domaincount . " of " . $totaldomainrows);
-            }
-        }
-    }
-    if( !is_array($specificitems) )
-    {
-        $billableitemstax = $CONFIG['TaxEnabled'] && $CONFIG['TaxBillableItems'] ? '1' : '0';
-        $result = select_query('tblbillableitems', '', "((invoiceaction='1' AND invoicecount='0') OR (invoiceaction='3' AND invoicecount='0' AND duedate<='" . $invoicedate . "') OR (invoiceaction='4' AND duedate<='" . $invoicedate . "' AND (recurfor='0' OR invoicecount<recurfor)))" . $billableitemqry);
-        while( $data = mysqli_fetch_array($result) )
-        {
-            $paymentmethod = getClientsPaymentMethod($data['userid']);
-            if( $data['invoiceaction'] != '4' )
-            {
-                insert_query('tblinvoiceitems', array( 'userid' => $data['userid'], 'type' => 'Item', 'relid' => $data['id'], 'description' => $data['description'], 'amount' => $data['amount'], 'taxed' => $billableitemstax, 'duedate' => $data['duedate'], 'paymentmethod' => $paymentmethod ));
-            }
-            $updatearray = array( 'invoicecount' => "+1" );
-            if( $data['invoiceaction'] == '4' )
-            {
-                $num_rows = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'type' => 'Item', 'relid' => $data['id'], 'duedate' => $data['duedate'] ));
-                if( $num_rows == 0 )
-                {
-                    insert_query('tblinvoiceitems', array( 'userid' => $data['userid'], 'type' => 'Item', 'relid' => $data['id'], 'description' => $data['description'], 'amount' => $data['amount'], 'taxed' => $billableitemstax, 'duedate' => $data['duedate'], 'paymentmethod' => $paymentmethod ));
-                }
-                $adddays = $addmonths = $addyears = 0;
-                if( $data['recurcycle'] == 'Days' )
-                {
-                    $adddays = $data['recur'];
-                }
-                else
-                {
-                    if( $data['recurcycle'] == 'Weeks' )
-                    {
-                        $adddays = $data['recur'] * 7;
-                    }
-                    else
-                    {
-                        if( $data['recurcycle'] == 'Months' )
-                        {
-                            $addmonths = $data['recur'];
-                        }
-                        else
-                        {
-                            if( $data['recurcycle'] == 'Years' )
-                            {
-                                $addyears = $data['recur'];
-                            }
-                        }
-                    }
-                }
-                $year = substr($data['duedate'], 0, 4);
-                $month = substr($data['duedate'], 5, 2);
-                $day = substr($data['duedate'], 8, 2);
-                $updatearray['duedate'] = date('Ymd', mktime(0, 0, 0, $month + $addmonths, $day + $adddays, $year + $addyears));
-            }
-            update_query('tblbillableitems', $updatearray, array( 'id' => $data['id'] ));
-        }
-    }
-    $invoicecount = $invoiceid = 0;
-    $where = array(  );
-    $where[] = "invoiceid=0";
-    if( $func_userid )
-    {
-        $where[] = "userid=" . (int) $func_userid;
-    }
-    if( !is_array($specificitems) )
-    {
-        $where[] = "tblclients.separateinvoices=''";
-        $where[] = "(tblclientgroups.separateinvoices='' OR tblclientgroups.separateinvoices is null)";
-    }
-    $result = select_query('tblinvoiceitems', "DISTINCT tblinvoiceitems.userid,tblinvoiceitems.duedate,tblinvoiceitems.paymentmethod", implode(" AND ", $where), 'duedate', 'ASC', '', "tblclients ON tblclients.id=tblinvoiceitems.userid LEFT JOIN tblclientgroups ON tblclientgroups.id=tblclients.groupid");
-    while( $data = mysqli_fetch_array($result) )
-    {
-        createInvoicesProcess($data, $noemails, $nocredit);
-    }
-    if( !is_array($specificitems) )
-    {
-        $where = array(  );
-        $where[] = "invoiceid=0";
-        if( $func_userid )
-        {
-            $where[] = "userid=" . (int) $func_userid;
-        }
-        $where[] = "(tblclients.separateinvoices='on' OR tblclientgroups.separateinvoices='on')";
-        $result = select_query('tblinvoiceitems', "tblinvoiceitems.id,tblinvoiceitems.userid,tblinvoiceitems.type,tblinvoiceitems.relid,tblinvoiceitems.duedate,tblinvoiceitems.paymentmethod", implode(" AND ", $where), 'duedate', 'ASC', '', "tblclients ON tblclients.id=tblinvoiceitems.userid LEFT JOIN tblclientgroups ON tblclientgroups.id=tblclients.groupid");
-        while( $data = mysqli_fetch_array($result) )
-        {
-            createInvoicesProcess($data, $noemails, $nocredit);
-        }
-    }
-    if( is_object($cron) )
-    {
-        $cron->logActivity($invoicecount . " Invoices Created", true);
-        $cron->emailLog($invoicecount . " Invoices Created");
-    }
-    if( $func_userid )
-    {
-        return $invoiceid;
-    }
-}
-function createInvoicesProcess($data, $noemails = '', $nocredit = '')
-{
-    global $whmcs;
-    global $cron;
-    global $CONFIG;
-    global $_LANG;
-    global $invoicecount;
-    global $invoiceid;
-    $itemid = $data['id'];
-    $userid = $data['userid'];
-    $type = $data['type'];
-    $relid = $data['relid'];
-    $duedate = $data['duedate'];
-    $paymentmethod = $invpaymentmethod = $data['paymentmethod'];
-    $gateways = new WHMCS_Gateways();
-    if( !$invpaymentmethod || !$gateways->isActiveGateway($invpaymentmethod) )
-    {
-        $invpaymentmethod = ensurePaymentMethodIsSet($userid, $itemid, 'tblinvoiceitems');
-    }
-    $where = array( 'userid' => $userid, 'duedate' => $duedate, 'paymentmethod' => $paymentmethod, 'invoiceid' => '0' );
-    if( !empty($itemid) )
-    {
-        $where['id'] = $itemid;
-    }
-    if( is_null(get_query_val('tblinvoiceitems', 'id', $where)) )
-    {
-        return false;
-    }
-    unset($where);
-    $taxrate = $taxrate2 = 0;
-    if( $CONFIG['TaxEnabled'] )
-    {
-        $data = get_query_vals('tblclients', 'taxexempt,state,country,separateinvoices', array( 'id' => $userid ));
-        $taxexempt = $data['taxexempt'];
-        $taxstate = $data['state'];
-        $taxcountry = $data['country'];
-        if( !$taxexempt )
-        {
-            $taxrate = getTaxRate(1, $taxstate, $taxcountry);
-            $taxrate2 = getTaxRate(2, $taxstate, $taxcountry);
-            $taxrate = $taxrate['rate'];
-            $taxrate2 = $taxrate2['rate'];
-        }
-    }
-    $invoiceid = insert_query('tblinvoices', array( 'date' => "now()", 'duedate' => $duedate, 'userid' => $userid, 'status' => 'Unpaid', 'taxrate' => $taxrate, 'taxrate2' => $taxrate2, 'paymentmethod' => $invpaymentmethod, 'notes' => $invoicenotes ));
-    if( $paymentmethod != $invpaymentmethod )
-    {
-        if( is_object($cron) )
-        {
-            $cron->logActivity(sprintf("Invalid payment method updated on invoice generation from '%s' to '%s' for Invoice ID: %d", $paymentmethod, $invpaymentmethod, $invoiceid));
-        }
-        else
-        {
-            logActivity(sprintf("Invalid payment method updated on invoice generation from '%s' to '%s' for Invoice ID: %d", $paymentmethod, $invpaymentmethod, $invoiceid));
-        }
-    }
-    if( $itemid )
-    {
-        update_query('tblinvoiceitems', array( 'invoiceid' => $invoiceid ), array( 'invoiceid' => '0', 'userid' => $userid, 'type' => 'Promo' . $type, 'relid' => $relid ));
-        $where = array( 'id' => $itemid );
-    }
-    else
-    {
-        $where = array( 'invoiceid' => '', 'duedate' => $duedate, 'userid' => $userid, 'paymentmethod' => $paymentmethod );
-    }
-    update_query('tblinvoiceitems', array( 'invoiceid' => $invoiceid ), $where);
-    logActivity("Created Invoice - Invoice ID: " . $invoiceid, $userid);
-    if( is_object($cron) )
-    {
-        $cron->logActivityDebug("Generated Invoice #" . $invoiceid);
-    }
-    $billableitemstax = $CONFIG['TaxEnabled'] && $CONFIG['TaxCustomInvoices'] ? '1' : '0';
-    $result2 = select_query('tblbillableitems', '', array( 'userid' => $userid, 'invoiceaction' => '2', 'invoicecount' => '0' ));
-    while( $data = mysqli_fetch_array($result2) )
-    {
-        insert_query('tblinvoiceitems', array( 'invoiceid' => $invoiceid, 'userid' => $userid, 'type' => 'Item', 'relid' => $data['id'], 'description' => $data['description'], 'amount' => $data['amount'], 'taxed' => $billableitemstax ));
-        update_query('tblbillableitems', array( 'invoicecount' => "+1" ), array( 'id' => $data['id'] ));
-    }
-    updateInvoiceTotal($invoiceid);
-    $data2 = get_query_vals('tblclients', 'credit,groupid', array( 'id' => $userid ));
-    $credit = $data2['credit'];
-    $groupid = $data2['groupid'];
-    $data2 = get_query_vals('tblinvoices', 'subtotal,total', array( 'id' => $invoiceid ));
-    $subtotal = $data2['subtotal'];
-    $total = $data2['total'];
-    $isaddfundsinvoice = get_query_val('tblinvoiceitems', "COUNT(id)", "invoiceid='" . $invoiceid . "' AND (type='AddFunds' OR type='Invoice')");
-    if( $groupid && !$isaddfundsinvoice )
-    {
-        $discountPercent = get_query_val('tblclientgroups', 'discountpercent', array( 'id' => $groupid ));
-        if( 0 < $discountPercent )
-        {
-            if( $CONFIG['TaxType'] == 'Inclusive' )
-            {
-                $discountAmount = $total * $discountPercent / 100 * (0 - 1);
-            }
-            else
-            {
-                $discountAmount = $subtotal * $discountPercent / 100 * (0 - 1);
-            }
-            insert_query('tblinvoiceitems', array( 'invoiceid' => $invoiceid, 'userid' => $userid, 'type' => 'GroupDiscount', 'description' => $_LANG['clientgroupdiscount'], 'amount' => $discountAmount, 'taxed' => '1' ));
-            updateInvoiceTotal($invoiceid);
-            $data2 = get_query_vals('tblclients', 'credit,groupid', array( 'id' => $userid ));
-            $credit = $data2['credit'];
-            $groupid = $data2['groupid'];
-            $data2 = get_query_vals('tblinvoices', 'subtotal,total', array( 'id' => $invoiceid ));
-            $subtotal = $data2['subtotal'];
-            $total = $data2['total'];
-        }
-    }
-    if( $whmcs->get_config('ContinuousInvoiceGeneration') )
-    {
-        $result2 = select_query('tblinvoiceitems', '', array( 'invoiceid' => $invoiceid ));
-        while( $data = mysqli_fetch_array($result2) )
-        {
-            $type = $data['type'];
-            $relid = $data['relid'];
-            $nextinvoicedate = $data['duedate'];
-            $year = substr($nextinvoicedate, 0, 4);
-            $month = substr($nextinvoicedate, 5, 2);
-            $day = substr($nextinvoicedate, 8, 2);
-            $proratabilling = false;
-            if( $type == 'Hosting' )
-            {
-                $data = get_query_vals('tblhosting', 'billingcycle,packageid,regdate,nextduedate', array( 'id' => $relid ));
-                $billingcycle = $data['billingcycle'];
-                $packageid = $data['packageid'];
-                $regdate = $data['regdate'];
-                $nextduedate = $data['nextduedate'];
-                $data = get_query_vals('tblproducts', 'proratabilling,proratadate,proratachargenextmonth', array( 'id' => $packageid ));
-                $proratabilling = $data['proratabilling'];
-                $proratadate = $data['proratadate'];
-                $proratachargenextmonth = $data['proratachargenextmonth'];
-                $proratamonths = getBillingCycleMonths($billingcycle);
-                $nextinvoicedate = date('Ymd', mktime(0, 0, 0, $month + $proratamonths, $day, $year));
-            }
-            else
-            {
-                if( $type == 'Domain' || $type == 'DomainRegister' || $type == 'DomainTransfer' )
-                {
-                    $data = get_query_vals('tbldomains', 'registrationperiod,nextduedate', array( 'id' => $relid ));
-                    $registrationperiod = $data['registrationperiod'];
-                    $nextduedate = explode('-', $data['nextduedate']);
-                    $billingcycle = '';
-                    $nextinvoicedate = date('Ymd', mktime(0, 0, 0, $nextduedate[1], $nextduedate[2], $nextduedate[0] + $registrationperiod));
-                }
-                else
-                {
-                    if( $type == 'Addon' )
-                    {
-                        $billingcycle = get_query_val('tblhostingaddons', 'billingcycle', array( 'id' => $relid ));
-                        $proratamonths = getBillingCycleMonths($billingcycle);
-                        $nextinvoicedate = date('Ymd', mktime(0, 0, 0, $month + $proratamonths, $day, $year));
-                    }
-                }
-            }
-            if( $billingcycle == "One Time" )
-            {
-                $nextinvoicedate = '00000000';
-            }
-            if( $regdate == $nextduedate && $proratabilling )
-            {
-                if( $billingcycle != 'Monthly' )
-                {
-                    $proratachargenextmonth = 0;
-                }
-                $orderyear = substr($regdate, 0, 4);
-                $ordermonth = substr($regdate, 5, 2);
-                $orderday = substr($regdate, 8, 2);
-                if( $orderday < $proratadate )
-                {
-                    $proratamonth = $ordermonth;
-                }
-                else
-                {
-                    $proratamonth = $ordermonth + 1;
-                }
-                $days = (strtotime(date('Y-m-d', mktime(0, 0, 0, $proratamonth, $proratadate, $orderyear))) - strtotime(date('Y-m-d'))) / (60 * 60 * 24);
-                $totaldays = 30;
-                $nextinvoicedate = date('Y-m-d', mktime(0, 0, 0, $proratamonth, $proratadate, $orderyear));
-                if( $proratachargenextmonth <= $orderday && $days < 31 )
-                {
-                    $nextinvoicedate = date('Y-m-d', mktime(0, 0, 0, $proratamonth + $proratamonths, $proratadate, $orderyear));
-                }
-            }
-            if( $type == 'Hosting' )
-            {
-                update_query('tblhosting', array( 'nextinvoicedate' => $nextinvoicedate ), array( 'id' => $relid ));
-            }
-            else
-            {
-                if( $type == 'Domain' || $type == 'DomainRegister' || $type == 'DomainTransfer' )
-                {
-                    update_query('tbldomains', array( 'nextinvoicedate' => $nextinvoicedate ), array( 'id' => $relid ));
-                }
-                else
-                {
-                    if( $type == 'Addon' )
-                    {
-                        update_query('tblhostingaddons', array( 'nextinvoicedate' => $nextinvoicedate ), array( 'id' => $relid ));
-                    }
-                }
-            }
-        }
-    }
-    $doprocesspaid = false;
-    if( !$nocredit && $credit != "0.00" && !$CONFIG['NoAutoApplyCredit'] )
-    {
-        if( $total <= $credit )
-        {
-            $creditleft = $credit - $total;
-            $credit = $total;
-            $doprocesspaid = true;
-        }
-        else
-        {
-            $creditleft = 0;
-        }
-        logActivity("Credit Automatically Applied at Invoice Creation - Invoice ID: " . $invoiceid . " - Amount: " . $credit, $userid);
-        insert_query('tblcredit', array( 'clientid' => $userid, 'date' => "now()", 'description' => "Credit Applied to Invoice #" . $invoiceid, 'amount' => $credit * (0 - 1) ));
-        update_query('tblclients', array( 'credit' => $creditleft ), array( 'id' => $userid ));
-        update_query('tblinvoices', array( 'credit' => $credit ), array( 'id' => $invoiceid ));
-        updateInvoiceTotal($invoiceid);
-    }
-    $invoiceArr = array( 'source' => 'autogen', 'user' => WHMCS_Session::get('adminid') ? WHMCS_Session::get('adminid') : 'system', 'invoiceid' => $invoiceid );
-    run_hook('InvoiceCreation', $invoiceArr);
-    $result2 = select_query('tblpaymentgateways', 'value', array( 'gateway' => $invpaymentmethod, 'setting' => 'type' ));
-    $data2 = mysqli_fetch_array($result2);
-    $paymenttype = $data2['value'];
-    if( $noemails != 'true' )
-    {
-        run_hook('InvoiceCreationPreEmail', $invoiceArr);
-        sendMessage(($paymenttype == 'CC' || $paymenttype == 'OfflineCC' ? "Credit Card " : '') . "Invoice Created", $invoiceid);
-    }
-    run_hook('InvoiceCreated', $invoiceArr);
-    $result2 = select_query('tblinvoices', 'total', array( 'id' => $invoiceid, 'status' => 'Unpaid' ));
-    $data2 = mysqli_fetch_array($result2);
-    $total = $data2['total'];
-    if( $total == "0.00" )
-    {
-        $doprocesspaid = true;
-    }
-    WHMCS_Session::set('InOrderButNeedProcessPaidInvoiceAction', false);
-    if( $doprocesspaid )
-    {
-        if( defined('INORDERFORM') )
-        {
-            WHMCS_Session::set('InOrderButNeedProcessPaidInvoiceAction', true);
-        }
-        else
-        {
-            processPaidInvoice($invoiceid);
-        }
-    }
-    $invoicetotal = 0;
-    $invoicecount++;
-    WHMCS_Invoices::adjustincrementfornextinvoice($invoiceid);
-}
-function getInvoiceProductDetails($id, $pid, $regdate, $nextduedate, $billingcycle, $domain, $userid)
-{
-    global $CONFIG;
-    global $_LANG;
-    global $currency;
-    $data = get_query_vals('tblproducts', 'type,name,tax,proratabilling,proratadate,proratachargenextmonth,recurringcycles', array( 'id' => $pid ));
-    $type = $data['type'];
-    $package = $data['name'];
-    $tax = $data['tax'];
-    $proratabilling = $data['proratabilling'];
-    $proratadate = $data['proratadate'];
-    $proratachargenextmonth = $data['proratachargenextmonth'];
-    $recurringcycles = $data['recurringcycles'];
-    $userid = get_query_val('tblhosting', 'userid', array( 'id' => $id ));
-    $currency = getCurrency($userid);
-    if( $tax && $CONFIG['TaxEnabled'] )
-    {
-        $tax = '1';
-    }
-    else
-    {
-        $tax = '0';
-    }
-    $paydates = '';
-    if( $regdate || $nextduedate )
-    {
-        if( $regdate == $nextduedate && $proratabilling )
-        {
-            $orderyear = substr($regdate, 0, 4);
-            $ordermonth = substr($regdate, 5, 2);
-            $orderday = substr($regdate, 8, 2);
-            $proratavalues = getProrataValues($billingcycle, 0, $proratadate, $proratachargenextmonth, $orderday, $ordermonth, $orderyear, $userid);
-            $invoicepayuntildate = $proratavalues['invoicedate'];
-        }
-        else
-        {
-            $invoicepayuntildate = getInvoicePayUntilDate($nextduedate, $billingcycle);
-        }
-        if( $billingcycle != "One Time" )
-        {
-            $paydates = " (" . fromMySQLDate($nextduedate) . " - " . fromMySQLDate($invoicepayuntildate) . ")";
-        }
-    }
-    $description = $package;
-    if( $domain )
-    {
-        $description .= " - " . $domain;
-    }
-    $description .= $paydates;
-    $configbillingcycle = $billingcycle;
-    if( $configbillingcycle == "One Time" || $configbillingcycle == "Free Account" )
-    {
-        $configbillingcycle = 'monthly';
-    }
-    $configbillingcycle = strtolower(str_replace('-', '', $configbillingcycle));
-    $query = "SELECT tblproductconfigoptions.id, tblproductconfigoptions.optionname AS confoption, tblproductconfigoptions.optiontype AS conftype, tblproductconfigoptionssub.optionname, tblhostingconfigoptions.qty,tblhostingconfigoptions.optionid FROM tblhostingconfigoptions INNER JOIN tblproductconfigoptions ON tblproductconfigoptions.id = tblhostingconfigoptions.configid INNER JOIN tblproductconfigoptionssub ON tblproductconfigoptionssub.id = tblhostingconfigoptions.optionid INNER JOIN tblhosting ON tblhosting.id=tblhostingconfigoptions.relid INNER JOIN tblproductconfiglinks ON tblproductconfiglinks.gid=tblproductconfigoptions.gid WHERE tblhostingconfigoptions.relid=" . (int) $id . " AND tblproductconfigoptions.hidden='0' AND tblproductconfigoptionssub.hidden='0' AND tblproductconfiglinks.pid=tblhosting.packageid ORDER BY tblproductconfigoptions.`order`,tblproductconfigoptions.id ASC";
-    $result = full_query($query);
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $confoption = $data['confoption'];
-        $conftype = $data['conftype'];
-        if( strpos($confoption, "|") )
-        {
-            $confoption = explode("|", $confoption);
-            $confoption = trim($confoption[1]);
-        }
-        $optionname = $data['optionname'];
-        $optionqty = $data['qty'];
-        $optionid = $data['optionid'];
-        if( strpos($optionname, "|") )
-        {
-            $optionname = explode("|", $optionname);
-            $optionname = trim($optionname[1]);
-        }
-        if( $conftype == 3 )
-        {
-            if( $optionqty )
-            {
-                $optionname = $_LANG['yes'];
-            }
-            else
-            {
-                $optionname = $_LANG['no'];
-            }
-        }
-        else
-        {
-            if( $conftype == 4 )
-            {
-                $optionname = $optionqty . " x " . $optionname . " ";
-                $qtyprice = get_query_val('tblpricing', $configbillingcycle, array( 'type' => 'configoptions', 'currency' => $currency['id'], 'relid' => $optionid ));
-                $optionname .= formatCurrency($qtyprice);
-            }
-        }
-        $description .= "\n" . $confoption . ": " . $optionname;
-    }
-    $result = select_query('tblcustomfields', "tblcustomfields.id,tblcustomfields.fieldname,(SELECT value FROM tblcustomfieldsvalues WHERE tblcustomfieldsvalues.fieldid=tblcustomfields.id AND tblcustomfieldsvalues.relid=" . (int) $id . " LIMIT 1) AS value", array( 'type' => 'product', 'relid' => $pid, 'showinvoice' => 'on' ));
-    while( $data = simulate_fetch_assoc($result) )
-    {
-        if( $data['value'] )
-        {
-            $description .= "\n" . $data['fieldname'] . ": " . $data['value'];
-        }
-    }
-    return array( 'description' => $description, 'tax' => $tax, 'recurringcycles' => $recurringcycles );
-}
-function InvoicesAddLateFee()
-{
-    global $CONFIG;
-    global $_LANG;
-    global $cron;
-    if( $CONFIG['TaxLateFee'] )
-    {
-        $taxlatefee = '1';
-    }
-    $invoiceids = array(  );
-    if( $CONFIG['InvoiceLateFeeAmount'] != "0.00" )
-    {
-        if( $CONFIG['AddLateFeeDays'] == '' )
-        {
-            $CONFIG['AddLateFeeDays'] = '0';
-        }
-        $adddate = date('Ymd', mktime(0, 0, 0, date('m'), date('d') - $CONFIG['AddLateFeeDays'], date('Y')));
-        $query = "SELECT tblinvoices.* FROM tblinvoices " . "INNER JOIN tblclients ON tblclients.id=tblinvoices.userid " . "WHERE duedate<='" . $adddate . "' AND tblinvoices.status='Unpaid' AND duedate!=date AND latefeeoveride=''";
-        $result = full_query($query);
-        while( $data = mysqli_fetch_array($result) )
-        {
-            $userid = $data['userid'];
-            $invoiceid = $data['id'];
-            $duedate = $data['duedate'];
-            $paymentmethod = $data['paymentmethod'];
-            $total = $data['total'];
-            if( !get_query_val('tblinvoiceitems', "COUNT(id)", array( 'type' => 'LateFee', 'invoiceid' => $invoiceid )) )
-            {
-                if( $CONFIG['LateFeeType'] == 'Percentage' )
-                {
-                    $amountpaid = get_query_val('tblaccounts', "SUM(amountin)-SUM(amountout)", array( 'invoiceid' => $invoiceid ));
-                    $balance = round($total - $amountpaid, 2);
-                    $latefeeamount = format_as_currency($balance * $CONFIG['InvoiceLateFeeAmount'] / 100);
-                }
-                else
-                {
-                    $latefeeamount = $CONFIG['InvoiceLateFeeAmount'];
-                }
-                if( 0 < $CONFIG['LateFeeMinimum'] && $latefeeamount < $CONFIG['LateFeeMinimum'] )
-                {
-                    $latefeeamount = $CONFIG['LateFeeMinimum'];
-                }
-                getUsersLang($userid);
-                insert_query('tblinvoiceitems', array( 'userid' => $userid, 'type' => 'LateFee', 'invoiceid' => $invoiceid, 'description' => $_LANG['latefee'] . " (" . $_LANG['latefeeadded'] . " " . fromMySQLDate(date('Y-m-d')) . ")", 'amount' => $latefeeamount, 'duedate' => $duedate, 'paymentmethod' => $paymentmethod, 'taxed' => $taxlatefee ));
-                if( !function_exists('updateInvoiceTotal') )
-                {
-                    require(dirname(__FILE__) . "/invoicefunctions.php");
-                }
-                updateInvoiceTotal($invoiceid);
-                run_hook('AddInvoiceLateFee', array( 'invoiceid' => $invoiceid ));
-                $invoiceids[] = $invoiceid;
-            }
-        }
-    }
-    if( is_object($cron) )
-    {
-        $cron->logActivity("Late Invoice Fees added to " . count($invoiceids) . " Invoices" . (count($invoiceids) ? " (Invoice Numbers: " . implode(',', $invoiceids) . ")" : ''), true);
-        $cron->emailLog(count($invoiceids) . " Late Fees Added" . (count($invoiceids) ? " to Invoice Numbers " . implode(',', $invoiceids) : ''));
-    }
-}
-function SendOverdueInvoiceReminders()
-{
-    global $whmcs;
-    global $CONFIG;
-    global $cron;
-    $count = 0;
-    $types = array( 'First', 'Second', 'Third' );
-    foreach( $types as $type )
-    {
-        if( $CONFIG['Send' . $type . 'OverdueInvoiceReminder'] != '0' )
-        {
-            $adddate = date('Ymd', mktime(0, 0, 0, date('m'), date('d') - $CONFIG['Send' . $type . 'OverdueInvoiceReminder'], date('Y')));
-            $result = select_query('tblinvoices,tblclients', "tblinvoices.id,tblinvoices.userid,tblclients.firstname,tblclients.lastname", array( "tblinvoices.duedate" => $adddate, "tblinvoices.status" => 'Unpaid', "tblclients.overideduenotices" => '', "tblclients.id" => array( 'sqltype' => 'TABLEJOIN', 'value' => "tblinvoices.userid" ) ));
-            while( $data = mysqli_fetch_array($result) )
-            {
-                $invoiceid = $data['id'];
-                $userid = $data['userid'];
-                $firstname = $data['firstname'];
-                $lastname = $data['lastname'];
-                $result2 = full_query("SELECT COUNT(tblinvoiceitems.id) FROM tblinvoiceitems INNER JOIN tblhosting ON tblhosting.id=tblinvoiceitems.relid WHERE tblinvoiceitems.type = 'Hosting' AND tblhosting.overideautosuspend = '1' AND tblhosting.overidesuspenduntil>'" . date('Y-m-d') . "' AND tblhosting.overidesuspenduntil!='0000-00-00' AND tblinvoiceitems.invoiceid = " . (int) $invoiceid);
-                $data2 = mysqli_fetch_array($result2);
-                $numoverideautosuspend = $data2[0];
-                if( $numoverideautosuspend == '0' )
-                {
-                    sendMessage($type . " Invoice Overdue Notice", $invoiceid);
-                    run_hook('InvoicePaymentReminder', array( 'invoiceid' => $invoiceid, 'type' => strtolower($type) . 'overdue' ));
-                    if( is_object($cron) )
-                    {
-                        $cron->emailLogSub("Sent " . $type . " Notice to User " . $firstname . " " . $lastname);
-                    }
-                    $count++;
-                }
-            }
-        }
-    }
-    if( is_object($cron) )
-    {
-        $cron->logActivity("Sent " . $count . " Reminders", true);
-        $cron->emailLog($count . " Overdue Invoice Reminders Sent");
-    }
-}
-function getInvoiceProductPromo($amount, $promoid, $userid = '', $serviceid = '', $orderamt = '')
-{
-    global $_LANG;
-    global $currency;
-    if( !$promoid )
-    {
-        return array(  );
-    }
-    $data = get_query_vals('tblpromotions', '', array( 'id' => $promoid ));
-    $promo_id = $data['id'];
-    if( !$promo_id )
-    {
-        return array(  );
-    }
-    $promo_code = $data['code'];
-    $promo_type = $data['type'];
-    $promo_recurring = $data['recurring'];
-    $promo_value = $data['value'];
-    $promo_recurfor = $data['recurfor'];
-    if( $userid )
-    {
-        $currency = getCurrency($userid);
-    }
-    if( $serviceid )
-    {
-        $data = get_query_vals('tblhosting', 'packageid,regdate,nextduedate,firstpaymentamount,billingcycle', array( 'id' => $serviceid ));
-        $pid = $data['packageid'];
-        $regdate = $data['regdate'];
-        $nextduedate = $data['nextduedate'];
-        $firstpaymentamount = $data['firstpaymentamount'];
-        $billingcycle = $data['billingcycle'];
-        $billingcycle = str_replace('-', '', strtolower($billingcycle));
-        if( $billingcycle == "one time" )
-        {
-            $billingcycle = 'monthly';
-        }
-    }
-    if( $serviceid && $promo_recurring && 0 < $promo_recurfor )
-    {
-        $promo_recurringcount = get_query_val('tblinvoiceitems', "COUNT(id)", array( 'userid' => $userid, 'type' => 'Hosting', 'relid' => $serviceid ));
-        if( $promo_recurfor - 1 <= $promo_recurringcount )
-        {
-            $fullAmount = getInvoiceProductDefaultPrice($pid, $billingcycle, $regdate, $nextduedate);
-            if( !function_exists('getCartConfigOptions') )
-            {
-                require(ROOTDIR . "/includes/configoptionsfunctions.php");
-            }
-            $configoptions = getCartConfigOptions($pid, '', $billingcycle, $serviceid);
-            foreach( $configoptions as $configoption )
-            {
-                $fullAmount += $configoption['selectedrecurring'];
-            }
-            update_query('tblhosting', array( 'amount' => $fullAmount, 'promoid' => '0' ), array( 'id' => $serviceid ));
-        }
-    }
-    if( !$promo_id )
-    {
-        return array(  );
-    }
-    if( !$serviceid || $promo_recurring || !$promo_recurring && $regdate == $nextduedate )
-    {
-        if( $promo_type == 'Percentage' )
-        {
-            $promo_amount = round($amount / (1 - $promo_value / 100), 2) - $amount;
-            if( $orderamt )
-            {
-                $promoAmountCheck = $promo_amount + $amount;
-                if( $promoAmountCheck < $orderamt )
-                {
-                    $promo_amount = $promo_amount + $orderamt - $promoAmountCheck;
-                }
-            }
-            if( 0 < $promo_value && $promo_amount <= 0 )
-            {
-                $promo_amount = $orderamt ? $orderamt : getInvoiceProductDefaultPrice($pid, $billingcycle, $regdate, $nextduedate);
-            }
-            $promo_value .= "%";
-        }
-        else
-        {
-            if( $promo_type == "Fixed Amount" )
-            {
-                if( $currency['id'] != 1 )
-                {
-                    $promo_value = convertCurrency($promo_value, 1, $currency['id']);
-                }
-                $default_price = '';
-                $default_price = getInvoiceProductDefaultPrice($pid, $billingcycle, $regdate, $nextduedate, $serviceid, $userid);
-                if( $default_price < $promo_value )
-                {
-                    $promo_value = $default_price;
-                }
-                $default_price = '';
-                $promo_amount = $promo_value;
-                $promo_value = formatCurrency($promo_value);
-            }
-            else
-            {
-                if( $promo_type == "Price Override" )
-                {
-                    if( $currency['id'] != 1 )
-                    {
-                        $promo_value = convertCurrency($promo_value, 1, $currency['id']);
-                    }
-                    $promo_amount = $orderamt ? $orderamt : getInvoiceProductDefaultPrice($pid, $billingcycle, $regdate, $nextduedate);
-                    $promo_amount -= $promo_value;
-                    $promo_value = formatCurrency($promo_value) . " " . $_LANG['orderpromopriceoverride'];
-                }
-                else
-                {
-                    if( $promo_type == "Free Setup" )
-                    {
-                        $promo_amount = $orderamt ? $orderamt : getInvoiceProductDefaultPrice($pid, $billingcycle, $regdate, $nextduedate);
-                        $promo_amount -= $firstpaymentamount;
-                        $promo_value = $_LANG['orderpromofreesetup'];
-                    }
-                }
-            }
-        }
-        getUsersLang($userid);
-        $promo_recurring = $promo_recurring ? $_LANG['recurring'] : $_LANG['orderpaymenttermonetime'];
-        $promo_description = $_LANG['orderpromotioncode'] . ": " . $promo_code . " - " . $promo_value . " " . $promo_recurring . " " . $_LANG['orderdiscount'];
-        getUsersLang(0);
-        return array( 'description' => $promo_description, 'amount' => $promo_amount * (0 - 1) );
-    }
-    return array(  );
-}
-function getInvoiceProductDefaultPrice($pid, $billingcycle, $regdate, $nextduedate, $serviceid = '', $userid = '')
-{
-    global $currency;
-    $data = get_query_vals('tblpricing', '', array( 'type' => 'product', 'currency' => $currency['id'], 'relid' => $pid ));
-    $amount = $data[$billingcycle];
-    if( $regdate == $nextduedate )
-    {
-        $amount += $data[substr($billingcycle, 0, 1) . 'setupfee'];
-    }
-    if( $serviceid )
-    {
-        if( !function_exists('recalcRecurringProductPrice') )
-        {
-            require(ROOTDIR . "/includes/clientfunctions.php");
-        }
-        if( $regdate == $nextduedate )
-        {
-            $amount = recalcRecurringProductPrice($serviceid, $userid, $pid, ucfirst($billingcycle), 'empty', 0, true);
-        }
-        else
-        {
-            $amount = recalcRecurringProductPrice($serviceid, $userid, $pid, ucfirst($billingcycle), 'empty', 0);
-        }
-    }
-    return $amount;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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
+9RJgh1oyFOk2pCkXfqad2m==

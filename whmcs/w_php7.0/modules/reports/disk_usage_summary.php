@@ -13,16 +13,16 @@ if ($_GET["action"]=="updatestats") {
     ServerUsageUpdate();
 }
 
-$query2 = "SELECT * FROM tblservers ORDER BY `name` ASC";
+$query2 = "SELECT * FROM tblservers ORDER BY `name` ASC"; 
 $result2=full_query($query2);
-while($data = mysqli_fetch_array($result2)) {
+while($data = mysql_fetch_array($result2)) {
     $serverid = $data["id"];
     $name = $data["name"];
     $ipaddress = $data["ipaddress"];
     $reportdata["tablevalues"][] = array("**<B>$name</B> - $ipaddress");
-    $query = "SELECT tblhosting.domain,tblhosting.diskusage,tblhosting.disklimit,tblhosting.bwlimit,tblhosting.bwusage,tblhosting.domainstatus,tblclients.firstname,tblclients.lastname,tblclients.companyname,tblhosting.lastupdate FROM tblhosting INNER JOIN tblclients ON tblclients.id=tblhosting.userid WHERE tblhosting.server=".(int)$serverid." AND tblhosting.lastupdate!='0000-00-00 00:00:00' AND (domainstatus='Active' OR domainstatus='Suspended') ORDER BY tblhosting.domain ASC";
+    $query = "SELECT tblhosting.domain,tblhosting.diskusage,tblhosting.disklimit,tblhosting.bwlimit,tblhosting.bwusage,tblhosting.domainstatus,tblclients.firstname,tblclients.lastname,tblclients.companyname,tblhosting.lastupdate FROM tblhosting INNER JOIN tblclients ON tblclients.id=tblhosting.userid WHERE tblhosting.server=".(int)$serverid." AND tblhosting.lastupdate!='0000-00-00 00:00:00' AND (domainstatus='Active' OR domainstatus='Suspended') ORDER BY tblhosting.domain ASC"; 
     $result=full_query($query);
-    while($data = mysqli_fetch_array($result)) {
+    while($data = mysql_fetch_array($result)) {
         $firstname = $data["firstname"];
         $lastname = $data["lastname"];
         $companyname = $data["companyname"];

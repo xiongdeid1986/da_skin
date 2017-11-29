@@ -1,3 +1,17 @@
+{if $linkableProviders }
+    <h2>
+        {lang key='remoteAuthn.titleLinkedAccounts'}
+    </h2>
+
+    {include file="$template/includes/linkedaccounts.tpl" linkContext="clientsecurity" }
+
+    <br>
+
+    {include file="$template/includes/linkedaccounts.tpl" linkContext="linktable" }
+
+    <br>
+{/if}
+
 {if $twofaavailable}
 
     {if $twofaactivation}
@@ -122,9 +136,6 @@
     </form>
 
     <p>{$LANG.sso.disablenotice}</p>
-
-    <link href="{$BASE_PATH_CSS}/bootstrap-switch.min.css" rel="stylesheet">
-    <script src="{$BASE_PATH_JS}/bootstrap-switch.min.js"></script>
 
     <br />
     <br />

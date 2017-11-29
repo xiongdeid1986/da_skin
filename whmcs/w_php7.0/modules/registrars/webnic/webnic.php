@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,885 +32,444 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function webnic_getConfigArray()
-{
-    $configarray = array( 'Source' => array( 'Type' => 'text', 'Size' => '20', 'Description' => '' ), 'Password' => array( 'Type' => 'password', 'Size' => '20', 'Description' => '' ), 'TestMode' => array( 'Type' => 'yesno' ) );
-    return $configarray;
-}
-function webnic_GetNameservers($params)
-{
-    $url = "pn_whois.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['domain'] = $params['sld'] . "." . $params['tld'];
-    $rtype = "Get Nameservers";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( $results[0] == 0 )
-    {
-        foreach( $results as $row )
-        {
-            $row = explode("\t", $row);
-            $arr[$row[0]] = $row[1];
-        }
-        return array( 'ns1' => $arr['ns1'], 'ns2' => $arr['ns2'], 'ns3' => $arr['ns3'], 'ns4' => $arr['ns4'], 'ns5' => $arr['ns5'] );
-    }
-    if( $results[1] )
-    {
-        return array( 'error' => $results[1] );
-    }
-    if( $results[0] )
-    {
-        return array( 'error' => $results[0] );
-    }
-}
-function webnic_SaveNameservers($params)
-{
-    $otime = date("Y-m-d H:i:s");
-    $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-    $url = "pn_dns.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['otime'] = $otime;
-    $postfields['ochecksum'] = $ochecksum;
-    $postfields['domain'] = $params['sld'] . "." . $params['tld'];
-    $postfields['ns1'] = $params['ns1'];
-    $postfields['ns2'] = $params['ns2'];
-    $postfields['ns3'] = $params['ns3'];
-    $postfields['ns4'] = $params['ns4'];
-    $postfields['ns5'] = $params['ns5'];
-    $postfields['nsip1'] = gethostbyname($params['ns1']);
-    $postfields['nsip2'] = gethostbyname($params['ns2']);
-    $postfields['nsip3'] = gethostbyname($params['ns3']);
-    $postfields['nsip4'] = gethostbyname($params['ns4']);
-    $postfields['nsip5'] = gethostbyname($params['ns5']);
-    $rtype = "Save Nameservers";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-}
-function webnic_GetRegistrarLock($params)
-{
-    $url = "pn_whois.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['domain'] = $params['sld'] . "." . $params['tld'];
-    $rtype = "Get Registrar Lock";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( $results[0] == 0 )
-    {
-        foreach( $results as $row )
-        {
-            $row = explode("\t", $row);
-            $arr[$row[0]] = $row[1];
-        }
-        if( $arr['status'] == 'A' )
-        {
-            $lockstatus = 'unlocked';
-        }
-        else
-        {
-            $lockstatus = 'locked';
-        }
-        return $lockstatus;
-    }
-}
-function webnic_SaveRegistrarLock($params)
-{
-    $otime = date("Y-m-d H:i:s");
-    $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-    $url = "pn_protect.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['otime'] = $otime;
-    $postfields['ochecksum'] = $ochecksum;
-    $postfields['domainname'] = $params['sld'] . "." . $params['tld'];
-    if( $params['lockenabled'] == 'locked' )
-    {
-        $postfields['status'] = 'L';
-    }
-    else
-    {
-        $postfields['status'] = 'A';
-    }
-    $rtype = "Save Registrar Lock";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( substr($results[0], 0, 1) == 0 )
-    {
-        return NULL;
-    }
-    return array( 'error' => $results[0] );
-}
-function webnic_RegisterDomain($params)
-{
-    $otime = date("Y-m-d H:i:s");
-    $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-    $username = preg_replace("/[^a-zA-Z]/", '', $params['sld'] . $params['tld']);
-    $username = substr($username, 0, 8) . rand(100, 999);
-    $password = substr(md5($params['domainid']), 0, 10);
-    require(ROOTDIR . "/includes/countriescallingcodes.php");
-    $phoneprefix = $countrycallingcodes[$params['country']];
-    if( !$params['companyname'] )
-    {
-        $params['companyname'] = '-';
-    }
-    $url = "pn_newreg.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['otime'] = $otime;
-    $postfields['ochecksum'] = $ochecksum;
-    $postfields['domainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['encoding'] = 'iso8859-1';
-    $postfields['term'] = $params['regperiod'];
-    $postfields['ns1'] = $params['ns1'];
-    $postfields['ns2'] = $params['ns2'];
-    if( $params['ns3'] )
-    {
-        $postfields['ns3'] = $params['ns3'];
-    }
-    if( $params['ns4'] )
-    {
-        $postfields['ns4'] = $params['ns4'];
-    }
-    if( $params['ns5'] )
-    {
-        $postfields['ns5'] = $params['ns5'];
-    }
-    $postfields['ns1ip'] = gethostbyname($params['ns1']);
-    $postfields['ns2ip'] = gethostbyname($params['ns2']);
-    if( $params['ns3'] )
-    {
-        $postfields['ns3ip'] = gethostbyname($params['ns3']);
-    }
-    if( $params['ns4'] )
-    {
-        $postfields['ns4ip'] = gethostbyname($params['ns4']);
-    }
-    if( $params['ns5'] )
-    {
-        $postfields['ns5ip'] = gethostbyname($params['ns5']);
-    }
-    $postfields['reg_company'] = $params['companyname'];
-    $postfields['reg_fname'] = $params['firstname'];
-    $postfields['reg_lname'] = $params['lastname'];
-    $postfields['reg_addr1'] = $params['address1'];
-    $postfields['reg_addr2'] = $params['address2'];
-    $postfields['reg_state'] = $params['state'];
-    $postfields['reg_city'] = $params['city'];
-    $postfields['reg_postcode'] = $params['postcode'];
-    $postfields['reg_telephone'] = "+" . $phoneprefix . "." . preg_replace("/[^0-9]/", '', $params['phonenumber']);
-    $postfields['reg_country'] = $params['country'];
-    $postfields['reg_email'] = $params['email'];
-    $postfields['flag_adm'] = 1;
-    $postfields['flag_tec'] = 1;
-    $postfields['flag_bil'] = 1;
-    $postfields['username'] = $username;
-    $postfields['password'] = $password;
-    $postfields['newuser'] = 'new';
-    $postfields['bil_contact_type'] = $params['companyname'] ? (int) '0' : '1';
-    $postfields['tec_contact_type'] = $postfields['bil_contact_type'];
-    $postfields['adm_contact_type'] = $postfields['tec_contact_type'];
-    $postfields['reg_contact_type'] = $postfields['adm_contact_type'];
-    $postfields['custom_reg1'] = $params['additionalfields']["Identity or Registration Number"];
-    $postfields['custom_reg2'] = $params['additionalfields']["Organization Type"];
-    $postfields['custom_reg3'] = $params['additionalfields']["Registrant Type"];
-    if( preg_match("/us\$/i", $params['tld']) )
-    {
-        $nexus = $params['additionalfields']["Nexus Category"];
-        $countrycode = $params['additionalfields']["Nexus Country"];
-        $purpose = $params['additionalfields']["Application Purpose"];
-        if( $purpose == "Business use for profit" )
-        {
-            $purpose = 'P1';
-            $custom_reg2 = 'OTA000005';
-        }
-        else
-        {
-            if( $purpose == "Non-profit business" )
-            {
-                $purpose = 'P2';
-                $custom_reg2 = 'OTA000025';
-            }
-            else
-            {
-                if( $purpose == 'Club' )
-                {
-                    $purpose = 'P2';
-                    $custom_reg2 = 'OTA000032';
-                }
-                else
-                {
-                    if( $purpose == 'Association' )
-                    {
-                        $purpose = 'P2';
-                        $custom_reg2 = 'OTA000032';
-                    }
-                    else
-                    {
-                        if( $purpose == "Religious Organization" )
-                        {
-                            $purpose = 'P2';
-                            $custom_reg2 = 'OTA000032';
-                        }
-                        else
-                        {
-                            if( $purpose == "Personal Use" )
-                            {
-                                $purpose = 'P3';
-                                $custom_reg2 = 'OTA000032';
-                            }
-                            else
-                            {
-                                if( $purpose == "Educational purposes" )
-                                {
-                                    $purpose = 'P4';
-                                    $custom_reg2 = 'OTA000006';
-                                }
-                                else
-                                {
-                                    if( $purpose == "Government purposes" )
-                                    {
-                                        $purpose = 'P5';
-                                        $custom_reg2 = 'OTA000032';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        $postfields['purpose'] = $purpose;
-        $postfields['nexus'] = $nexus;
-        $postfields['custom_reg3'] = $nexus;
-    }
-    if( preg_match("/sg\$/i", $params['tld']) )
-    {
-        if( $params['additionalfields']["Registrant Type"] == 'Individual' )
-        {
-            $regtype = '2';
-        }
-        else
-        {
-            $regtype = '1';
-        }
-        $postfields['custom_reg1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['custom_adm1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['proxy'] = 0;
-    }
-    if( preg_match("/my\$/i", $params['tld']) )
-    {
-        $individual = $params['companyname'] == '-' ? 'I' : 'O';
-        $postfields['ctxtype'] = $individual;
-    }
-    if( !$params['companyname'] )
-    {
-        if( preg_match("/sg\$/i", $params['tld']) )
-        {
-            $postfields['bil_contact_type'] = (int) '0';
-            $postfields['tec_contact_type'] = $postfields['bil_contact_type'];
-            $postfields['adm_contact_type'] = $postfields['tec_contact_type'];
-            $postfields['reg_contact_type'] = $postfields['adm_contact_type'];
-            $postfields['custom_reg1'] = $params['additionalfields']["RCB Singapore ID"];
-            $postfields['custom_adm1'] = $params['additionalfields']["RCB Singapore ID"];
-            $postfields['custom_tec1'] = $params['additionalfields']["RCB Singapore ID"];
-            $postfields['custom_bil1'] = $params['additionalfields']["RCB Singapore ID"];
-        }
-        $postfields['custom_bil3'] = $params['additionalfields']["Date of Birth"];
-        $params['additionalfields']["Date of Birth"] = $postfields['custom_bil3'];
-        $postfields['custom_tec3'] = $params['additionalfields']["Date of Birth"];
-        $postfields['custom_adm3'] = $postfields['custom_tec3'];
-        $postfields['custom_reg3'] = $postfields['custom_adm3'];
-        $params['companyname'] = '-';
-    }
-    else
-    {
-        $postfields['custom_reg1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['custom_adm1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['custom_tec1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['custom_bil1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['bil_contact_type'] = '1';
-        $postfields['tec_contact_type'] = $postfields['bil_contact_type'];
-        $postfields['adm_contact_type'] = $postfields['tec_contact_type'];
-        $postfields['reg_contact_type'] = $postfields['adm_contact_type'];
-        $usorgtype = $params['additionalfields']["Organization Type"];
-        if( $usorgtype == "Permanent resident of U.S" )
-        {
-            $usorgtype = 'C12';
-        }
-        else
-        {
-            if( $usorgtype == "Entity with office in US" )
-            {
-                $usorgtype = 'C32';
-            }
-            else
-            {
-                if( $usorgtype == "Entity that regularly engages in lawful activities" )
-                {
-                    $usorgtype = 'C31';
-                }
-                else
-                {
-                    if( $usorgtype == "Citizen of U.S" )
-                    {
-                        $usorgtype = 'C11';
-                    }
-                    else
-                    {
-                        if( $usorgtype == "Incorporated within one of the U.S. states" )
-                        {
-                            $usorgtype = 'C21';
-                        }
-                    }
-                }
-            }
-        }
-        if( $usorgtype == '' )
-        {
-            $usorgtype = 'C31';
-        }
-        $postfields['custom_bil3'] = $usorgtype;
-        $params['additionalfields']["Date of Birth"] = $postfields['custom_bil3'];
-        $postfields['custom_tec3'] = $params['additionalfields']["Date of Birth"];
-        $postfields['custom_adm3'] = $postfields['custom_tec3'];
-        $postfields['custom_reg3'] = $postfields['custom_adm3'];
-    }
-    if( preg_match("/(asia|tw)\$/i", $params['tld']) )
-    {
-        $reg1value = trim($params['additionalfields']["Identity Number"]);
-        $legaltype = strtolower($params['additionalfields']["Legal Type"]);
-        $reg2value = '';
-        switch( $legaltype )
-        {
-            case 'corporation':
-                $reg2value = 'OTA000003';
-                break;
-            case 'partnership':
-                $reg2value = 'OTA000005';
-                break;
-            case 'politicalParty':
-                $reg2value = 'OTA000025';
-                break;
-            case 'institution':
-                $reg2value = 'OTA000006';
-                break;
-            case 'society':
-                $reg2value = 'OTA000012';
-                break;
-            default:
-                $reg2value = 'OTA000032';
-                break;
-        }
-        $postfields['custom_bil1'] = $reg1value;
-        $postfields['custom_tec1'] = $postfields['custom_bil1'];
-        $postfields['custom_adm1'] = $postfields['custom_tec1'];
-        $postfields['custom_reg1'] = $postfields['custom_adm1'];
-        $postfields['custom_bil2'] = $reg2value;
-        $postfields['custom_tec2'] = $postfields['custom_bil2'];
-        $postfields['custom_adm2'] = $postfields['custom_tec2'];
-        $postfields['custom_reg2'] = $postfields['custom_adm2'];
-        foreach( array( 'custom_reg3', 'custom_adm3', 'custom_tec3', 'custom_bil3' ) as $removefield )
-        {
-            unset($postfields[$removefield]);
-        }
-        if( preg_match("/asia\$/i", $params['tld']) && !webnic_isCountryInAsia($postfields['reg_country']) )
-        {
-            $postfields['proxy'] = 1;
-        }
-    }
-    $rtype = "Register Domain";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( substr($results[0], 0, 1) == 0 )
-    {
-        if( $params['idprotection'] )
-        {
-            $otime = date("Y-m-d H:i:s");
-            $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-            $url = "pn_whoisprivacy.jsp";
-            $postfields = array(  );
-            $postfields['source'] = $params['Source'];
-            $postfields['otime'] = $otime;
-            $postfields['ochecksum'] = $ochecksum;
-            $postfields['domainname'] = $params['sld'] . "." . $params['tld'];
-            $results = webnic_call($url, $rtype, $postfields, $params);
-            if( substr($results[0], 0, 1) == 0 )
-            {
-            }
-            else
-            {
-                return array( 'error' => $results[0] );
-            }
-        }
-        return array( 'success' => 'complete' );
-    }
-    return array( 'error' => $results[0] );
-}
-function webnic_TransferDomain($params)
-{
-    $otime = date("Y-m-d H:i:s");
-    $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-    $username = preg_replace("/[^a-zA-Z]/", '', $params['sld'] . $params['tld']);
-    $username = substr($username, 0, 8) . rand(100, 999);
-    $password = substr(md5($params['domainid']), 0, 10);
-    require(ROOTDIR . "/includes/countriescallingcodes.php");
-    $phoneprefix = $countrycallingcodes[$params['country']];
-    $url = "pn_newtransfer.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['otime'] = $otime;
-    $postfields['ochecksum'] = $ochecksum;
-    $postfields['domainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['term'] = $params['regperiod'];
-    $postfields['authinfo'] = $params['transfersecret'];
-    $postfields['userstatus'] = 'NEW';
-    $postfields['username'] = $username;
-    $postfields['password'] = $password;
-    $postfields['password2'] = $password;
-    $postfields['reg_company'] = $params['companyname'];
-    $postfields['reg_fname'] = $params['firstname'];
-    $postfields['reg_lname'] = $params['lastname'];
-    $postfields['reg_addr1'] = $params['address1'];
-    $postfields['reg_addr2'] = $params['address2'];
-    $postfields['reg_state'] = $params['state'];
-    $postfields['reg_city'] = $params['city'];
-    $postfields['reg_postcode'] = $params['postcode'];
-    $postfields['reg_telephone'] = $params['fullphonenumber'];
-    $postfields['reg_country'] = $params['country'];
-    $postfields['reg_email'] = $params['email'];
-    $postfields['bil_company'] = $params['companyname'];
-    $postfields['bil_fname'] = $params['firstname'];
-    $postfields['bil_lname'] = $params['lastname'];
-    $postfields['bil_addr1'] = $params['address1'];
-    $postfields['bil_addr2'] = $params['address2'];
-    $postfields['bil_state'] = $params['state'];
-    $postfields['bil_city'] = $params['city'];
-    $postfields['bil_postcode'] = $params['postcode'];
-    $postfields['bil_telephone'] = $params['fullphonenumber'];
-    $postfields['bil_country'] = $params['country'];
-    $postfields['bil_email'] = $params['email'];
-    $postfields['adm_company'] = $params['companyname'];
-    $postfields['adm_fname'] = $params['firstname'];
-    $postfields['adm_lname'] = $params['lastname'];
-    $postfields['adm_addr1'] = $params['address1'];
-    $postfields['adm_addr2'] = $params['address2'];
-    $postfields['adm_state'] = $params['state'];
-    $postfields['adm_city'] = $params['city'];
-    $postfields['adm_postcode'] = $params['postcode'];
-    $postfields['adm_telephone'] = $params['fullphonenumber'];
-    $postfields['adm_country'] = $params['country'];
-    $postfields['adm_email'] = $params['email'];
-    $postfields['tec_company'] = $params['companyname'];
-    $postfields['tec_fname'] = $params['firstname'];
-    $postfields['tec_lname'] = $params['lastname'];
-    $postfields['tec_addr1'] = $params['address1'];
-    $postfields['tec_addr2'] = $params['address2'];
-    $postfields['tec_state'] = $params['state'];
-    $postfields['tec_city'] = $params['city'];
-    $postfields['tec_postcode'] = $params['postcode'];
-    $postfields['tec_telephone'] = $params['fullphonenumber'];
-    $postfields['tec_country'] = $params['country'];
-    $postfields['tec_email'] = $params['email'];
-    $postfields['bil_contact_type'] = $params['companyname'] ? (int) '0' : '1';
-    $postfields['tec_contact_type'] = $postfields['bil_contact_type'];
-    $postfields['adm_contact_type'] = $postfields['tec_contact_type'];
-    $postfields['reg_contact_type'] = $postfields['adm_contact_type'];
-    if( preg_match("/us\$/i", $params['tld']) )
-    {
-        $nexus = $params['additionalfields']["Nexus Category"];
-        $countrycode = $params['additionalfields']["Nexus Country"];
-        $purpose = $params['additionalfields']["Application Purpose"];
-        if( $purpose == "Business use for profit" )
-        {
-            $purpose = 'P1';
-            $custom_reg2 = 'OTA000005';
-        }
-        else
-        {
-            if( $purpose == "Non-profit business" )
-            {
-                $purpose = 'P2';
-                $custom_reg2 = 'OTA000025';
-            }
-            else
-            {
-                if( $purpose == 'Club' )
-                {
-                    $purpose = 'P2';
-                    $custom_reg2 = 'OTA000032';
-                }
-                else
-                {
-                    if( $purpose == 'Association' )
-                    {
-                        $purpose = 'P2';
-                        $custom_reg2 = 'OTA000032';
-                    }
-                    else
-                    {
-                        if( $purpose == "Religious Organization" )
-                        {
-                            $purpose = 'P2';
-                            $custom_reg2 = 'OTA000032';
-                        }
-                        else
-                        {
-                            if( $purpose == "Personal Use" )
-                            {
-                                $purpose = 'P3';
-                                $custom_reg2 = 'OTA000032';
-                            }
-                            else
-                            {
-                                if( $purpose == "Educational purposes" )
-                                {
-                                    $purpose = 'P4';
-                                    $custom_reg2 = 'OTA000006';
-                                }
-                                else
-                                {
-                                    if( $purpose == "Government purposes" )
-                                    {
-                                        $purpose = 'P5';
-                                        $custom_reg2 = 'OTA000032';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        $postfields['purpose'] = $purpose;
-        $postfields['nexus'] = $nexus;
-        $postfields['custom_reg3'] = $nexus;
-    }
-    if( preg_match("/sg\$/i", $params['tld']) )
-    {
-        if( $params['additionalfields']["Registrant Type"] == 'Individual' )
-        {
-            $regtype = '2';
-        }
-        else
-        {
-            $regtype = '1';
-        }
-        $postfields['custom_reg1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['custom_adm1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['proxy'] = 0;
-    }
-    if( preg_match("/my\$/i", $params['tld']) )
-    {
-        $individual = $params['companyname'] == '-' ? 'I' : 'O';
-        $postfields['ctxtype'] = $individual;
-    }
-    $rtype = "Transfer Domain";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( substr($results[0], 0, 1) == 0 )
-    {
-        return array( 'success' => 'complete' );
-    }
-    return array( 'error' => $results[0] );
-}
-function webnic_RenewDomain($params)
-{
-    $otime = date("Y-m-d H:i:s");
-    $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-    $url = "pn_renew.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['otime'] = $otime;
-    $postfields['ochecksum'] = $ochecksum;
-    $postfields['domainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['term'] = $params['regperiod'];
-    if( preg_match("/asia\$/i", $params['tld']) )
-    {
-        $postfields['proxy'] = 1;
-    }
-    $rtype = "Renew Domain";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( substr($results[0], 0, 1) == 0 )
-    {
-        return array( 'success' => 'complete' );
-    }
-    return array( 'error' => $results[0] );
-}
-function webnic_GetContactDetails($params)
-{
-    $url = "pn_whois.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['domain'] = $params['sld'] . "." . $params['tld'];
-    $rtype = "Get Contact Details";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( $results[0] == 0 )
-    {
-        foreach( $results as $row )
-        {
-            $row = explode("\t", $row);
-            $arr[$row[0]] = $row[1];
-        }
-        return array( 'Registrant' => array( "First Name" => $arr["registrant first name"], "Last Name" => $arr["registrant last name"], "Company Name" => $arr['registrant'], "Address 1" => $arr["registrant address 1"], "Address 2" => $arr["registrant address 2"], 'City' => $arr["registrant city"], 'State' => $arr["registrant state"], 'Country' => $arr["registrant country"], "ZIP Code" => $arr["registrant zip"], "Phone Number" => $arr["registrant phone"], "Fax Number" => $arr["registrant fax"], "Email Address" => $arr["registrant email"] ), 'Admin' => array( "First Name" => $arr["admin first name"], "Last Name" => $arr["admin last name"], "Company Name" => $arr["admin company"], "Address 1" => $arr["admin address 1"], "Address 2" => $arr["admin address 2"], 'City' => $arr["admin city"], 'State' => $arr["admin state"], 'Country' => $arr["admin country"], "ZIP Code" => $arr["admin zip"], "Phone Number" => $arr["admin phone"], "Fax Number" => $arr["admin fax"], "Email Address" => $arr["admin email"] ), 'Technical' => array( "First Name" => $arr["technical first name"], "Last Name" => $arr["technical last name"], "Company Name" => $arr["technical company"], "Address 1" => $arr["technical address 1"], "Address 2" => $arr["technical address 2"], 'City' => $arr["technical city"], 'State' => $arr["technical state"], 'Country' => $arr["technical country"], "ZIP Code" => $arr["technical zip"], "Phone Number" => $arr["technical phone"], "Fax Number" => $arr["technical fax"], "Email Address" => $arr["technical email"] ), 'Billing' => array( "First Name" => $arr["billing first name"], "Last Name" => $arr["billing last name"], "Company Name" => $arr["billing company"], "Address 1" => $arr["billing address 1"], "Address 2" => $arr["billing address 2"], 'City' => $arr["billing city"], 'State' => $arr["billing state"], 'Country' => $arr["billing country"], "ZIP Code" => $arr["billing zip"], "Phone Number" => $arr["billing phone"], "Fax Number" => $arr["billing fax"], "Email Address" => $arr["billing email"] ) );
-    }
-    return array( 'error' => $results[1] );
-}
-function webnic_SaveContactDetails($params)
-{
-    $otime = date("Y-m-d H:i:s");
-    $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-    $url = "pn_newmod.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['otime'] = $otime;
-    $postfields['ochecksum'] = $ochecksum;
-    $postfields['domainname'] = $params['sld'] . "." . $params['tld'];
-    $postfields['reg_company'] = $params['contactdetails']['Registrant']["Company Name"];
-    $postfields['reg_fname'] = $params['contactdetails']['Registrant']["First Name"];
-    $postfields['reg_lname'] = $params['contactdetails']['Registrant']["Last Name"];
-    $postfields['reg_addr1'] = $params['contactdetails']['Registrant']["Address 1"];
-    $postfields['reg_addr2'] = $params['contactdetails']['Registrant']["Address 2"];
-    $postfields['reg_state'] = $params['contactdetails']['Registrant']['State'];
-    $postfields['reg_city'] = $params['contactdetails']['Registrant']['City'];
-    $postfields['reg_postcode'] = $params['contactdetails']['Registrant']["ZIP Code"];
-    $postfields['reg_telephone'] = $params['contactdetails']['Registrant']["Phone Number"];
-    $postfields['reg_fax'] = $params['contactdetails']['Registrant']["Fax Number"];
-    $postfields['reg_country'] = $params['contactdetails']['Registrant']['Country'];
-    $postfields['reg_email'] = $params['contactdetails']['Registrant']["Email Address"];
-    $postfields['adm_company'] = $params['contactdetails']['Admin']["Company Name"];
-    $postfields['adm_fname'] = $params['contactdetails']['Admin']["First Name"];
-    $postfields['adm_lname'] = $params['contactdetails']['Admin']["Last Name"];
-    $postfields['adm_addr1'] = $params['contactdetails']['Admin']["Address 1"];
-    $postfields['adm_addr2'] = $params['contactdetails']['Admin']["Address 2"];
-    $postfields['adm_state'] = $params['contactdetails']['Admin']['State'];
-    $postfields['adm_city'] = $params['contactdetails']['Admin']['City'];
-    $postfields['adm_postcode'] = $params['contactdetails']['Admin']["ZIP Code"];
-    $postfields['adm_telephone'] = $params['contactdetails']['Admin']["Phone Number"];
-    $postfields['adm_fax'] = $params['contactdetails']['Admin']["Fax Number"];
-    $postfields['adm_country'] = $params['contactdetails']['Admin']['Country'];
-    $postfields['adm_email'] = $params['contactdetails']['Admin']["Email Address"];
-    $postfields['tec_company'] = $params['contactdetails']['Technical']["Company Name"];
-    $postfields['tec_fname'] = $params['contactdetails']['Technical']["First Name"];
-    $postfields['tec_lname'] = $params['contactdetails']['Technical']["Last Name"];
-    $postfields['tec_addr1'] = $params['contactdetails']['Technical']["Address 1"];
-    $postfields['tec_addr2'] = $params['contactdetails']['Technical']["Address 2"];
-    $postfields['tec_state'] = $params['contactdetails']['Technical']['State'];
-    $postfields['tec_city'] = $params['contactdetails']['Technical']['City'];
-    $postfields['tec_postcode'] = $params['contactdetails']['Technical']["ZIP Code"];
-    $postfields['tec_telephone'] = $params['contactdetails']['Technical']["Phone Number"];
-    $postfields['tec_fax'] = $params['contactdetails']['Technical']["Fax Number"];
-    $postfields['tec_country'] = $params['contactdetails']['Technical']['Country'];
-    $postfields['tec_email'] = $params['contactdetails']['Technical']["Email Address"];
-    $postfields['bil_company'] = $params['contactdetails']['Billing']["Company Name"];
-    $postfields['bil_fname'] = $params['contactdetails']['Billing']["First Name"];
-    $postfields['bil_lname'] = $params['contactdetails']['Billing']["Last Name"];
-    $postfields['bil_addr1'] = $params['contactdetails']['Billing']["Address 1"];
-    $postfields['bil_addr2'] = $params['contactdetails']['Billing']["Address 2"];
-    $postfields['bil_state'] = $params['contactdetails']['Billing']['State'];
-    $postfields['bil_city'] = $params['contactdetails']['Billing']['City'];
-    $postfields['bil_postcode'] = $params['contactdetails']['Billing']["ZIP Code"];
-    $postfields['bil_telephone'] = $params['contactdetails']['Billing']["Phone Number"];
-    $postfields['bil_fax'] = $params['contactdetails']['Billing']["Fax Number"];
-    $postfields['bil_country'] = $params['contactdetails']['Billing']['Country'];
-    $postfields['bil_email'] = $params['contactdetails']['Billing']["Email Address"];
-    if( preg_match("/us\$/i", $params['tld']) )
-    {
-        $nexus = $params['additionalfields']["Nexus Category"];
-        $countrycode = $params['additionalfields']["Nexus Country"];
-        $purpose = $params['additionalfields']["Application Purpose"];
-        if( $purpose == "Business use for profit" )
-        {
-            $purpose = 'P1';
-        }
-        else
-        {
-            if( $purpose == "Non-profit business" )
-            {
-                $purpose = 'P2';
-            }
-            else
-            {
-                if( $purpose == 'Club' )
-                {
-                    $purpose = 'P2';
-                }
-                else
-                {
-                    if( $purpose == 'Association' )
-                    {
-                        $purpose = 'P2';
-                    }
-                    else
-                    {
-                        if( $purpose == "Religious Organization" )
-                        {
-                            $purpose = 'P2';
-                        }
-                        else
-                        {
-                            if( $purpose == "Personal Use" )
-                            {
-                                $purpose = 'P3';
-                            }
-                            else
-                            {
-                                if( $purpose == "Educational purposes" )
-                                {
-                                    $purpose = 'P4';
-                                }
-                                else
-                                {
-                                    if( $purpose == "Government purposes" )
-                                    {
-                                        $purpose = 'P5';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        $postfields['purpose'] = $purpose;
-        $postfields['nexus'] = $nexus;
-        $usorgtype = $params['additionalfields']["Organization Type"];
-        if( $usorgtype == "Permanent resident of U.S" )
-        {
-            $usorgtype = 'C12';
-        }
-        else
-        {
-            if( $usorgtype == "Entity with office in US" )
-            {
-                $usorgtype = 'C32';
-            }
-            else
-            {
-                if( $usorgtype == "Entity that regularly engages in lawful activities" )
-                {
-                    $usorgtype = 'C31';
-                }
-                else
-                {
-                    if( $usorgtype == "Citizen of U.S" )
-                    {
-                        $usorgtype = 'C11';
-                    }
-                    else
-                    {
-                        if( $usorgtype == "Incorporated within one of the U.S. states" )
-                        {
-                            $usorgtype = 'C21';
-                        }
-                    }
-                }
-            }
-        }
-        $individual = $params['companyname'] == '-' ? 'I' : 'O';
-        if( $individual == 'O' )
-        {
-            $postfields['custom_bil3'] = $usorgtype;
-            $postfields['custom_tec3'] = $postfields['custom_bil3'];
-            $postfields['custom_adm3'] = $postfields['custom_tec3'];
-            $postfields['custom_reg3'] = $postfields['custom_adm3'];
-        }
-    }
-    if( preg_match("/sg\$/i", $params['tld']) )
-    {
-        if( $params['additionalfields']["Registrant Type"] == 'Individual' )
-        {
-            $regtype = '2';
-        }
-        else
-        {
-            $regtype = '1';
-        }
-        $postfields['custom_reg1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['custom_reg2'] = $usorgtype;
-        $postfields['custom_adm1'] = $params['additionalfields']["RCB Singapore ID"];
-        $postfields['custom_adm2'] = $usorgtype;
-        $postfields['custom_tec2'] = $usorgtype;
-        $postfields['custom_bil2'] = $usorgtype;
-        $postfields['proxy'] = 0;
-    }
-    if( preg_match("/hk\$/i", $params['tld']) )
-    {
-        $individual = $params['companyname'] == '-' ? 'I' : 'O';
-        $postfields['ctxtype'] = $individual;
-        if( $individual == 'I' )
-        {
-            $postfields['custom_bil3'] = $params['additionalfields']["Date of Birth"];
-            $params['additionalfields']["Date of Birth"] = $postfields['custom_bil3'];
-            $postfields['custom_tec3'] = $params['additionalfields']["Date of Birth"];
-            $postfields['custom_adm3'] = $postfields['custom_tec3'];
-            $postfields['custom_reg3'] = $postfields['custom_adm3'];
-        }
-    }
-    if( preg_match("/my\$/i", $params['tld']) )
-    {
-        $individual = $params['companyname'] == '-' ? 'I' : 'O';
-        $postfields['ctxtype'] = $individual;
-        if( $individual == 'I' )
-        {
-            $postfields['custom_bil3'] = $params['additionalfields']["Date of Birth"];
-            $params['additionalfields']["Date of Birth"] = $postfields['custom_bil3'];
-            $postfields['custom_tec3'] = $params['additionalfields']["Date of Birth"];
-            $postfields['custom_adm3'] = $postfields['custom_tec3'];
-            $postfields['custom_reg3'] = $postfields['custom_adm3'];
-        }
-    }
-    $rtype = "Save Contact Details";
-    $results = webnic_call($url, $rtype, $postfields, $params);
-    if( substr($results[0], 0, 1) == 0 )
-    {
-        return NULL;
-    }
-    return array( 'error' => $results[0] );
-}
-function webnic_IDProtectToggle($params)
-{
-    $otime = date("Y-m-d H:i:s");
-    $ochecksum = md5($params['Source'] . $otime . md5($params['Password']));
-    $url = "pn_whoisprivacyacti.jsp";
-    $postfields = array(  );
-    $postfields['source'] = $params['Source'];
-    $postfields['otime'] = $otime;
-    $postfields['ochecksum'] = $ochecksum;
-    $postfields['domain'] = $params['sld'] . "." . $params['tld'];
-    $postfields['Action'] = $params['protectenable'] ? 'act' : 'deact';
-    $results = webnic_call($url, $postfields, $params);
-}
-function webnic_call($url, $rtype, $postfields, $params)
-{
-    if( $params['TestMode'] )
-    {
-        $url = "http://ote.webnic.cc/jsp/" . $url;
-    }
-    else
-    {
-        $url = "https://my.webnic.cc/jsp/" . $url;
-    }
-    $query_string = '';
-    foreach( $postfields as $k => $v )
-    {
-        $query_string .= $k . "=" . urlencode($v) . "&";
-    }
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 50);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $query_string);
-    $res_data = curl_exec($ch);
-    if( curl_errno($ch) )
-    {
-        $res_data = "CURL Error: " . curl_errno($ch) . " - " . curl_error($ch);
-    }
-    curl_close($ch);
-    $res_data = trim($res_data);
-    $res_array = explode("\n", $res_data);
-    logModuleCall('webnic', $rtype, $query_string, $res_data, $res_array, array( $params['Source'] ));
-    return $res_array;
-}
-function webnic_isCountryInAsia($countrycode)
-{
-    $asiacountrycodes = array( 'af', 'am', 'az', 'bh', 'bd', 'bt', 'bn', 'kh', 'cn', 'cx', 'cc', 'io', 'ge', 'hk', 'in', 'id', 'ir', 'iq', 'il', 'jp', 'jo', 'kz', 'kp', 'kr', 'kw', 'kg', 'la', 'lb', 'mo', 'my', 'mv', 'mn', 'mm', 'np', 'om', 'pk', 'ph', 'qa', 'sa', 'sg', 'lk', 'sy', 'tw', 'tj', 'th', 'tr', 'tm', 'ae', 'uz', 'vn', 'ye' );
-    return in_array(strtolower($countrycode), $asiacountrycodes);
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

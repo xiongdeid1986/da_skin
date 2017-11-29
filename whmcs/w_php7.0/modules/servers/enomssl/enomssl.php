@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,455 +32,355 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function enomssl_ConfigOptions()
-{
-    $result = select_query('tblemailtemplates', "COUNT(*)", array( 'name' => "SSL Certificate Configuration Required" ));
-    $data = mysqli_fetch_array($result);
-    if( !$data[0] )
-    {
-        full_query("INSERT INTO `tblemailtemplates` (`type` ,`name` ,`subject` ,`message` ,`fromname` ,`fromemail` ,`disabled` ,`custom` ,`language` ,`copyto` ,`plaintext` )VALUES ('product', 'SSL Certificate Configuration Required', 'SSL Certificate Configuration Required', '<p>Dear {\$client_name},</p><p>Thank you for your order for an SSL Certificate. Before you can use your certificate, it requires configuration which can be done at the URL below.</p><p>{\$ssl_configuration_link}</p><p>Instructions are provided throughout the process but if you experience any problems or have any questions, please open a ticket for assistance.</p><p>{\$signature}</p>', '', '', '', '', '', '', '0')");
-    }
-    $result = select_query('tblproducts', 'configoption1,configoption2,configoption5', array( 'servertype' => 'enomssl', 'configoption1' => array( 'sqltype' => 'NEQ', 'value' => '' ) ));
-    $data = simulate_fetch_assoc($result);
-    $enomusername = $data['configoption1'];
-    $enompassword = $data['configoption2'];
-    $testmode = $data['configoption5'];
-    if( $enomusername && $enompassword )
-    {
-        $postfields = array(  );
-        $postfields['uid'] = $enomusername;
-        $postfields['pw'] = $enompassword;
-        $postfields['command'] = 'GetCerts';
-        $postfields['ResponseType'] = 'XML';
-        $result = enomssl_call($postfields, $testmode);
-        $certtypelist = '';
-        foreach( $result['INTERFACE-RESPONSE']['GETCERTS']['CERTS'] as $cert => $details )
-        {
-            $certcode = $details['PRODCODE'];
-            if( $certcode )
-            {
-                $certcode = str_replace('-', " ", $certcode);
-                $certcode = titleCase($certcode);
-                $certtypelist .= $certcode . ',';
-            }
-        }
-        $certtypelist = substr($certtypelist, 0, 0 - 1);
-        if( !$certtypelist )
-        {
-            $certtypelist = 'certificate-rapidssl-rapidssl,certificate-geotrust-quickssl,certificate-geotrust-quickssl-premium,certificate-geotrust-truebizid,certificate-geotrust-truebizid-ev,certificate-geotrust-truebizid-wildcard,certificate-verisign-secure-site,certificate-verisign-secure-site-pro,certificate-verisign-secure-site-ev,certificate-verisign-secure-site-pro-ev,certificate-comodo-essential,certificate-comodo-premium-wildcard,certificate-comodo-essential-wildcard,certificate-comodo-ev,certificate-comodo-ev-sgc,certificate-comodo-ucc-dv-1yr-additional-domain,certificate-comodo-ucc-dv-2yr-additional-domain,certificate-comodo-ucc-dv-3yr-additional-domain,certificate-comodo-ucc-ov,certificate-comodo-ucc-ov-1yr-additional-domain,certificate-comodo-ucc-ov-2yr-additional-domain,certificate-comodo-ucc-ov-3yr-additional-domain';
-        }
-    }
-    else
-    {
-        $certtypelist = "Please Enter your Username and Password";
-    }
-    $configarray = array( 'Username' => array( 'Type' => 'text', 'Size' => '25' ), 'Password' => array( 'Type' => 'password', 'Size' => '25' ), "Certificate Type" => array( 'Type' => 'dropdown', 'Options' => $certtypelist ), 'Years' => array( 'Type' => 'dropdown', 'Options' => '1,2,3,4,5,6,7,8,9,10' ), "Test Mode" => array( 'Type' => 'yesno' ) );
-    return $configarray;
-}
-function enomssl_CreateAccount($params)
-{
-    $result = select_query('tblsslorders', "COUNT(*)", array( 'serviceid' => $params['serviceid'] ));
-    $data = mysqli_fetch_array($result);
-    if( $data[0] )
-    {
-        return "An SSL Order already exists for this order";
-    }
-    updateService(array( 'username' => '', 'password' => '' ));
-    $certtype = $params['configoptions']["Certificate Type"] ? $params['configoptions']["Certificate Type"] : $params['configoption3'];
-    $certyears = $params['configoptions']['Years'] ? $params['configoptions']['Years'] : $params['configoption4'];
-    $certtype = str_replace(" ", '-', strtolower($certtype));
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['ProductType'] = $certtype;
-    $postfields['Quantity'] = $certyears;
-    $postfields['ClearItems'] = 'yes';
-    $postfields['command'] = 'AddToCart';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    if( !is_array($result) && substr($result, 0, 4) == 'CURL' )
-    {
-        return $result;
-    }
-    $error = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-    if( $error )
-    {
-        return $error;
-    }
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['command'] = 'InsertNewOrder';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    $error = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-    if( $error )
-    {
-        return $error;
-    }
-    $orderid = $result['INTERFACE-RESPONSE']['ORDERID'];
-    $sslorderid = insert_query('tblsslorders', array( 'userid' => $params['clientsdetails']['userid'], 'serviceid' => $params['serviceid'], 'remoteid' => $orderid, 'module' => 'enomssl', 'certtype' => $certtype, 'status' => "Awaiting Configuration" ));
-    global $CONFIG;
-    $sslconfigurationlink = $CONFIG['SystemURL'] . "/configuressl.php?cert=" . md5($sslorderid);
-    $sslconfigurationlink = "<a href=\"" . $sslconfigurationlink . "\">" . $sslconfigurationlink . "</a>";
-    sendMessage("SSL Certificate Configuration Required", $params['serviceid'], array( 'ssl_configuration_link' => $sslconfigurationlink ));
-    return 'success';
-}
-function enomssl_TerminateAccount($params)
-{
-    $result = select_query('tblsslorders', "COUNT(*)", array( 'serviceid' => $params['serviceid'], 'status' => "Awaiting Configuration" ));
-    $data = mysqli_fetch_array($result);
-    if( !$data[0] )
-    {
-        return "SSL Either not Provisioned or Not Awaiting Configuration so unable to cancel";
-    }
-    update_query('tblsslorders', array( 'status' => 'Cancelled' ), array( 'serviceid' => $params['serviceid'] ));
-    return 'success';
-}
-function enomssl_AdminCustomButtonArray()
-{
-    $buttonarray = array( "Resend Configuration Email" => 'resend' );
-    return $buttonarray;
-}
-function enomssl_resend($params)
-{
-    $result = select_query('tblsslorders', 'id', array( 'serviceid' => $params['serviceid'] ));
-    $data = mysqli_fetch_array($result);
-    $id = $data['id'];
-    if( !$id )
-    {
-        return "No SSL Order exists for this product";
-    }
-    global $CONFIG;
-    $sslconfigurationlink = $CONFIG['SystemURL'] . "/configuressl.php?cert=" . md5($id);
-    $sslconfigurationlink = "<a href=\"" . $sslconfigurationlink . "\">" . $sslconfigurationlink . "</a>";
-    sendMessage("SSL Certificate Configuration Required", $params['serviceid'], array( 'ssl_configuration_link' => $sslconfigurationlink ));
-    return 'success';
-}
-function enomssl_ClientArea($params)
-{
-    global $_LANG;
-    $result = select_query('tblsslorders', '', array( 'serviceid' => $params['serviceid'] ));
-    $data = mysqli_fetch_array($result);
-    $id = $data['id'];
-    $orderid = $data['orderid'];
-    $serviceid = $data['serviceid'];
-    $remoteid = $data['remoteid'];
-    $module = $data['module'];
-    $certtype = $data['certtype'];
-    $domain = $data['domain'];
-    $provisiondate = $data['provisiondate'];
-    $completiondate = $data['completiondate'];
-    $status = $data['status'];
-    if( $id )
-    {
-        if( !$provisiondate )
-        {
-            $result = select_query('tblhosting', 'regdate', array( 'id' => $params['serviceid'] ));
-            $data = mysqli_fetch_array($result);
-            $provisiondate = $data['regdate'];
-        }
-        $provisiondate = fromMySQLDate($provisiondate);
-        $status .= " - <a href=\"configuressl.php?cert=" . md5($id) . "\">" . $_LANG['sslconfigurenow'] . "</a>";
-        $output = "<div align=\"left\">\n<table width=\"100%\">\n<tr><td width=\"150\" class=\"fieldlabel\">" . $_LANG['sslprovisioningdate'] . ":</td><td>" . $provisiondate . "</td></tr>\n<tr><td class=\"fieldlabel\">" . $_LANG['sslstatus'] . ":</td><td>" . $status . "</td></tr>\n</table>\n</div>";
-        return $output;
-    }
-}
-function enomssl_AdminServicesTabFields($params)
-{
-    $result = select_query('tblsslorders', '', array( 'serviceid' => $params['serviceid'] ));
-    $data = mysqli_fetch_array($result);
-    $id = $data['id'];
-    $orderid = $data['orderid'];
-    $serviceid = $data['serviceid'];
-    $remoteid = $data['remoteid'];
-    $module = $data['module'];
-    $certtype = $data['certtype'];
-    $domain = $data['domain'];
-    $provisiondate = $data['provisiondate'];
-    $completiondate = $data['completiondate'];
-    $status = $data['status'];
-    if( !$id )
-    {
-        $remoteid = '-';
-        $status = "Not Yet Provisioned";
-    }
-    $fieldsarray = array( "Enom Order ID" => $remoteid, "SSL Configuration Status" => $status );
-    return $fieldsarray;
-}
-function enomssl_SSLStepOne($params)
-{
-    $orderid = $params['remoteid'];
-    $values = array(  );
-    if( !$_SESSION['enomsslcert'][$orderid]['id'] )
-    {
-        $postfields = array(  );
-        $postfields['uid'] = $params['configoption1'];
-        $postfields['pw'] = $params['configoption2'];
-        $postfields['command'] = 'CertGetCerts';
-        $postfields['ResponseType'] = 'XML';
-        $result = enomssl_call($postfields, $params['configoption5']);
-        $values['error'] = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-        if( $values['error'] )
-        {
-            return $values;
-        }
-        $cert_allowconfig = false;
-        foreach( $result['INTERFACE-RESPONSE']['CERTGETCERTS']['CERTS'] as $certificate )
-        {
-            $temp_cert_id = $certificate['CERTID'];
-            $temp_cert_name = $certificate['PRODDESC'];
-            $temp_cert_status = $certificate['CERTSTATUS'];
-            $temp_cert_orderid = $certificate['ORDERID'];
-            $temp_cert_orderdate = $certificate['ORDERDATE'];
-            $temp_cert_validityperiod = $certificate['VALIDITYPERIOD'];
-            if( $temp_cert_orderid == $orderid )
-            {
-                $cert_id = $temp_cert_id;
-                $cert_name = $temp_cert_name;
-                $cert_orderid = $temp_cert_orderid;
-                $cert_orderdate = $temp_cert_orderdate;
-                $cert_validityperiod = $temp_cert_validityperiod;
-                if( $temp_cert_status == "Awaiting Configuration" || $temp_cert_status == "Rejected by Customer" )
-                {
-                    $cert_allowconfig = true;
-                }
-            }
-        }
-        if( !$cert_allowconfig )
-        {
-            update_query('tblsslorders', array( 'completiondate' => "now()", 'status' => 'Completed' ), array( 'serviceid' => $params['serviceid'], 'status' => array( 'sqltype' => 'NEQ', 'value' => 'Completed' ) ));
-        }
-        else
-        {
-            update_query('tblsslorders', array( 'completiondate' => '', 'status' => "Awaiting Configuration" ), array( 'serviceid' => $params['serviceid'] ));
-        }
-        $_SESSION['enomsslcert'][$orderid]['id'] = $cert_id;
-    }
-    else
-    {
-        $cert_id = $_SESSION['enomsslcert'][$orderid]['id'];
-    }
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['CertID'] = $cert_id;
-    $postfields['command'] = 'CertGetCertDetail';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    $values['error'] = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-    if( $values['error'] )
-    {
-        return $values;
-    }
-    $values['displaydata']['Domain'] = $result['INTERFACE-RESPONSE']['CERTGETCERTDETAIL']['DOMAINNAME'];
-    $values['displaydata']["Validity Period"] = $result['INTERFACE-RESPONSE']['CERTGETCERTDETAIL']['VALIDITYPERIOD'] . " Months";
-    $values['displaydata']["Expiration Date"] = $result['INTERFACE-RESPONSE']['CERTGETCERTDETAIL']['EXPIRATIONDATE'];
-    return $values;
-}
-function enomssl_SSLStepTwo($params)
-{
-    $orderid = $params['remoteid'];
-    $cert_id = $_SESSION['enomsslcert'][$orderid]['id'];
-    $webservertype = $params['servertype'];
-    $csr = $params['csr'];
-    $firstname = $params['firstname'];
-    $lastname = $params['lastname'];
-    $organisationname = $params['orgname'];
-    $jobtitle = $params['jobtitle'];
-    $emailaddress = $params['email'];
-    $address1 = $params['address1'];
-    $address2 = $params['address2'];
-    $city = $params['city'];
-    $state = $params['state'];
-    $postcode = $params['postcode'];
-    $country = $params['country'];
-    $phonenumber = $params['phonenumber'];
-    $faxnumber = $params['faxnumber'];
-    $values = array(  );
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['CertID'] = $cert_id;
-    $postfields['WebServerType'] = $webservertype;
-    $postfields['CSR'] = $csr;
-    $contacttypes = array( 'Admin', 'Tech', 'Billing' );
-    foreach( $contacttypes as $contacttype )
-    {
-        $postfields[$contacttype . 'FName'] = $firstname;
-        $postfields[$contacttype . 'LName'] = $lastname;
-        $postfields[$contacttype . 'OrgName'] = $organisationname;
-        $postfields[$contacttype . 'JobTitle'] = $jobtitle;
-        $postfields[$contacttype . 'Address1'] = $address1;
-        $postfields[$contacttype . 'Address2'] = $address2;
-        $postfields[$contacttype . 'City'] = $city;
-        if( $country == 'US' )
-        {
-            $postfields[$contacttype . 'State'] = $state;
-        }
-        else
-        {
-            $postfields[$contacttype . 'Province'] = $state;
-        }
-        $postfields[$contacttype . 'PostalCode'] = $postcode;
-        $postfields[$contacttype . 'Country'] = $country;
-        $postfields[$contacttype . 'Phone'] = $phonenumber;
-        $postfields[$contacttype . 'Fax'] = $faxnumber;
-        $postfields[$contacttype . 'EmailAddress'] = $emailaddress;
-    }
-    $postfields['command'] = 'CertConfigureCert';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    $values['error'] = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-    if( $values['error'] )
-    {
-        return $values;
-    }
-    $approveremailsarray = array(  );
-    foreach( $result['INTERFACE-RESPONSE']['CERTCONFIGURECERT'] as $k => $v )
-    {
-        if( substr($k, 0, 8) == 'APPROVER' )
-        {
-            $approver = trim($v['APPROVEREMAIL']);
-            if( $approver )
-            {
-                $approveremailsarray[] = $approver;
-            }
-        }
-    }
-    $values['approveremails'] = $approveremailsarray;
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['CertID'] = $cert_id;
-    $postfields['command'] = 'CertGetCertDetail';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    $values['error'] = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-    if( $values['error'] )
-    {
-        return $values;
-    }
-    $values['displaydata']['Domain'] = $result['INTERFACE-RESPONSE']['CERTGETCERTDETAIL']['DOMAINNAME'];
-    $values['displaydata']["Validity Period"] = $result['INTERFACE-RESPONSE']['CERTGETCERTDETAIL']['VALIDITYPERIOD'] . " Months";
-    $values['displaydata']["Expiration Date"] = $result['INTERFACE-RESPONSE']['CERTGETCERTDETAIL']['EXPIRATIONDATE'];
-    update_query('tblhosting', array( 'domain' => $values['displaydata']['Domain'] ), array( 'id' => $params['serviceid'] ));
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['CertID'] = $cert_id;
-    $postfields['CSR'] = $csr;
-    $postfields['command'] = 'CertParseCSR';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    $values['error'] = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-    if( $values['error'] )
-    {
-        return $values;
-    }
-    $values['displaydata']['Organization'] = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['ORGANIZATION'];
-    $values['displaydata']["Organization Unit"] = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['ORGANIZATIONUNIT'];
-    $values['displaydata']['Email'] = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['EMAIL'];
-    $values['displaydata']['Locality'] = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['LOCALITY'];
-    $values['displaydata']['State'] = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['STATE'];
-    $values['displaydata']['Country'] = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['COUNTRY'];
-    return $values;
-}
-function enomssl_SSLStepThree($params)
-{
-    $orderid = $params['remoteid'];
-    $cert_id = $_SESSION['enomsslcert'][$orderid]['id'];
-    $webservertype = $params['servertype'];
-    $csr = $params['csr'];
-    $firstname = $params['firstname'];
-    $lastname = $params['lastname'];
-    $organisationname = $params['organisationname'];
-    $jobtitle = $params['jobtitle'];
-    $emailaddress = $params['email'];
-    $address1 = $params['address1'];
-    $address2 = $params['address2'];
-    $city = $params['city'];
-    $state = $params['state'];
-    $postcode = $params['postcode'];
-    $country = $params['country'];
-    $phonenumber = $params['phonenumber'];
-    $faxnumber = $params['faxnumber'];
-    $approveremail = $params['approveremail'];
-    $cert_id = $_SESSION['enomsslcert'][$orderid]['id'];
-    unset($_SESSION['enomsslcert']);
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['CertID'] = $cert_id;
-    $postfields['CSR'] = $csr;
-    $postfields['command'] = 'CertParseCSR';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    $csr_organization = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['ORGANIZATION'];
-    $csr_organizationunit = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['ORGANIZATIONUNIT'];
-    $csr_email = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['EMAIL'];
-    $csr_locality = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['LOCALITY'];
-    $csr_state = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['STATE'];
-    $csr_country = $result['INTERFACE-RESPONSE']['CERTPARSECSR']['COUNTRY'];
-    $postfields = array(  );
-    $postfields['uid'] = $params['configoption1'];
-    $postfields['pw'] = $params['configoption2'];
-    $postfields['ApproverEmail'] = $params['approveremail'];
-    $postfields['CertID'] = $cert_id;
-    $postfields['CSRAddress1'] = $address1;
-    $postfields['CSRPostalCode'] = $postcode;
-    if( $csr_organization )
-    {
-        $postfields['CSROrganization'] = $csr_organization;
-    }
-    if( $csr_organizationunit )
-    {
-        $postfields['CSROrganizationUnit'] = $csr_organizationunit;
-    }
-    if( $csr_locality )
-    {
-        $postfields['CSRLocality'] = $csr_locality;
-    }
-    if( $csr_state )
-    {
-        $postfields['CSRStateProvince'] = $csr_state;
-    }
-    if( $csr_country )
-    {
-        $postfields['CSRCountry'] = $csr_country;
-    }
-    $postfields['command'] = 'CertPurchaseCert';
-    $postfields['ResponseType'] = 'XML';
-    $result = enomssl_call($postfields, $params['configoption5']);
-    $values['error'] = $result['INTERFACE-RESPONSE']['ERRORS']['ERR1'];
-    if( $values['error'] )
-    {
-        return $values;
-    }
-    return $values;
-}
-function enomssl_call($fields, $testmode = '')
-{
-    $url = $testmode ? "resellertest.enom.com" : "reseller.enom.com";
-    $query_string = '';
-    foreach( $fields as $k => $v )
-    {
-        $query_string .= $k . "=" . urlencode($v) . "&";
-    }
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "https://" . $url . "/interface.asp");
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $query_string);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 100);
-    $data = curl_exec($ch);
-    if( curl_error($ch) )
-    {
-        return "CURL Error: " . curl_errno($ch) . " - " . curl_error($ch);
-    }
-    curl_close($ch);
-    $result = XMLtoARRAY($data);
-    logModuleCall('enomssl', $fields['command'], $fields, $result, '', array( $fields['uid'], $fields['pw'] ));
-    return $result;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,255 +32,147 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-require_once(dirname(__FILE__) . "/ApiSettings.php");
-require_once(dirname(__FILE__) . "/DataCenterVisitor.php");
-/**
- * This is the API endpoint for the ColocationService
- *
- * @package Transip
- * @class ColocationService
- * @author TransIP (support@transip.nl)
- * @version 20121211 12:04
- */
-class Transip_ColocationService
-{
-    protected static $_soapClient = null;
-    const SERVICE = 'ColocationService';
-    /**
-     * Gets the singleton SoapClient which is used to connect to the TransIP Api.
-     *
-     * @param  mixed       $parameters  Parameters.
-     * @return SoapClient               The SoapClient object to which we can connect to the TransIP API
-     */
-    public static function _getSoapClient($parameters = array(  ))
-    {
-        $endpoint = Transip_ApiSettings::$endpoint;
-        if( self::$_soapClient === null )
-        {
-            $extensions = get_loaded_extensions();
-            $errors = array(  );
-            if( !class_exists('SoapClient') || !in_array('soap', $extensions) )
-            {
-                $errors[] = "The PHP SOAP extension doesn't seem to be installed. You need to install the PHP SOAP extension. (See: http://www.php.net/manual/en/book.soap.php)";
-            }
-            if( !in_array('openssl', $extensions) )
-            {
-                $errors[] = "The PHP OpenSSL extension doesn't seem to be installed. You need to install PHP with the OpenSSL extension. (See: http://www.php.net/manual/en/book.openssl.php)";
-            }
-            if( !empty($errors) )
-            {
-                exit( "<p>" . implode("</p>\n<p>", $errors) . "</p>" );
-            }
-            $classMap = array( 'DataCenterVisitor' => 'Transip_DataCenterVisitor' );
-            $options = array( 'classmap' => $classMap, 'encoding' => 'utf-8', 'features' => SOAP_SINGLE_ELEMENT_ARRAYS, 'trace' => false );
-            $wsdlUri = "https://" . $endpoint . "/wsdl/?service=" . self::SERVICE;
-            try
-            {
-                self::$_soapClient = new SoapClient($wsdlUri, $options);
-            }
-            catch( SoapFault $sf )
-            {
-                throw new Exception("Unable to connect to endpoint '" . $endpoint . "'");
-            }
-            self::$_soapClient->__setCookie('login', Transip_ApiSettings::$login);
-            self::$_soapClient->__setCookie('mode', Transip_ApiSettings::$mode);
-        }
-        $timestamp = time();
-        $nonce = uniqid('', true);
-        self::$_soapClient->__setCookie('timestamp', $timestamp);
-        self::$_soapClient->__setCookie('nonce', $nonce);
-        self::$_soapClient->__setCookie('signature', self::_urlencode(self::_sign(array_merge($parameters, array( '__service' => self::SERVICE, '__hostname' => $endpoint, '__timestamp' => $timestamp, '__nonce' => $nonce )))));
-        return self::$_soapClient;
-    }
-    /**
-     * Calculates the hash to sign our request with based on the given parameters.
-     *
-     * @param  mixed   $parameters  The parameters to sign.
-     * @return string               Base64 encoded signing hash.
-     */
-    protected static function _sign($parameters)
-    {
-        $matches = array(  );
-        if( !preg_match("/-----BEGIN(?: RSA|) PRIVATE KEY-----(.*)-----END(?: RSA|) PRIVATE KEY-----/si", Transip_ApiSettings::$privateKey, $matches) )
-        {
-            exit( "<p>Could not find your private key, please supply your private key in the ApiSettings file. You can request a new private key in your TransIP Controlpanel.</p>" );
-        }
-        $key = $matches[1];
-        $key = preg_replace("/\\s*/s", '', $key);
-        $key = chunk_split($key, 64, "\n");
-        $key = "-----BEGIN PRIVATE KEY-----\n" . $key . "-----END PRIVATE KEY-----";
-        $digest = self::_sha512asn1(self::_encodeparameters($parameters));
-        if( !@openssl_private_encrypt($digest, $signature, $key) )
-        {
-            exit( "<p>Could not sign your request, please supply your private key in the ApiSettings file. You can request a new private key in your TransIP Controlpanel.</p>" );
-        }
-        return base64_encode($signature);
-    }
-    /**
-     * Creates a digest of the given data, with an asn1 header.
-     *
-     * @param  string  $data  The data to create a digest of.
-     * @return string         The digest of the data, with asn1 header.
-     */
-    protected static function _sha512Asn1($data)
-    {
-        $digest = hash('sha512', $data, true);
-        $asn1 = chr(48) . chr(81);
-        $asn1 .= chr(48) . chr(13);
-        $asn1 .= chr(6) . chr(9);
-        $asn1 .= chr(96) . chr(134) . chr(72) . chr(1) . chr(101);
-        $asn1 .= chr(3) . chr(4);
-        $asn1 .= chr(2) . chr(3);
-        $asn1 .= chr(5) . chr(0);
-        $asn1 .= chr(4) . chr(64);
-        $asn1 .= $digest;
-        return $asn1;
-    }
-    /**
-     * Encodes the given paramaters into a url encoded string based upon RFC 3986.
-     *
-     * @param  mixed   $parameters  The parameters to encode.
-     * @param  string  $keyPrefix   Key prefix.
-     * @return string               The given parameters encoded according to RFC 3986.
-     */
-    protected static function _encodeParameters($parameters, $keyPrefix = null)
-    {
-        if( !is_array($parameters) && !is_object($parameters) )
-        {
-            return self::_urlencode($parameters);
-        }
-        $encodedData = array(  );
-        foreach( $parameters as $key => $value )
-        {
-            $encodedKey = is_null($keyPrefix) ? self::_urlencode($key) : $keyPrefix . "[" . self::_urlencode($key) . "]";
-            if( is_array($value) || is_object($value) )
-            {
-                $encodedData[] = self::_encodeparameters($value, $encodedKey);
-            }
-            else
-            {
-                $encodedData[] = $encodedKey . "=" . self::_urlencode($value);
-            }
-        }
-        return implode("&", $encodedData);
-    }
-    /**
-     * Our own function to encode a string according to RFC 3986 since.
-     * PHP < 5.3.0 encodes the ~ character which is not allowed.
-     *
-     * @param string $string The string to encode.
-     * @return string The encoded string according to RFC 3986.
-     */
-    protected static function _urlencode($string)
-    {
-        $string = rawurlencode($string);
-        return str_replace("%7E", "~", $string);
-    }
-    /**
-     * Requests access to the data-center
-     *
-     * @param string $when the datetime of the wanted datacenter access, in YYYY-MM-DD hh:mm:ss format
-     * @param int $duration the expected duration of the visit, in minutes
-     * @param string[] $visitors the names of the visitors for this data-center visit, must be at least 1 and at most 20
-     * @param string $phoneNumber if an SMS with access codes needs to be sent, set the phonenumber of the receiving phone here;
-     * @return Transip_DataCenterVisitor[] An array of Visitor objects holding information (such as reservation and access number) about
-     */
-    public static function requestAccess($when, $duration, $visitors, $phoneNumber)
-    {
-        return self::_getsoapclient(array_merge(array( $when, $duration, $visitors, $phoneNumber ), array( '__method' => 'requestAccess' )))->requestAccess($when, $duration, $visitors, $phoneNumber);
-    }
-    /**
-     * Request remote hands to the data-center
-     *
-     * @param string $coloName The name of the colocation
-     * @param string $contactName The contact name
-     * @param string $phoneNumber Phone number to contact
-     * @param int $expectedDuration Expected duration of the job in minutes
-     * @param string $instructions What to do
-     */
-    public static function requestRemoteHands($coloName, $contactName, $phoneNumber, $expectedDuration, $instructions)
-    {
-        return self::_getsoapclient(array_merge(array( $coloName, $contactName, $phoneNumber, $expectedDuration, $instructions ), array( '__method' => 'requestRemoteHands' )))->requestRemoteHands($coloName, $contactName, $phoneNumber, $expectedDuration, $instructions);
-    }
-    /**
-     * Get coloNames for customer
-     *
-     * @return string[] Array with colo names
-     */
-    public static function getColoNames()
-    {
-        return self::_getsoapclient(array_merge(array(  ), array( '__method' => 'getColoNames' )))->getColoNames();
-    }
-    /**
-     * Get IpAddresses that are active and assigned to a Colo.
-     * Both ipv4 and ipv6 addresses are returned: ipv4 adresses in dot notation,
-     * ipv6 addresses in ipv6 presentation.
-     *
-     * @param string $coloName The name of the colo to get the ipaddresses for for
-     * @return string[] Array with assigned IPv4 and IPv6 addresses for the colo
-     */
-    public static function getIpAddresses($coloName)
-    {
-        return self::_getsoapclient(array_merge(array( $coloName ), array( '__method' => 'getIpAddresses' )))->getIpAddresses($coloName);
-    }
-    /**
-     * Get ipranges that are assigned to a Colo. Both ipv4 and ipv6 ranges are
-     * returned, in CIDR notation.
-     *
-     * @param string $coloName The name of the colo to get the ranges for
-     * @see http://en.wikipedia.org/wiki/CIDR_notation
-     * @return string[] Array of ipranges in CIDR format assigned to this colo.
-     */
-    public static function getIpRanges($coloName)
-    {
-        return self::_getsoapclient(array_merge(array( $coloName ), array( '__method' => 'getIpRanges' )))->getIpRanges($coloName);
-    }
-    /**
-     * Adds a new IpAddress, either an ipv6 or an ipv4 address.
-     * The service will validate the address, ensure the user is entitled
-     * to the address and will add the address to the correct Colo and range.
-     *
-     * @param string $ipAddress The IpAddress to create, can be either ipv4 or ipv6.
-     * @param string $reverseDns The RDNS name for this IpAddress
-     */
-    public static function createIpAddress($ipAddress, $reverseDns)
-    {
-        return self::_getsoapclient(array_merge(array( $ipAddress, $reverseDns ), array( '__method' => 'createIpAddress' )))->createIpAddress($ipAddress, $reverseDns);
-    }
-    /**
-     * Deletes an IpAddress currently in use this account.
-     * IpAddress can be either ipv4 or ipv6. The service will validate
-     * if the user has rights to remove the address and will remove it completely,
-     * together with any RDNS or monitoring assigned to the address.
-     *
-     * @param string $ipAddress the IpAddress to delete, can be either ipv4 or ipv6.
-     */
-    public static function deleteIpAddress($ipAddress)
-    {
-        return self::_getsoapclient(array_merge(array( $ipAddress ), array( '__method' => 'deleteIpAddress' )))->deleteIpAddress($ipAddress);
-    }
-    /**
-     * Get the Reverse DNS for an IpAddress assigned to the user
-     * Throws an Exception when the Address does not exist or is not
-     * owned by the user.
-     *
-     * @param string $ipAddress the IpAddress, either ipv4 or ipv6
-     * @return string rdns
-     */
-    public static function getReverseDns($ipAddress)
-    {
-        return self::_getsoapclient(array_merge(array( $ipAddress ), array( '__method' => 'getReverseDns' )))->getReverseDns($ipAddress);
-    }
-    /**
-     * Set the RDNS name for an ipAddress.
-     * Throws an Exception when the Address does not exist or is not
-     * owned by the user.
-     *
-     * @param string $ipAddress The IpAddress to set the reverse dns for, can be either ipv4 or ipv6.
-     * @param string $reverseDns The new reverse DNS, must be a valid RDNS value.
-     */
-    public static function setReverseDns($ipAddress, $reverseDns)
-    {
-        return self::_getsoapclient(array_merge(array( $ipAddress, $reverseDns ), array( '__method' => 'setReverseDns' )))->setReverseDns($ipAddress, $reverseDns);
-    }
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

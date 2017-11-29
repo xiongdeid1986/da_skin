@@ -1,1 +1,0 @@
-<p>{$LANG.logoutsuccessful}  <a href="index.php">{$LANG.logoutcontinuetext}</a></p>

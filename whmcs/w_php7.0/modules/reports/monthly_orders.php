@@ -15,7 +15,7 @@ $datefilter = $year.'-'.$month.'%';
 $reportdata["tableheadings"] = array("Product Name","Units Sold","Value");
 
 $result = select_query("tblproducts","tblproducts.id,tblproducts.name,tblproductgroups.name AS groupname","","tblproductgroups`.`order` ASC,`tblproducts`.`order` ASC,`name","ASC","","tblproductgroups ON tblproducts.gid=tblproductgroups.id");
-while($data = mysqli_fetch_array($result)) {
+while($data = mysql_fetch_array($result)) {
     $pid = $data["id"];
     $group = $data["groupname"];
     $prodname = $data["name"];
@@ -23,7 +23,7 @@ while($data = mysqli_fetch_array($result)) {
     if ($group!=$prevgroup) $reportdata["tablevalues"][] = array("**<b>$group</b>");
 
     $result2 = select_query("tblhosting","COUNT(*),SUM(tblhosting.firstpaymentamount)","tblhosting.packageid='$pid' AND tblhosting.domainstatus='Active' AND tblhosting.regdate LIKE '".$datefilter."' AND tblclients.currency='$currencyid'","","","","tblclients ON tblclients.id=tblhosting.userid");
-    $data = mysqli_fetch_array($result2);
+    $data = mysql_fetch_array($result2);
     $number = $data[0];
     $amount = $data[1];
 
@@ -40,13 +40,13 @@ while($data = mysqli_fetch_array($result)) {
 $reportdata["tablevalues"][] = array("**<b>Addons</b>");
 
 $result = select_query("tbladdons","","","name","ASC");
-while($data = mysqli_fetch_array($result)) {
+while($data = mysql_fetch_array($result)) {
 
     $pid = $data["id"];
     $prodname = $data["name"];
 
     $result2 = select_query("tblhostingaddons","COUNT(*),SUM(tblhostingaddons.setupfee+tblhostingaddons.recurring)","tblhostingaddons.addonid='$pid' AND tblhostingaddons.status='Active' AND tblhostingaddons.regdate LIKE '$datefilter' AND tblclients.currency='$currencyid'","","","","tblhosting ON tblhosting.id=tblhostingaddons.hostingid INNER JOIN tblclients ON tblclients.id=tblhosting.userid");
-    $data = mysqli_fetch_array($result2);
+    $data = mysql_fetch_array($result2);
     $number = $data[0];
     $amount = $data[1];
 

@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,930 +32,423 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-/**
- * API for vps.net
- *
- * This API provides an interface to vps.net allowing common virtual machine and account management tasks
- * @package VPSNET
- * @version 1.0.8
- *
- * Known Issues:
- * - When removing a virtual machine the server may return a 406 Not Acceptable message even though the virtual machine is deleted correctly.
- * - Your PHP user will need access to /tmp so it can write cookies. Some PHP configurations may not allow this.
- *
- * Changelog:
- * 2009-06-24 Corrected wrong variable virtual_machine_id in removing virtual machines (should just be id) and error in createVirtualMachine
- * 2009-06-10 Corrected error in sendGETRequest and sendPUTRequest
- * 2009-06-09 Added proxy support, fixed incorrect parameters (hostname+domain_name) passed in create virtual machine - now uses fqdn
- * 2009-06-02 Fixed showConsole function
- * 2009-06-02 Fixed graph function
- * 2009-05-31 Fixed CURL_USERAGENT to CURLOPT_USERAGENT
- * 2009-05-29 Added changelog, fixed API resource for available clouds.
- */
-class VPSNET
-{
-    protected $_apiUrl = "https://api.vps.net";
-    private $_apiVersion = 'api10json';
-    protected $_apiUserAgent = 'VPSNET_API_10_JSON/PHP';
-    private $_session_cookie = NULL;
-    private $_auth_name = '';
-    private $_auth_api_key = '';
-    private $_proxy = '';
-    private $ch = null;
-    public $last_errors = null;
-    private static $instance = NULL;
-    /**
-     * This contains the API version and is sent as part of server
-     * requests.
-     * @var string
-     */
-    private function __construct()
-    {
-    }
-    public function __destruct()
-    {
-        if( !is_null($this->ch) )
-        {
-            curl_close($this->ch);
-        }
-    }
-    /**
-     * Returns true if the API instance has authentication information set.
-     * If not, you can call getInstance() with credentials.
-     * @return boolean
-     */
-    public function isAuthenticationInfoSet()
-    {
-        return 0 < strlen($this->_auth_name) && 0 < strlen($this->_auth_api_key);
-    }
-    /**
-     * Returns the instance of the API.
-     * @return VPSNET
-     */
-    public static function getInstance($username = '', $_auth_api_key = '', $proxy = '')
-    {
-        if( !isset($instance) )
-        {
-            $c = 'VPSNET';
-            self::$instance = new $c();
-            self::$instance->_auth_name = $username;
-            self::$instance->_auth_api_key = $_auth_api_key;
-            if( 0 < strlen($proxy) )
-            {
-                self::$instance->_proxy = $proxy;
-            }
-            if( strlen($username) == 0 || strlen($_auth_api_key) == 0 )
-            {
-                throw new Exception("A Username and/or API Key has not yet been setup in Setup > Servers.");
-            }
-            self::$instance->_initCurl();
-        }
-        return self::$instance;
-    }
-    public function __clone()
-    {
-        trigger_error("Clone is not permitted. This class is a singleton.", E_USER_ERROR);
-    }
-    private function _initCurl()
-    {
-        $this->ch = curl_init();
-        if( 0 < strlen($this->_proxy) )
-        {
-            curl_setopt($this->ch, CURLOPT_PROXY, $this->_proxy);
-        }
-        curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array( "Content-Type: application/json", "Accept: application/json" ));
-        curl_setopt($this->ch, CURLOPT_USERAGENT, $this->_apiUserAgent);
-        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($this->ch, CURLOPT_USERPWD, $this->_auth_name . ":" . $this->_auth_api_key);
-        curl_setopt($this->ch, CURLOPT_COOKIEFILE, "/tmp/.vpsnet." . $this->_auth_name . ".cookie");
-        curl_setopt($this->ch, CURLOPT_COOKIEJAR, "/tmp/.vpsnet." . $this->_auth_name . ".cookie");
-    }
-    public function setAPIResource($resource, $append_api_version = true, $queryString = '')
-    {
-        if( $append_api_version )
-        {
-            curl_setopt($this->ch, CURLOPT_URL, sprintf("%1\$s/%2\$s.%3\$s?%4\$s", $this->_apiUrl, $resource, $this->_apiVersion, $queryString));
-        }
-        else
-        {
-            curl_setopt($this->ch, CURLOPT_URL, sprintf("%1\$s/%2\$s?%3\$s", $this->_apiUrl, $resource, $queryString));
-        }
-    }
-    public function sendGETRequest()
-    {
-        curl_setopt($this->ch, CURLOPT_CUSTOMREQUEST, 'GET');
-        curl_setopt($this->ch, CURLOPT_HTTPGET, true);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array( "Content-Length: 0", "Content-Type: application/json", "Accept: application/json" ));
-        $rtn = $this->sendRequest();
-        logModuleCall('vpsnet', 'get', $this, $rtn);
-        return $rtn;
-    }
-    public function sendPOSTRequest($data = null, $encodeasjson = true)
-    {
-        curl_setopt($this->ch, CURLOPT_CUSTOMREQUEST, 'POST');
-        curl_setopt($this->ch, CURLOPT_POST, true);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array( "Content-Type: application/json", "Accept: application/json" ));
-        if( !is_null($data) )
-        {
-            if( $encodeasjson )
-            {
-                curl_setopt($this->ch, CURLOPT_POSTFIELDS, json_encode($data));
-            }
-            else
-            {
-                curl_setopt($this->ch, CURLOPT_POSTFIELDS, $data);
-                curl_setopt($this->ch, CURLOPT_HTTPHEADER, array(  ));
-            }
-        }
-        $rtn = $this->sendRequest();
-        logModuleCall('vpsnet', 'post', $this, $rtn);
-        return $rtn;
-    }
-    public function sendPUTRequest($data)
-    {
-        curl_setopt($this->ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-        $json_data = json_encode($data);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $json_data);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array( "Content-Length: " . strlen($json_data), "Content-Type: application/json", "Accept: application/json" ));
-        $rtn = $this->sendRequest();
-        logModuleCall('vpsnet', 'put', $this, $rtn);
-        return $rtn;
-    }
-    public function sendDELETERequest()
-    {
-        curl_setopt($this->ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array( "Content-Type: application/json", "Accept: application/json" ));
-        $rtn = $this->sendRequest();
-        logModuleCall('vpsnet', 'delete', $this, $rtn);
-        return $rtn;
-    }
-    protected function sendRequest($data = null)
-    {
-        $rtn = array(  );
-        $rtn['response_body'] = curl_exec($this->ch);
-        $rtn['info'] = curl_getinfo($this->ch);
-        if( $rtn['info']['content_type'] == "application/json; charset=utf-8" )
-        {
-            if( $rtn['info']['http_code'] == 200 )
-            {
-                $rtn['response'] = json_decode($rtn['response_body']);
-                $this->last_errors = null;
-            }
-            else
-            {
-                if( $rtn['info']['http_code'] == 422 )
-                {
-                    $rtn['errors'] = json_decode($rtn['response_body']);
-                    $this->last_errors = $rtn['errors'];
-                }
-                else
-                {
-                    $rtn['errors'] = json_decode($rtn['response_body']);
-                    $this->last_errors = $rtn['errors'];
-                }
-            }
-        }
-        return $rtn;
-    }
-    /**
-     * Returns Nodes from your account.
-     * @param int $consumer_id (Optional) Consumer Id to filter results by
-     * @return array An array of IPAddress instances
-     */
-    public function getNodes($consumer_id = 0)
-    {
-        if( 0 < $consumer_id )
-        {
-            $this->setAPIResource('nodes', true, "consumer_id=" . $consumer_id);
-        }
-        else
-        {
-            $this->setAPIResource('nodes');
-        }
-        $result = $this->sendGETRequest();
-        $return = array(  );
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            if( $result['response'] )
-            {
-                $response = $result['response'];
-                for( $x = 0; $x < count($response); $x++ )
-                {
-                    $return[$x] = $this->_castObjectToClass('Node', $response[$x]->slice);
-                }
-            }
-        }
-        return $return;
-    }
-    /**
-     * Returns IP addresses from your account.
-     * @param int $consumer_id (Optional) Consumer Id to filter results by
-     * @return array An array of IPAddress instances
-     */
-    public function getIPAddresses($consumer_id = 0)
-    {
-        if( 0 < $consumer_id )
-        {
-            $this->setAPIResource('ip_address_assignments', true, "consumer_id=" . $consumer_id);
-        }
-        else
-        {
-            $this->setAPIResource('ip_address_assignments');
-        }
-        $result = $this->sendGETRequest();
-        $return = array(  );
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            if( $result['response'] )
-            {
-                $response = $result['response'];
-                for( $x = 0; $x < count($response); $x++ )
-                {
-                    $return[$x] = $this->_castObjectToClass('IPAddress', $response[$x]->ip_address);
-                }
-            }
-        }
-        return $return;
-    }
-    /**
-     * Returns Virtual Machines from your account.
-     * @param int $consumer_id (Optional) Consumer Id to filter results by
-     * @return array An array of VirtualMachine instances
-     */
-    public function getVirtualMachines($consumer_id = 0)
-    {
-        if( 0 < $consumer_id )
-        {
-            $this->setAPIResource('virtual_machines', true, "consumer_id=" . $consumer_id);
-        }
-        else
-        {
-            $this->setAPIResource('virtual_machines');
-        }
-        $result = $this->sendGETRequest();
-        $return = array(  );
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            if( $result['response'] )
-            {
-                $response = $result['response'];
-                for( $x = 0; $x < count($response); $x++ )
-                {
-                    $return[$x] = $this->_castObjectToClass('VirtualMachine', $response[$x]->virtual_machine);
-                }
-            }
-        }
-        return $return;
-    }
-    /**
-     * Returns available Clouds and Virtual Machine templates.
-     * @return array
-     */
-    public function getAvailableCloudsAndTemplates()
-    {
-        $this->setAPIResource('available_clouds');
-        $result = $this->sendGETRequest();
-        $return = null;
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            if( $result['response'] )
-            {
-                $return = $result['response'];
-            }
-        }
-        return $return;
-    }
-    /**
-     * Adds internal IP addresses to your account.
-     * @param int $quantity Number of IPs to add
-     * @param int $consumer_id (Optional) Consumer Id to tag the IP Address with
-     * @return IPAddress An instance of the IP address that was assigned
-     */
-    public function addInternalIPAddresses($quantity, $consumer_id = 0)
-    {
-        if( $quantity < 1 )
-        {
-            trigger_error("To call VPSNET::addInternalIPAddress() you must provide a quantity greater than 0", E_USER_ERROR);
-            return false;
-        }
-        $this->setAPIResource('ip_address_assignments');
-        $json_request['ip_address_assignment']->quantity = $quantity;
-        $json_request['ip_address_assignment']->type = 'internal';
-        if( 0 < $consumer_id )
-        {
-            $json_request['ip_address_assignment']->consumer_id = $consumer_id;
-        }
-        $result = $this->sendPOSTRequest($json_request);
-        $return = null;
-        if( $result['response'] )
-        {
-            $return = $result['response'];
-        }
-        return $return;
-    }
-    /**
-     * Adds external IP addresses to your account.
-     * @param int $quantity Number of IPs to add
-     * @param int $cloud_id Id of the cluster on which to add the IP Address
-     * @param int $consumer_id (Optional) Consumer Id to tag the IP Address with
-     * @return IPAddress An instance of the IP address that was assigned
-     */
-    public function addExternalIPAddresses($quantity, $cloud_id, $consumer_id = 0)
-    {
-        if( $quantity < 1 || $cloud_id < 1 )
-        {
-            trigger_error("To call VPSNET::addExternalIPAddresses() you must provide a quantity greater than 0 and a cluster_id", E_USER_ERROR);
-            return false;
-        }
-        $this->setAPIResource('ip_address_assignments');
-        $json_request['ip_address_assignment']->quantity = $quantity;
-        $json_request['ip_address_assignment']->cloud_id = $cloud_id;
-        $json_request['ip_address_assignment']->type = 'external';
-        if( 0 < $consumer_id )
-        {
-            $json_request['ip_address_assignment']->consumer_id = $consumer_id;
-        }
-        $result = $this->sendPOSTRequest($json_request);
-        $return = null;
-        if( $result['response'] )
-        {
-            $return = $result['response'];
-        }
-        return $return;
-    }
-    /**
-     * Creates a new Virtual Machine account.
-     * @param VirtualMachine $virtualmachine Instance of VirtualMachine containing new virtual machine properties
-     * @return VirtualMachine|object An instance of the created VirtualMachine that was assigned or an Object of errors
-     */
-    public function createVirtualMachine($virtualmachine)
-    {
-        $this->setAPIResource('virtual_machines');
-        $requestdata['label'] = $virtualmachine->label;
-        $requestdata['fqdn'] = $virtualmachine->hostname;
-        $requestdata['slices_required'] = $virtualmachine->slices_required;
-        $requestdata['backups_enabled'] = (int) $virtualmachine->backups_enabled;
-        $requestdata['rsync_backups_enabled'] = (int) $virtualmachine->rsync_backups_enabled;
-        $requestdata['r1_soft_backups_enabled'] = (int) $virtualmachine->r1_soft_backups_enabled;
-        $requestdata['system_template_id'] = $virtualmachine->system_template_id;
-        $requestdata['cloud_id'] = $virtualmachine->cloud_id;
-        $requestdata['consumer_id'] = $virtualmachine->consumer_id;
-        $json_request['virtual_machine'] = $requestdata;
-        $result = $this->sendPOSTRequest($json_request);
-        $return = null;
-        if( $result['response'] )
-        {
-            $return = $this->_castObjectToClass('VirtualMachine', $result['response']->virtual_machine);
-        }
-        else
-        {
-            $return = $result;
-        }
-        return $return;
-    }
-    /**
-     * Adds Nodes to your account.
-     * @param int $quantity Number of Nodes to add
-     * @param int $consumer_id (Optional) Consumer Id to tag the IP Address with
-     * @return boolean true if nodes were added succesfully, false otherwise
-     */
-    public function addNodes($quantity, $consumer_id = 0)
-    {
-        $this->setAPIResource('nodes');
-        $json_request['quantity'] = $quantity;
-        if( 0 < $consumer_id )
-        {
-            $json_request['consumer_id'] = $consumer_id;
-        }
-        $result = $this->sendPOSTRequest($json_request);
-        return $result['info']['http_code'] == 200;
-    }
-    public function _castObjectToClass($classname, $object)
-    {
-        return unserialize(preg_replace("/^O:\\d+:\"[^\"]++\"/", "O:" . strlen($classname) . ":\"" . $classname . "\"", serialize($object)));
-    }
-}
-
-/**
- * Node class
- *
- * Allows management of Nodes
- */
-class Node
-{
-    public $virtual_machine_id = 0;
-    public $id = 0;
-    public $consumer_id = 0;
-    public $deleted = 0;
-    public function __construct($id = 0, $virtual_machine_id = 0)
-    {
-        $this->id = $id;
-        $this->virtual_machine_id = $virtual_machine_id;
-    }
-    /**
-     * Removes Node from your account
-     * @return boolean true if Node was deleted succesfully, false otherwise
-     */
-    public function remove()
-    {
-        $api = VPSNET::getinstance();
-        if( $this->id < 1 )
-        {
-            trigger_error("To call Node::remove() you must set its id", E_USER_ERROR);
-            return false;
-        }
-        if( 0 < $this->virtual_machine_id )
-        {
-            trigger_error("You cannot call Node::remove() with a node assigned to a virtual machine. Instead use VirtualMachine::update()", E_USER_ERROR);
-            return false;
-        }
-        $api->setAPIResource('nodes/' . $this->id);
-        $result = $api->sendDELETERequest();
-        $this->deleted = $result['info']['http_code'] == 200;
-        return $this->deleted;
-    }
-}
-
-/**
- * IP Address class
- *
- * Allows management of IP addresses
- */
-class IPAddress
-{
-    public $id = 0;
-    public $netmask = '';
-    public $network = '';
-    public $cloud_id = 0;
-    public $ip_address = '';
-    public $consumer_id = 0;
-    public $deleted = false;
-    private function __construct($id)
-    {
-        $this->id = $id;
-    }
-    /**
-     * Use to find out if an IP address is Internal
-     * @return boolean true if IP address is Internal, false otherwise
-     */
-    public function isInternal()
-    {
-        return $cloud_id == 0;
-    }
-    /**
-     * Use to find out if an IP address is External
-     * @return boolean true if IP address is External, false otherwise
-     */
-    public function isExternal()
-    {
-        return 0 < $cloud_id;
-    }
-    /**
-     * Removes IP address from your account
-     * @return boolean true if IP address was deleted succesfully, false otherwise
-     */
-    public function remove()
-    {
-        $api = VPSNET::getinstance();
-        if( $this->id < 1 )
-        {
-            trigger_error("To call IPAddress::remove() you must set id", E_USER_ERROR);
-            return false;
-        }
-        $api->setAPIResource('ip_address_assignments/' . $this->id);
-        $result = $api->sendDELETERequest();
-        $this->deleted = $result['info']['http_code'] == 200;
-        return $this->deleted;
-    }
-}
-
-/**
- * Backups class
- *
- * Allows management of Backups
- */
-class Backup
-{
-    public $virtual_machine_id = 0;
-    public $id = 0;
-    public $label = '';
-    public $auto_backup_type = NULL;
-    public $deleted = false;
-    public function __construct($id = 0, $virtual_machine_id = 0)
-    {
-        $this->id = $id;
-        $this->virtual_machine_id = $virtual_machine_id;
-    }
-    /**
-     * Restores a backup
-     * @return boolean true if backup restore request was succesful, false otherwise
-     */
-    public function restore()
-    {
-        $api = VPSNET::getinstance();
-        if( $this->id < 1 || $this->virtual_machine_id < 1 )
-        {
-            trigger_error("To call Backup::restore() you must set id and virtual_machine_id", E_USER_ERROR);
-            return false;
-        }
-        $api->setAPIResource('virtual_machines/' . $this->virtual_machine_id . '/backups/' . $this->id . '/restore');
-        $result = $api->sendPOSTRequest();
-        return $result['info']['http_code'] == 200;
-    }
-    /**
-     * Removes a backup
-     * @return boolean true if backup was removed, false otherwise
-     */
-    public function remove()
-    {
-        $api = VPSNET::getinstance();
-        if( $this->id < 1 || $this->virtual_machine_id < 1 )
-        {
-            trigger_error("To call Backup::remove() you must set id and virtual_machine_id", E_USER_ERROR);
-            return false;
-        }
-        $api->setAPIResource('virtual_machines/' . $this->virtual_machine_id . '/backups/' . $this->id);
-        $result = $api->sendDELETERequest();
-        $this->deleted = $result['info']['http_code'] == 200;
-        return $this->deleted;
-    }
-}
-
-/**
- * Upgrade Schedule class
- *
- * Allows management of Scheduled Upgrades
- */
-class UpgradeSchedule
-{
-    public $id = 0;
-    public $label = '';
-    public $extra_slices = 0;
-    public $temporary = false;
-    public $run_at = NULL;
-    public $days = NULL;
-    public function __construct($label, $extra_slices, $run_at, $days = 0)
-    {
-        $this->temporary = 0 < $days;
-        $this->label = $label;
-        $this->extra_slices = $extra_slices;
-        $this->run_at = date_format('c', $run_at);
-        if( 0 < $days )
-        {
-            $this->days = $days;
-        }
-    }
-}
-
-/**
- * Virtual Machines class
- *
- * Allows management of Virtual Machines
- */
-class VirtualMachine
-{
-    public $label = '';
-    public $hostname = '';
-    public $domain_name = '';
-    public $slices_count = 0;
-    public $slices_required = 0;
-    public $backups_enabled = 0;
-    public $rsync_backups_enabled = 0;
-    public $r1_soft_backups_enabled = 0;
-    public $system_template_id = 0;
-    public $cloud_id = 0;
-    public $id = NULL;
-    public $consumer_id = 0;
-    public $created_at = null;
-    public $updated_at = null;
-    public $password = '';
-    public $backups = array(  );
-    public $upgrade_schedules = array(  );
-    public $deleted = false;
-    public function __construct($label = '', $hostname = '', $slices_required = '', $backups_enabled = '', $cloud_id = '', $system_template_id = '', $consumer_id = 0)
-    {
-        $this->label = $label;
-        $this->hostname = $hostname;
-        $this->slices_required = $slices_required;
-        $this->backups_enabled = $backups_enabled;
-        $this->cloud_id = $cloud_id;
-        $this->system_template_id = $system_template_id;
-        $this->consumer_id = $consumer_id;
-    }
-    private function _doAction($action)
-    {
-        $api = VPSNET::getinstance();
-        $api->setAPIResource('virtual_machines/' . $this->id . '/' . $action);
-        $result = $api->sendPOSTRequest();
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            if( $result['response'] )
-            {
-                foreach( $result['response']->virtual_machine as $key => $value )
-                {
-                    $this->$key = $value;
-                }
-            }
-        }
-        $resultclone = array(  );
-        foreach( $result as $key => $value )
-        {
-            if( is_array($value) )
-            {
-                foreach( $value as $key1 => $value1 )
-                {
-                    if( is_array($value1) )
-                    {
-                        foreach( $value1 as $key2 => $value2 )
-                        {
-                            $resultclone[$key][$key1][$key2] = strip_tags($value2);
-                        }
-                    }
-                    else
-                    {
-                        $resultclone[$key][$key1] = strip_tags($value1);
-                    }
-                }
-            }
-            else
-            {
-                $resultclone[$key] = strip_tags($value);
-            }
-        }
-        $this->rawresponse = $resultclone;
-        return $this;
-    }
-    /**
-     * Powers on a virtual machine
-     * @return VirtualMachine Virtual Machine instance
-     */
-    public function powerOn()
-    {
-        return $this->_doAction('power_on');
-    }
-    /**
-     * Powers off a virtual machine
-     * @return VirtualMachine Virtual Machine instance
-     */
-    public function powerOff()
-    {
-        return $this->_doAction('power_off');
-    }
-    /**
-     * Gracefully shuts down a virtual machine
-     * @return VirtualMachine Virtual Machine instance
-     */
-    public function shutdown()
-    {
-        return $this->_doAction('shutdown');
-    }
-    /**
-     * Reboots a virtual machine
-     * @return VirtualMachine Virtual Machine instance
-     */
-    public function reboot()
-    {
-        return $this->_doAction('reboot');
-    }
-    /**
-     * Creates a backup
-     * @param string $label Name of backup
-     * @return Backup Backup instance
-     */
-    public function createBackup($label)
-    {
-        if( !is_string($label) || strlen($label) < 0 )
-        {
-            trigger_error("To call VirtualMachine::createBackup() you must specify a label", E_USER_ERROR);
-            return false;
-        }
-        $api = VPSNET::getinstance();
-        $api->setAPIResource('virtual_machines/' . $this->id . '/backups');
-        $json_request['backup']->label = $label;
-        $result = $api->sendPOSTRequest($json_request);
-        $return = null;
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            $this->backups[] = $api->_castObjectToClass('Backup', $result['response']);
-        }
-        return $result['response'];
-    }
-    /**
-     * Creates a temporary upgrade schedule
-     * @param string $label Name of upgrade schedule
-     * @param int $extra_slices Number of new nodes
-     * @param date $run_at Date to run upgrade schedule
-     * @param int $days Number of days to run upgrade schedule for
-     * @return UpgradeSchedule instance
-     */
-    public function createTemporaryUpgradeSchedule($label, $extra_slices, $run_at, $days)
-    {
-        $bInputErrors = false;
-        if( !is_string($label) || strlen($label) < 0 )
-        {
-            trigger_error("To call VirtualMachine::createTemporaryUpgradeSchedule() you must specify a label", E_USER_ERROR);
-            $bInputErrors = true;
-        }
-        if( !is_int($extra_slices) )
-        {
-            trigger_error("To call VirtualMachine::createTemporaryUpgradeSchedule() you must specify extra_slices as a number", E_USER_ERROR);
-            $bInputErrors = true;
-        }
-        if( !is_int($days) || $days < 1 )
-        {
-            trigger_error("To call VirtualMachine::createTemporaryUpgradeSchedule() you must specify days as a number greater than 0", E_USER_ERROR);
-            $bInputErrors = true;
-        }
-        if( $bInputErrors )
-        {
-            return false;
-        }
-        $api = VPSNET::getinstance();
-        $api->setAPIResource('virtual_machines/' . $this->id . '/backups');
-        $json_request['backup']->label = $label;
-        $result = $api->sendPOSTRequest($json_request);
-        $return = null;
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            $this->backups[] = $api->_castObjectToClass('Backup', $result['response']);
-        }
-        return $result['response'];
-    }
-    /**
-     * Outputs a bandwidth usage graph to output stream
-     * @param string $period Period of usage ('hourly', 'daily', 'weekly', 'monthly')
-     */
-    public function showNetworkGraph($period)
-    {
-        if( !in_array($period, array( 'hourly', 'daily', 'weekly', 'monthly' )) )
-        {
-            trigger_error("To call VirtualMachine::getNetworkGraph() you must specify a period of hourly, daily, weekly or monthly", E_USER_ERROR);
-            return false;
-        }
-        return $this->showGraph($period, 'network');
-    }
-    /**
-     * Outputs a CPU usage graph to output stream
-     * @param string $period Period of usage ('hourly', 'daily', 'weekly', 'monthly')
-     */
-    public function showCPUGraph($period)
-    {
-        if( !in_array($period, array( 'hourly', 'daily', 'weekly', 'monthly' )) )
-        {
-            trigger_error("To call VirtualMachine::getCPUGraph() you must specify a period of hourly, daily, weekly or monthly", E_USER_ERROR);
-            return false;
-        }
-        return $this->showGraph($period, 'cpu');
-    }
-    protected function showGraph($period, $type)
-    {
-        $api = VPSNET::getinstance();
-        $api->setAPIResource('virtual_machines/' . $this->id . '/' . $type . '_graph', false, "period=" . $period);
-        $result = $api->sendGETRequest();
-        $response_body = $result['response_body'];
-        return $result;
-    }
-    /**
-     * Outputs a Console to output stream
-     */
-    public function showConsole()
-    {
-        $api = VPSNET::getinstance();
-        $urlpath = substr($_SERVER['PATH_INFO'], 1);
-        $api->setAPIResource('virtual_machines/' . $this->id . '/console_proxy/' . $urlpath, false);
-        $response_body = $result['response_body'];
-        if( $_SERVER['REQUEST_METHOD'] == 'POST' )
-        {
-            $requestdata = "k=" . urlencode($_POST['k']) . "&";
-            $requestdata .= "w=" . urlencode($_POST['w']) . "&";
-            $requestdata .= "c=" . urlencode($_POST['c']) . "&";
-            $requestdata .= "h=" . urlencode($_POST['h']) . "&";
-            $requestdata .= "s=" . urlencode($_POST['s']) . "&";
-            $result = $api->sendPOSTRequest($requestdata, false);
-            header("Content-type: " . $result['info']['content_type']);
-            echo $result['response_body'];
-        }
-        else
-        {
-            $result = $api->sendGETRequest();
-            if( strpos($urlpath, ".css") )
-            {
-                header("Content-type: text/css");
-            }
-            else
-            {
-                header("Content-type: " . $result['info']['content_type']);
-            }
-            echo $result['response_body'];
-        }
-        return $result;
-    }
-    /**
-     * Retrieves a list of backups and adds it to backups property of current instance
-     * @return array Array of Backups instances
-     */
-    public function loadBackups()
-    {
-        $api = VPSNET::getinstance();
-        $api->setAPIResource('virtual_machines/' . $this->id . '/backups');
-        $result = $api->sendGETRequest();
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            $this->backups = array(  );
-            $response = $result['response'];
-            for( $x = 0; $x < count($response); $x++ )
-            {
-                $this->backups[$x] = $api->_castObjectToClass('Backup', $response[$x]);
-            }
-        }
-        return $this->backups;
-    }
-    public function loadFully()
-    {
-        $api = VPSNET::getinstance();
-        $api->setAPIResource('virtual_machines/' . $this->id);
-        $result = $api->sendGETRequest();
-        if( $result['info']['http_code'] == 422 )
-        {
-        }
-        else
-        {
-            foreach( $result['response']->virtual_machine as $key => $value )
-            {
-                $this->$key = $value;
-            }
-        }
-        return $this;
-    }
-    /**
-     * Updates virtual machine
-     * @return boolean True if update succeeded, false otherwise
-     */
-    public function update()
-    {
-        $api = VPSNET::getinstance();
-        if( $this->id < 1 )
-        {
-            trigger_error("To call VirtualMachine::update() you must set id", E_USER_ERROR);
-            return false;
-        }
-        $api->setAPIResource('virtual_machines/' . $this->id);
-        $_virtual_machine_keys = array( 'label' => '', 'backups_enabled' => '', 'slices_required' => '' );
-        $vm = $this;
-        $requestdata['label'] = $this->label;
-        $requestdata['hostname'] = $this->hostname;
-        $requestdata['domain_name'] = $this->domain_name;
-        $requestdata['slices_required'] = $this->slices_required ? $this->slices_required : $this->slices_count;
-        $requestdata['backups_enabled'] = (int) $this->backups_enabled;
-        $requestdata['rsync_backups_enabled'] = (int) $this->rsync_backups_enabled;
-        $requestdata['r1_soft_backups_enabled'] = (int) $this->r1_soft_backups_enabled;
-        $requestdata['system_template_id'] = $this->system_template_id;
-        $requestdata['cloud_id'] = $this->cloud_id;
-        $requestdata['consumer_id'] = $this->consumer_id;
-        $json_request['virtual_machine'] = $requestdata;
-        $result = $api->sendPUTRequest($json_request);
-        return $result['info']['http_code'] == 200;
-    }
-    /**
-     * Removes a virtual machine
-     * @return boolean true if virtual machine was removed, false otherwise
-     */
-    public function remove()
-    {
-        $api = VPSNET::getinstance();
-        if( $this->id < 1 )
-        {
-            trigger_error("To call VirtualMachine::remove() you must set its id", E_USER_ERROR);
-            return false;
-        }
-        $api->setAPIResource('virtual_machines/' . $this->id);
-        $result = $api->sendDELETERequest();
-        $this->deleted = $result['info']['http_code'] == 200;
-        return $this->deleted;
-    }
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

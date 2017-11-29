@@ -33,5 +33,5 @@ if (!defined("WHMCS"))
 // ---------------------- DADOS FIXOS DE CONFIGURAÇÃO DO SEU BOLETO --------------- //
 
 // NÃO ALTERAR!
-include("include/funcoes_bradesco.php");
+include("include/funcoes_bradesco.php"); 
 include("include/layout_bradesco.php");

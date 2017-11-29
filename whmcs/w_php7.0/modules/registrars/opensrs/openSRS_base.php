@@ -1,5 +1,5 @@
 <?php
-/*
+/* 
  **************************************************************************
  *
  * OpenSRS-PHP
@@ -19,7 +19,7 @@
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * Lesser General Public License for more details.   
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
@@ -145,7 +145,7 @@ class openSRS_base extends PEAR {
     var $CA_LEGAL_TYPES = array (
         'ABO'   => 'Aboriginal',
         'ASS'   => 'Association',
-        'CCO'   => 'Canadian Corporation',
+        'CCO'   => 'Canadian Corporation', 
         'CCT'   => 'Canadian Citizen',
         'EDU'   => 'Educational Institute',
         'GOV'   => 'Government',
@@ -211,7 +211,7 @@ class openSRS_base extends PEAR {
         'quit_session'              => true,
 
         'buy_webcert'               => true,
-        'refund_webcert'            => true,
+        'refund_webcert'            => true,    
         'query_webcert'             => true,
         'cprefget_webcert'          => true,
         'cprefset_webcert'          => true,
@@ -242,9 +242,9 @@ class openSRS_base extends PEAR {
         $this->PEAR();
 
         $this->crypt_type = strtoupper($this->crypt_type);
-
+        
         if ('SSL' == $this->crypt_type) {
-            if (!function_exists('version_compare') || version_compare('4.3', phpversion(), '>=')) {
+            if (!function_exists('version_compare') || version_compare('4.3', phpversion(), '>=')) {  
                 $error_message = 'PHP version must be v4.3+ (current version is ' .
                     phpversion() . ') to use "SSL" encryption';
                 trigger_error ($error_message, E_USER_ERROR);
@@ -269,13 +269,13 @@ class openSRS_base extends PEAR {
         if ($protocol) {
             $this->protocol = strtoupper($protocol);
         }
-
+        
         $this->_log('i', 'Environment: '.$this->environment );
         $this->_log('i', 'Protocol: '.$this->protocol );
 
         $this->_CBC = false;
-
-        $this->USERNAME = $regusername;
+        
+        $this->USERNAME = $regusername;     
         $this->PRIVATE_KEY = $regprivatekey;
 
     }
@@ -357,7 +357,7 @@ class openSRS_base extends PEAR {
 
 #
 # Disable action checking.  This means you don't need to update the code
-# each time OpenSRS adds a new command, but means you should be more
+# each time OpenSRS adds a new command, but means you should be more 
 # careful with your coding ...
 #
 #       if (!isset($this->OPENSRS_ACTIONS[$action.'_'.$object])) {
@@ -406,7 +406,7 @@ class openSRS_base extends PEAR {
         $request['registrant_ip'] = $HTTP_SERVER_VARS['REMOTE_ADDR'];
 
         if ( strstr($request['action'], 'lookup') ) {
-            # lookups are treated specially
+            # lookups are treated specially 
             $data = $this->lookup_domain( $request );
         } else {
             # send request to server
@@ -802,7 +802,7 @@ class openSRS_base extends PEAR {
             $lookupData['attributes']['domain'] = $local_domain;
 
             # send request to server
-
+    
             $this->send_data( $lookupData );
             $answer = $this->read_data( );
 
@@ -1066,15 +1066,15 @@ class openSRS_base extends PEAR {
             $header .= "Content-Length: " . $len . $this->CRLF . $this->CRLF;
             break;
         }
-
+    
         fputs($fh, $header);
 
         fputs($fh, $msg, $len );
-
+    
         if ('SSL' == $this->crypt_type) {
             $this->_OPS->_log('http', 'w', $header.$msg);
         }
-
+    
         $this->_OPS->_log('raw', 'w', $msg, $len);
     }
 
@@ -1128,7 +1128,7 @@ class openSRS_base extends PEAR {
             if ($this->_OPS->socketStatus($fh)) {
                 return false;
             }
-
+            
             if (preg_match('/^\s*Content-Length:\s+(\d+)\s*\r\n/i', $line, $matches ) ) {
                 $header{'content-length'} = (int)$matches[1];
             } else {
@@ -1136,14 +1136,14 @@ class openSRS_base extends PEAR {
                 $this->_OPS->_log('raw', 'r', $line);
                 return false;
             }
-
+            
             /* read the empty line */
-
+            
             $line = fread($fh, 2);
             if ($this->_OPS->socketStatus($fh)) {
                 return false;
             }
-
+            
             if ($line!=$this->CRLF) {
                 $this->_OPS->_log('raw', 'e', 'UNEXPECTED READ: No CRLF');
                 $this->_OPS->_log('raw', 'r', $line);
@@ -1168,19 +1168,19 @@ class openSRS_base extends PEAR {
 
     function readData(&$fh, $timeout=5) {
         $len = 0;
-
+    
         /* PHP doesn't have timeout for fread ... we just set the timeout for the socket */
-
+    
         socket_set_timeout($fh, $timeout);
-
+    
         $header = $this->readHeader($fh, $timeout);
-
+    
         if (!$header || !isset($header{'content-length'}) || (empty($header{'content-length'}))) {
             $this->_OPS->_log('raw', 'e', 'UNEXPECTED ERROR: No Content-Length header provided!' );
         }
-
+    
         $len = (int)$header{'content-length'};
-
+    
         $line = '';
         while (strlen($line) < $len) {
             $line .= fread($fh, $len);
@@ -1188,7 +1188,7 @@ class openSRS_base extends PEAR {
                 return false;
             }
         }
-
+    
         if ($line) {
             $buf = $line;
             $this->_OPS->_log('raw', 'r', $line);
@@ -1197,7 +1197,7 @@ class openSRS_base extends PEAR {
             $this->_OPS->_log('raw', 'e', 'NEXT LINE SHORT READ (should be '.$len.')' );
             $this->_OPS->_log('raw', 'r', $line);
         }
-
+    
         if ('SSL' == $this->crypt_type) {
             $this->_OPS->_log('http', 'r', $header['full_header'].$line);
             $this->close_socket();

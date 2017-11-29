@@ -20,7 +20,7 @@ $reportdata["tableheadings"] = array(
 $reportvalues = array();
 $query = "SELECT date_format(date, '%e'),SUM(amountin),SUM(fees),SUM(amountout) FROM tblaccounts INNER JOIN tblclients ON tblclients.id=tblaccounts.userid WHERE date LIKE '". $year . "-" . $month . "-%' AND tblclients.currency=" . (int)$currencyid . " GROUP BY date_format(date, '%e') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $reportvalues[$data[0]] = array(
         'amountin' => $data[1],
         'fees' => $data[2],
@@ -29,7 +29,7 @@ while ($data = mysqli_fetch_array($result)) {
 }
 $query = "SELECT date_format(date, '%e'),SUM(amountin),SUM(fees),SUM(amountout) FROM tblaccounts WHERE date LIKE '" . $year . "-" . $month . "-%' AND userid='0' AND currency=" . (int)$currencyid . " GROUP BY date_format(date, '%e') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     if (!array_key_exists($data[0], $reportvalues)) {
         $reportvalues[$data[0]] = array(
             'amountin' => 0,

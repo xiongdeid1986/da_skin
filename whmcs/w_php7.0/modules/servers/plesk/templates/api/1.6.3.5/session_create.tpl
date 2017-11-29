@@ -1,3 +1,4 @@
+<!-- Copyright 1999-2016. Parallels IP Holdings GmbH. -->
 <server>
     <create_session>
         <login><?php echo $login; ?></login>

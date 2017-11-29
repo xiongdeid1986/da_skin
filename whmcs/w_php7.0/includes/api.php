@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,258 +32,57 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-$silent = 'true';
-require("../init.php");
-require("adminfunctions.php");
-define('APICALL', true);
-$userProvidedUsername = $whmcs->get_req_var('username');
-$userProvidedPassword = $whmcs->get_req_var('password');
-$incomingAccessKey = $whmcs->get_req_var('accesskey');
-$incomingAction = $whmcs->get_req_var('action');
-$userProvidedResponseType = $whmcs->get_req_var('responsetype');
-$httpRequestProtocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : "HTTP/1.1";
-$responsetype = $userProvidedResponseType;
-$action = preg_replace("/[^0-9a-z]/i", '', strtolower($incomingAction));
-$apiresults = array(  );
-$allowed = true;
-$api_access_key = $whmcsAppConfig['api_access_key'];
-$api_enable_logging = $whmcsAppConfig['api_enable_logging'];
-if( $whmcs->isVisitorIPBanned() )
-{
-    $apiresults = array( 'result' => 'error', 'message' => "IP Banned" );
-    $allowed = false;
-}
-if( $allowed )
-{
-    if( $incomingAccessKey && $api_access_key )
-    {
-        if( $incomingAccessKey != $api_access_key )
-        {
-            $apiresults = array( 'result' => 'error', 'message' => "Invalid Access Key" );
-            $allowed = false;
-        }
-    }
-    else
-    {
-        $apiallowedips = $whmcs->get_config('APIAllowedIPs');
-        $apiallowedips = unserialize($apiallowedips);
-        $allowedips = array(  );
-        foreach( $apiallowedips as $allowedip )
-        {
-            if( 0 < strlen(trim($allowedip['ip'])) )
-            {
-                $allowedips[] = $allowedip['ip'];
-            }
-        }
-        if( !in_array($remote_ip, $allowedips) )
-        {
-            $apiresults = array( 'result' => 'error', 'message' => "Invalid IP " . $remote_ip );
-            $allowed = false;
-        }
-    }
-}
-if( !$allowed )
-{
-    header($httpRequestProtocol . " 403 Forbidden");
-}
-$validPasswordProvided = false;
-if( $allowed )
-{
-    $hasher = new WHMCS_Security_Hash_Password();
-    try
-    {
-        $info = $hasher->getInfo($userProvidedPassword);
-        if( $info['algoName'] == WHMCS_Security_Hash_Password::HASH_MD5 )
-        {
-            $validPasswordFormatProvided = true;
-        }
-    }
-    catch( Exception $e )
-    {
-        logActivity("Unable to inspect user provided API password");
-    }
-}
-if( $validPasswordFormatProvided )
-{
-    $adminAuth = new WHMCS_Auth();
-    if( $adminAuth->getInfobyUsername($userProvidedUsername, false) )
-    {
-        if( !$adminAuth->isActive() )
-        {
-            $apiresults = array( 'result' => 'error', 'message' => "Administrator Account Disabled" );
-            $allowed = false;
-        }
-        $verifiedPassword = false;
-        $verifiedPassword = $adminAuth->compareApiPassword($userProvidedPassword);
-        if( $verifiedPassword )
-        {
-            $adminAuth->setSessionVars();
-            if( checkPermission("API Access", true) )
-            {
-                $createLogEntry = $whmcs->get_config('LogAPIAuthentication') ? true : false;
-                $adminAuth->processLogin($createLogEntry);
-                $needsRehash = false;
-                try
-                {
-                    $needsRehash = $hasher->needsRehash($adminAuth->getLegacyAdminPW());
-                }
-                catch( Exception $e )
-                {
-                    logActivity("Failed to validate password rehash: " . $e->getMessage());
-                }
-                if( $needsRehash )
-                {
-                    $adminAuth->generateNewPasswordHashAndStoreForApi($userProvidedPassword);
-                }
-            }
-            else
-            {
-                $adminAuth->logout();
-                $apiresults = array( 'result' => 'error', 'message' => "Access Denied" );
-                $allowed = false;
-            }
-        }
-        else
-        {
-            $adminAuth->failedLogin();
-            $apiresults = array( 'result' => 'error', 'message' => "Authentication Failed" );
-            $allowed = false;
-        }
-    }
-    else
-    {
-        $adminAuth->failedLogin();
-        $apiresults = array( 'result' => 'error', 'message' => "Authentication Failed" );
-        $allowed = false;
-    }
-    if( !$allowed )
-    {
-        header($httpRequestProtocol . " 403 Forbidden");
-    }
-    if( $allowed )
-    {
-        if( isValidforPath($action) )
-        {
-            switch( $action )
-            {
-                case 'adduser':
-                    $action = 'addclient';
-                    break;
-                case 'getclientsdata':
-                    break;
-                case 'getclientsdatabyemail':
-                    $action = 'getclientsdetails';
-            }
-            $apiFilePath = ROOTDIR . '/includes/api/' . $action . ".php";
-            if( file_exists($apiFilePath) )
-            {
-                include($apiFilePath);
-            }
-            else
-            {
-                $apiresults = array( 'result' => 'error', 'message' => "Command Not Found" );
-            }
-        }
-        else
-        {
-            $apiresults = array( 'result' => 'error', 'message' => "Invalid API Command Value" );
-        }
-    }
-}
-else
-{
-    if( $allowed )
-    {
-        $apiresults = array( 'result' => 'error', 'message' => "Authentication Failed" );
-        $allowed = false;
-        header($httpRequestProtocol . " 403 Forbidden");
-    }
-}
-$responseType = $userProvidedResponseType;
-if( $responseType != $responsetype && $responseType != 'xml' && $responseType != 'json' )
-{
-    $responseType = 'xml';
-}
-ob_start();
-if( count($apiresults) )
-{
-    if( $responseType == 'json' )
-    {
-        echo json_encode($apiresults);
-    }
-    else
-    {
-        if( $responseType == 'xml' )
-        {
-            $charset = $whmcs->get_config('Charset');
-            $version = $allowed ? $whmcs->getVersion()->getCasual() : '';
-            echo "<?xml version=\"1.0\" encoding=\"" . $charset . "\"?>\n" . "<whmcsapi version=\"" . $version . "\">\n" . "<action>" . $action . "</action>\n" . apixmloutput($apiresults) . "</whmcsapi>";
-        }
-        else
-        {
-            if( $responseType )
-            {
-                exit( "result=error;message=This API function can only return XML response format;" );
-            }
-            foreach( $apiresults as $k => $v )
-            {
-                echo $k . "=" . $v . ';';
-            }
-        }
-    }
-}
-$apiOutput = ob_get_contents();
-ob_end_clean();
-echo $apiOutput;
-if( $api_enable_logging )
-{
-    $fh = fopen("apilog.txt", 'a');
-    $stringData = "\nDate: " . date("Y-m-d H:i:s") . "\n\n";
-    $stringData .= "Request: " . print_r($_REQUEST, true) . "\n\n";
-    $stringData .= "Response: " . $apiOutput . "\n----------------------";
-    fwrite($fh, $stringData);
-    fclose($fh);
-}
-function apiXMLOutput($val, $lastk = '')
-{
-    $output = '';
-    foreach( $val as $k => $v )
-    {
-        if( is_array($v) )
-        {
-            if( is_numeric($k) )
-            {
-                $output .= "<" . $lastk . ">\n";
-            }
-            else
-            {
-                if( !is_numeric(key($v)) && count($v) )
-                {
-                    $output .= "<" . $k . ">\n";
-                }
-            }
-            $output .= apiXMLOutput($v, $k);
-            if( is_numeric($k) )
-            {
-                $output .= "</" . $lastk . ">\n";
-            }
-            else
-            {
-                if( !is_numeric(key($v)) && count($v) )
-                {
-                    $output .= "</" . $k . ">\n";
-                }
-            }
-        }
-        else
-        {
-            $v = WHMCS_Input_Sanitize::decode($v);
-            if( strpos($v, "<![CDATA[") === false && htmlspecialchars($v) != $v )
-            {
-                $v = "<![CDATA[" . $v . "]" . "]>";
-            }
-            $output .= "<" . $k . ">" . $v . "</" . $k . ">\n";
-        }
-    }
-    return $output;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

@@ -1,17 +1,23 @@
-{include file="$template/pageheader.tpl" title="License Verification Tool" desc="Check if a website is authorized to be using our software"}
+<div class="alert alert-info text-center">
 
-<div class="alert-message block-message info">
-
-    Our License Verification Tool allows you to check if a website is authorized to be running our software.<br />
-    If you find a website that is not showing as being licensed, please report it to us for us to check.
+    {$ADDONLANG.licenseVerificationToolInfo}<br />
+    {$ADDONLANG.reportUnlicensed}
 
 </div>
 
-<br />
+<h3>{$ADDONLANG.enterDomain}</h3>
 
 <form method="post" action="index.php?m=licensing">
-    <div align="center">
-        Enter Domain/IP: <input type="text" name="domain" size="30" value="{$domain}" style="font-size:18px;" /> <input type="submit" value="Check" class="btn danger" />
+    <div class="row">
+        <div class="col-sm-9 col-md-10">
+            <div class="input-group input-group-lg">
+                <span class="input-group-addon" id="sizing-addon1">http://</span>
+                <input type="text" name="domain" class="form-control" placeholder="support.domain.com" value="{$domain}">
+            </div>
+        </div>
+        <div class="col-sm-3 col-md-2">
+            <input type="submit" value="{$ADDONLANG.check}" class="btn btn-danger btn-lg btn-block" />
+        </div>
     </div>
 </form>
 
@@ -19,43 +25,43 @@
 
 {if !$check}
 
-<h3>How to use this tool:</h3>
+    <h3>{$ADDONLANG.howToUse}:</h3>
 
-<ul>
-<li>Enter <strong>only</strong> the domain name where you see our software in use</li>
-<li>For example if there was an installation @ http://support.domain.com/, enter just support.domain.com above</li>
-<li>You should not include the www. prefix in the case of website urls</li>
-</ul>
-
-{else}
-
-<h3>Search Results</h3>
-
-{if $results}
-
-<div class="alert-message block-message success">
-
-    <strong>License Match Found</strong><br />We can confirm that this domain/IP is authorized to be running our software.
-
-</div>
+    <ul>
+        <li>{$ADDONLANG.enterDomain}</li>
+        <li>{$ADDONLANG.domainExample}</li>
+        <li>{$ADDONLANG.noWWW}</li>
+    </ul>
 
 {else}
 
-<div class="alert-message block-message error">
+    <h3>Search Results</h3>
 
-    <strong>No License Matches Found</strong><br />We were unable to find any licenses assigned to the Domain/IP you entered. This doesn't necessarily mean it isn't licensed, but please report the domain to us so we can check it.
+    {if $results}
 
-</div>
+        <div class="alert alert-success text-center">
 
-{/if}
+            <strong>{$ADDONLANG.licenseMatch}</strong><br />
+            {$ADDONLANG.licenseMatchInfo}
+
+        </div>
+
+    {else}
+
+        <div class="alert alert-warning text-center">
+
+            <strong>{$ADDONLANG.noLicenseMatch}</strong><br />
+            {$ADDONLANG.noLicenseMatchInfo}
+
+        </div>
+
+    {/if}
 
 {/if}
 
 <br />
 
-<div align="center">
-<h2>We thank you for helping us in the fight against piracy</h2>
-</div>
+<h2 class="text-center">{$ADDONLANG.thankYou}</h2>
 
 <br />
 <br />

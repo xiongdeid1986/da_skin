@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,7 +32,16 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-class Plesk_Object_Addon
-{
-    const ADDON_PREFIX = "Plesk ";
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+HR+cPvdtAd2ULwz75pg/Kn21c4Wgl3HFjd49Nzwu5MCDFY/dVvUDbgExju7qbEtnd0H3x0VmY5xt
+P6LqV5FunLSrP+zUsLEExP6CqCNNwkJ/Z9ZfHwp+6M8b+D+/SsZqRoyw3XZMVh6aepaa8394K9Oj
+tqEMXq7YebU4LoSBw9ua2822ESVsNCHebRfLfjMLR3/LkU3OTcmDKuYKQ7phro4HwQqGQLOtFb13
+pbidj0V2/wN9CPlq6Htm1QlvHmzq8PKHuCxye6rkKngZ7ow4jPZEji9ScReFIjD2prG5JsjKv1Ez
+aFMIXN8OO4WrrQwhNUMoDUDs3JJ/i8PZtVlfL2B08YSF4lPXjjFTaUTAqf1IaGfIX8aR5bBt4ad/
+WiWj4DAaNiZ6VQceYMuTpjcHJGlGNCxu2zDbUq0gp2o/h7/NnQ26YaAVk0MpzcOfhAWMycWbmZv0
+ZlTLaHjzL3QoOSA4OwWk2Rro9+P+QG7+Dw4FllvVteKJ/a68eC7Rq+IKblS4Hd+mCmn7IdxrFNBa
+PgkLJS8K76zUS7+TLNUs1uLT5mUFqLFtIaEsb61/5UC6h8OG3w9IJXD+7tpPcCIVcU5u0B1fuIt4
+v40eiZ0MLY6db8qHPjT4s/+sHLasUNTMqu6f/EAwptGzuT6N3VAoeBBHuGdEiT/aV4IQQer4eNbu
+CSCrSY8LMo1vvUHJ5Em4ba7gzkCOQB1/ecn+VrT2Z2KHyMl3xbepVtMq1Vjbme1xOFUqwsRgAIJl
+ukxb5Q/QfSvN

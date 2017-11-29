@@ -20,7 +20,7 @@ if (!is_array($filterq)) $filterq = array();
 
 if (!$print) {
 
-    $reportdata["description"] = "This report can be used to generate a custom export of domains by applying up to 5 filters. CSV Export is available via the download link at the bottom of the page.";
+    $reportdata["description"] = "This report can be used to generate a custom export of domains by applying up to 5 filters. CSV Export is available via the Tools menu to the right.";
 
     $reportdata["headertext"] = '<form method="post" action="reports.php?report='.$report.'">
 <table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
@@ -75,7 +75,7 @@ if (count($incfields)) {
     }
 
     $result = select_query("tbldomains", implode(',', $fieldlist), implode(' AND ', $filters));
-    while ($data = simulate_fetch_assoc($result)) {
+    while ($data = mysql_fetch_assoc($result)) {
         if (isset($data['registrar'])) $data['registrar'] = ucfirst($data['registrar']);
         if (isset($data['paymentmethod'])) $data['paymentmethod'] = $gateways->getDisplayName($data['paymentmethod']);
         $reportdata["tablevalues"][] = $data;

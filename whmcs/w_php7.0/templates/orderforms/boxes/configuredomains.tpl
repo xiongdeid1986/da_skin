@@ -2,51 +2,122 @@
 
 <div id="order-boxes">
 
-<p>{$LANG.cartdomainsconfigdesc}</p>
+    <div class="header-lined">
+        <h1>{$LANG.cartconfigdomainextras}</h1>
+    </div>
 
-{if $errormessage}<div class="errorbox">{$errormessage|replace:'<li>':' &nbsp;#&nbsp; '} &nbsp;#&nbsp; </div><br />{/if}
+    <p>{$LANG.cartdomainsconfigdesc}</p>
 
-<form method="post" action="{$smarty.server.PHP_SELF}?a=confdomains">
-<input type="hidden" name="update" value="true" />
+    {if $errormessage}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <strong>{$LANG.clientareaerrors}</strong>
+            <ul>
+                {$errormessage}
+            </ul>
+        </div>
+    {/if}
 
-<table width="90%" align="center" cellspacing="1" cellpadding="5">
+    <form method="post" action="{$smarty.server.PHP_SELF}?a=confdomains">
+        <input type="hidden" name="update" value="true" />
 
-{foreach key=num item=domain from=$domains}
+        {foreach from=$domains key=num item=domain}
 
-<tr><td colspan="2"><strong>{$domain.domain} - {$domain.regperiod} {$LANG.orderyears} {if $domain.hosting}<span style="color:#009900;">[{$LANG.cartdomainshashosting}]</span>{else}<a href="cart.php" style="color:#cc0000;">[{$LANG.cartdomainsnohosting}]</a><br />{/if}</strong></td></tr>
-<tr class="orderheadingrow"><td colspan="2"></td></tr>
-{if $domain.configtoshow}
-{if $domain.eppenabled}<tr class="orderrow1"><td class="leftcol">{$LANG.domaineppcode}</td><td><input type="text" name="epp[{$num}]" size="20" value="{$domain.eppvalue}" /> {$LANG.domaineppcodedesc}</td></tr>{/if}
-{if $domain.dnsmanagement}<tr class="orderrow2"><td class="leftcol">{$LANG.domaindnsmanagement}</td><td><label><input type="checkbox" name="dnsmanagement[{$num}]"{if $domain.dnsmanagementselected} checked{/if} /> {$domain.dnsmanagementprice}</label></td></tr>{/if}
-{if $domain.emailforwarding}<tr class="orderrow1"><td class="leftcol">{$LANG.domainemailforwarding}</td><td><label><input type="checkbox" name="emailforwarding[{$num}]"{if $domain.emailforwardingselected} checked{/if} /> {$domain.emailforwardingprice}</label></td></tr>{/if}
-{if $domain.idprotection}<tr class="orderrow2"><td class="leftcol">{$LANG.domainidprotection}</td><td><label><input type="checkbox" name="idprotection[{$num}]"{if $domain.idprotectionselected} checked{/if} /> {$domain.idprotectionprice}</label></td></tr>{/if}
-{foreach key=domainfieldname item=domainfield from=$domain.fields}
-<tr class="orderrow1"><td class="leftcol">{$domainfieldname}:</td><td>{$domainfield}</td></tr>
-{/foreach}
-{/if}
-<tr class="orderheadingrow"><td colspan="2"></td></tr>
-<tr><td height="10"></td></tr>
+            <h2>{$domain.domain} - {$domain.regperiod} {$LANG.orderyears}</h2>
+            <div class="fields-container">
+                <div class="field-row clearfix">
+                    <div class="col-sm-4">{$LANG.hosting}</div>
+                    <div class="col-sm-8">{if $domain.hosting}{$LANG.cartdomainshashosting}{else}<a href="cart.php" style="color:#cc0000;">{$LANG.cartdomainsnohosting}</a>{/if}</div>
+                </div>
+                {if $domain.configtoshow}
+                    {if $domain.eppenabled}
+                        <div class="field-row clearfix">
+                            <div class="col-sm-4">{$LANG.domaineppcode}</div>
+                            <div class="col-sm-8 row">
+                                <div class="col-sm-5">
+                                    <input type="text" name="epp[{$num}]" value="{$domain.eppvalue}" class="form-control" />
+                                </div>
+                                <div class="col-sm-7">
+                                    {$LANG.domaineppcodedesc}
+                                </div>
+                            </div>
+                        </div>
+                    {/if}
+                    {if $domain.dnsmanagement}
+                        <div class="field-row clearfix">
+                            <div class="col-sm-4">{$LANG.domaindnsmanagement}</div>
+                            <div class="col-sm-8">
+                                <label class="checkbox-inline"><input type="checkbox" name="dnsmanagement[{$num}]"{if $domain.dnsmanagementselected} checked{/if} /> {$domain.dnsmanagementprice}</label>
+                            </div>
+                        </div>
+                    {/if}
+                    {if $domain.emailforwarding}
+                        <div class="field-row clearfix">
+                            <div class="col-sm-4">{$LANG.domainemailforwarding}</div>
+                            <div class="col-sm-8">
+                                <label class="checkbox-inline"><input type="checkbox" name="emailforwarding[{$num}]"{if $domain.emailforwardingselected} checked{/if} /> {$domain.emailforwardingprice}</label>
+                            </div>
+                        </div>
+                    {/if}
+                    {if $domain.idprotection}
+                        <div class="field-row clearfix">
+                            <div class="col-sm-4">{$LANG.domainidprotection}</div>
+                            <div class="col-sm-8">
+                                <label class="checkbox-inline"><input type="checkbox" name="idprotection[{$num}]"{if $domain.idprotectionselected} checked{/if} /> {$domain.idprotectionprice}</label>
+                            </div>
+                        </div>
+                    {/if}
+                    {foreach from=$domain.fields key=domainfieldname item=domainfieldinput}
+                        <div class="field-row clearfix">
+                            <div class="col-sm-4">{$domainfieldname}</div>
+                            <div class="col-sm-8">
+                                {$domainfieldinput}
+                            </div>
+                        </div>
+                    {/foreach}
+                {/if}
+            </div>
 
-{/foreach}
+        {/foreach}
 
-</table>
+        {if $atleastonenohosting}
 
-{if $atleastonenohosting}
-<table width="90%" align="center" cellspacing="1" cellpadding="5">
-<tr><td colspan="2"><strong>{$LANG.domainnameservers}</strong><br />{$LANG.cartnameserversdesc}</td></tr>
-<tr class="orderheadingrow"><td colspan="2"></td></tr>
-<tr class="orderrow1"><td>{$LANG.domainnameserver1}:</td><td><input type="text" name="domainns1" size="40" value="{$domainns1}" /></td></tr>
-<tr class="orderrow2"><td>{$LANG.domainnameserver2}:</td><td><input type="text" name="domainns2" size="40" value="{$domainns2}" /></td></tr>
-<tr class="orderrow1"><td>{$LANG.domainnameserver3}:</td><td><input type="text" name="domainns3" size="40" value="{$domainns3}" /></td></tr>
-<tr class="orderrow2"><td>{$LANG.domainnameserver4}:</td><td><input type="text" name="domainns4" size="40" value="{$domainns4}" /></td></tr>
-<tr class="orderrow2"><td>{$LANG.domainnameserver5}:</td><td><input type="text" name="domainns5" size="40" value="{$domainns5}" /></td></tr>
-<tr class="orderheadingrow"><td colspan="2"></td></tr>
-<tr><td height="10"></td></tr>
-</table>
-{/if}
+            <h2>{$LANG.domainnameservers}</h2>
 
-<p align="center"><input type="submit" value="{$LANG.updatecart}" /></p>
+            <p>{$LANG.cartnameserversdesc}</p>
 
-</form>
+            <div class="fields-container">
+                <div class="field-row clearfix">
+                    <div class="col-sm-4">{$LANG.domainnameserver1}</div>
+                    <div class="col-sm-5"><input type="text" name="domainns1" value="{$domainns1}" class="form-control" /></div>
+                </div>
+                <div class="field-row clearfix">
+                    <div class="col-sm-4">{$LANG.domainnameserver2}</div>
+                    <div class="col-sm-5"><input type="text" name="domainns2" value="{$domainns2}" class="form-control" /></div>
+                </div>
+                <div class="field-row clearfix">
+                    <div class="col-sm-4">{$LANG.domainnameserver3}</div>
+                    <div class="col-sm-5"><input type="text" name="domainns3" value="{$domainns3}" class="form-control" /></div>
+                </div>
+                <div class="field-row clearfix">
+                    <div class="col-sm-4">{$LANG.domainnameserver4}</div>
+                    <div class="col-sm-5"><input type="text" name="domainns4" value="{$domainns4}" class="form-control" /></div>
+                </div>
+                <div class="field-row clearfix">
+                    <div class="col-sm-4">{$LANG.domainnameserver5}</div>
+                    <div class="col-sm-5"><input type="text" name="domainns5" value="{$domainns5}" class="form-control" /></div>
+                </div>
+            </div>
+        {/if}
+
+        <div class="line-padded text-center">
+            <button type="submit" class="btn btn-primary btn-lg">{$LANG.continue} &nbsp;<i class="fa fa-arrow-circle-right"></i></button>
+        </div>
+
+    </form>
+
+    <div class="secure-warning">
+        <img src="assets/img/padlock.gif" align="absmiddle" border="0" alt="Secure Transaction" /> &nbsp;{$LANG.ordersecure} (<strong>{$ipaddress}</strong>) {$LANG.ordersecure2}
+    </div>
 
 </div>

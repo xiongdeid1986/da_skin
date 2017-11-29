@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,197 +32,362 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-if( !defined('WHMCS') )
-{
-    exit( "This file cannot be accessed directly" );
-}
-add_hook('AdminAreaClientSummaryActionLinks', 1, 'hook_project_management_csoactions');
-add_hook('AdminAreaViewTicketPage', 1, 'hook_project_management_adminticketinfo');
-add_hook('AdminHomeWidgets', 1, 'widget_project_management');
-add_hook('CalendarEvents', '0', 'hook_project_management_calendar');
-add_hook('CalendarEvents', '0', 'hook_project_management_calendar_tasks');
-function hook_project_management_csoactions($vars)
-{
-    return array( "<a href=\"addonmodules.php?module=project_management&view=user&userid=" . $_REQUEST['userid'] . "\"><img src=\"images/icons/invoices.png\" border=\"0\" align=\"absmiddle\" /> View Projects</a>" );
-}
-function hook_project_management_adminticketinfo($vars)
-{
-    global $aInt;
-    global $jscode;
-    global $jquerycode;
-    $ticketid = $vars['ticketid'];
-    $ticketdata = get_query_vals('tbltickets', 'userid,title,tid', array( 'id' => $ticketid ));
-    $tid = $ticketdata['tid'];
-    require(ROOTDIR . "/modules/addons/project_management/project_management.php");
-    $projectrows = '';
-    $result = select_query('mod_project', "mod_project.*,(SELECT CONCAT(firstname,' ',lastname) FROM tbladmins WHERE id=mod_project.adminid) AS adminname", "ticketids LIKE '%" . mysqli_real_escape_string($GLOBALS['whmcsmysql'],$tid) . "%'");
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $timerid = get_query_val('mod_projecttimes', 'id', array( 'projectid' => $data['id'], 'end' => '', 'adminid' => $_SESSION['adminid'] ), 'start', 'DESC');
-        $timetrackinglink = $timerid ? "<a href=\"#\" onclick=\"projectendtimer('" . $data['id'] . "');return false\"><img src=\"../modules/addons/project_management/images/notimes.png\" align=\"absmiddle\" border=\"0\" /> Stop Tracking Time</a>" : "<a href=\"#\" onclick=\"projectstarttimer('" . $data['id'] . "');return false\"><img src=\"../modules/addons/project_management/images/starttimer.png\" align=\"absmiddle\" border=\"0\" /> Start Tracking Time</a>";
-        $projectrows .= "<tr><td><a href=\"addonmodules.php?module=project_management&m=view&projectid=" . $data['id'] . "\">" . $data['id'] . "</a></td><td><a href=\"addonmodules.php?module=project_management&m=view&projectid=" . $data['id'] . "\">" . $data['title'] . "</a> <span id=\"projecttimercontrol" . $data['id'] . "\" class=\"tickettimer\">" . $timetrackinglink . "</span></td><td>" . $data['adminname'] . "</td><td>" . fromMySQLDate($data['created']) . "</td><td>" . fromMySQLDate($data['duedate']) . "</td><td>" . fromMySQLDate($data['lastmodified']) . "</td><td>" . $data['status'] . "</td></tr>";
-    }
-    $code = "<link href=\"../modules/addons/project_management/css/style.css\" rel=\"stylesheet\" type=\"text/css\" />\n\n<div id=\"projectscont\" style=\"margin:0 0 10px 0;padding:5px;border:2px dashed #e0e0e0;background-color:#fff;-moz-border-radius: 6px;-webkit-border-radius: 6px;-o-border-radius: 6px;border-radius: 6px;" . ($projectrows ? '' : "display:none;") . "\">\n\n<h2 style=\"margin:0 0 5px 0;text-align:center;background-color:#f2f2f2;-moz-border-radius: 6px;-webkit-border-radius: 6px;-o-border-radius: 6px;border-radius: 6px;\">Projects</h2>\n\n<div class=\"tablebg\" style=\"padding:0 20px;\">\n<table class=\"datatable\" width=\"100%\" border=\"0\" cellspacing=\"1\" cellpadding=\"3\" id=\"ticketprojectstbl\">\n<tr><th>Project ID</th><th>Title</th><th>Assigned To</th><th>Created</th><th>Due Date</th><th>Last Updated</th><th>Status</th></tr>\n" . $projectrows . "\n</table>\n</div>\n\n</div>\n\n";
-    if( project_management_checkperm("Create New Projects") )
-    {
-        $code .= "<span style=\"float:right;padding:0 50px 15px 0;\"><a href=\"#\" onclick=\"createnewproject();return false\" class=\"create\"><img src=\"images/icons/add.png\" align=\"top\" border=\"0\" /> <b>Create New Project</b></a></span>";
-    }
-    $code .= "\n<script>\n\$(document).on(\"keyup\",\"#cpclientname\",function () {\n    var ticketuseridsearchlength = \$(\"#cpclientname\").val().length;\n    if (ticketuseridsearchlength>2) {\n    \$.post(\"search.php\", { ticketclientsearch: 1, value: \$(\"#cpclientname\").val(), token: \"" . generate_token('plain') . "\" },\n        function(data){\n            if (data) {\n                \$(\"#cpticketclientsearchresults\").html(data.replace(\"searchselectclient(\",\"projectsearchselectclient(\"));\n                \$(\"#cpticketclientsearchresults\").slideDown(\"slow\");\n                \$(\"#cpclientsearchcancel\").fadeIn();\n            }\n        });\n    }\n});\nfunction projectsearchselectclient(userid,name,email) {\n    \$(\"#cpclientname\").val(name);\n    \$(\"#cpuserid\").val(userid);\n    \$(\"#cpclientsearchcancel\").fadeOut();\n    \$(\"#cpticketclientsearchresults\").slideUp(\"slow\");\n}\n\nfunction createnewproject() {\n    \$(\"#popupcreatenew\").show();\n    \$(\"#popupstarttimer\").hide();\n    \$(\"#popupendtimer\").hide();\n    \$(\"#createnewcont\").slideDown();\n}\nfunction createproject() {\n    inputs = \$(\"#ajaxcreateprojectform\").serializeArray();\n    \$.post(\"addonmodules.php?module=project_management&createproj=1&ajax=1\",\n        {\n            input : inputs,\n            token: \"" . generate_token('plain') . "\"\n        },\n        function (data) {\n            if(data == \"0\"){\n                alert(\"You do not have permission to create project\");\n            } else {\n                \$(\"#createnewcont\").slideUp();\n                \$(\"#ticketprojectstbl\").append(data);\n                \$(\"#projectscont\").slideDown();\n            }\n        });\n}\n\nfunction projectstarttimer(projectid) {\n    \$(\"#ajaxstarttimerformprojectid\").val(projectid);\n    \$(\"#popupcreatenew\").hide();\n    \$(\"#popupstarttimer\").show();\n    \$(\"#popupendtimer\").hide();\n    \$(\"#createnewcont\").slideDown();\n}\n\nfunction projectendtimer(projectid) {\n    \$(\"#popupcreatenew\").hide();\n    \$(\"#popupstarttimer\").hide();\n    \$(\"#popupendtimer\").show();\n    \$(\"#createnewcont\").slideDown();\n}\n\nfunction projectstarttimersubmit() {\n    \$.post(\"addonmodules.php?module=project_management&m=view\", \"a=hookstarttimer&\"+\$(\"#ajaxstarttimerform\").serialize(),\n        function (data) {\n            if(data == \"0\"){\n                alert(\"Could not start timer.\");\n            } else {\n                \$(\"#createnewcont\").slideUp();\n                var projid = \$(\"#ajaxstarttimerformprojectid\").val();\n                \$(\"#projecttimercontrol\"+projid).html(\"<a href=\\\"#\\\" onclick=\\\"projectendtimer('\"+projid+\"');return false\\\"><img src=\\\"../modules/addons/project_management/images/notimes.png\\\" align=\\\"absmiddle\\\" border=\\\"0\\\" /> Stop Tracking Time</a>\");\n                \$(\"#activetimers\").html(data);\n            }\n        });\n}\nfunction projectendtimersubmit(projectid,timerid) {\n    \$.post(\"addonmodules.php?module=project_management&m=view\",\n        {\n            a: \"hookendtimer\",\n            timerid: timerid,\n            ticketnum: \"" . $tid . "\",\n            token: \"" . generate_token('plain') . "\"\n        },\n        function (data) {\n            if (data == \"0\") {\n                alert(\"Could not stop timer.\");\n            } else {\n                \$(\"#createnewcont\").slideUp();\n                \$(\"#projecttimercontrol\"+projectid).html(\"<a href=\\\"#\\\" onclick=\\\"projectstarttimer('\"+projectid+\"');return false\\\"><img src=\\\"../modules/addons/project_management/images/starttimer.png\\\" align=\\\"absmiddle\\\" border=\\\"0\\\" /> Start Tracking Time</a>\");\n                \$(\"#activetimers\").html(data);\n            }\n        }\n    );\n}\n\nfunction projectpopupcancel() {\n    \$(\"#createnewcont\").slideUp();\n}\n\n</script>\n\n<div class=\"projectmanagement\">\n\n<div id=\"createnewcont\" style=\"display:none;\">\n\n<div class=\"createnewcont2\">\n\n<div class=\"createnewproject\" id=\"popupcreatenew\" style=\"display:none\">\n<div class=\"title\">Create New Project</div>\n<form id=\"ajaxcreateprojectform\">\n<div class=\"label\">Title</div>\n<input type=\"text\" name=\"title\" class=\"title\" />\n<div class=\"float\">\n<div class=\"label\">Created</div>\n<input type=\"text\" name=\"created\" class=\"datepick\" value=\"" . getTodaysDate() . "\" />\n</div>\n<div class=\"float\">\n<div class=\"label\">Due Date</div>\n<input type=\"text\" name=\"duedate\" class=\"datepick\" value=\"" . getTodaysDate() . "\" />\n</div>\n<div class=\"float\">\n<div class=\"label\">Assigned To</div>\n<select class=\"title\" name=\"adminid\">";
-    $code .= "<option value=\"0\">None</option>";
-    $result = select_query('tbladmins', 'id,firstname,lastname', '', "firstname` ASC,`lastname", 'ASC');
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $aid = $data['id'];
-        $adminfirstname = $data['firstname'];
-        $adminlastname = $data['lastname'];
-        $code .= "<option value=\"" . $aid . "\"";
-        if( $aid == $adminid )
-        {
-            $code .= " selected";
-        }
-        $code .= ">" . $adminfirstname . " " . $adminlastname . "</option>";
-    }
-    $code .= "</select>\n</div>\n<div class=\"float\">\n<div class=\"label\">Ticket #</div>\n<input type=\"text\" name=\"ticketnum\" class=\"ticketnum\" value=\"" . $tid . "\" />\n</div>\n<div class=\"clear\"></div>\n<div class=\"float\">\n<div class=\"label\">Associated Client</div>\n<input type=\"hidden\" name=\"userid\" id=\"cpuserid\" /><input type=\"text\" id=\"cpclientname\" value=\"" . $clientname . "\" class=\"title\" onfocus=\"if(this.value=='" . addslashes($clientname) . "')this.value=''\" /> <img src=\"images/icons/delete.png\" alt=\"" . $vars['_lang']['cancel'] . "\" align=\"right\" id=\"clientsearchcancel\" height=\"16\" width=\"16\"><div id=\"cpticketclientsearchresults\" style=\"z-index:2000;\"></div>\n</div>\n<br /><br />\n<div align=\"center\"><input type=\"button\" value=\"Create\" onclick=\"createproject()\" class=\"create\" /> <input type=\"button\" value=\"Cancel\" class=\"create\" onclick=\"projectpopupcancel();return false\" /></div>\n</form>\n</div>\n\n<div class=\"createnewproject\" id=\"popupstarttimer\" style=\"display:none\">\n<div class=\"title\">Start Time Tracking</div>\n<form id=\"ajaxstarttimerform\">\n" . generate_token() . "\n<input type=\"hidden\" id=\"ajaxstarttimerformprojectid\" name=\"projectid\">\n<input type=\"hidden\" name=\"ticketnum\" value=\"" . $tid . "\" />\n<div class=\"label\">Select Existing Task</div>\n<select class=\"title\" style=\"min-width:450px\" name=\"taskid\">";
-    $code .= "<option value=\"\">Choose one...</option>";
-    $result = select_query('mod_projecttasks', "mod_project.title, mod_projecttasks.id, mod_projecttasks.projectid, mod_projecttasks.task", array( "mod_project.ticketids" => array( 'sqltype' => 'LIKE', 'value' => (int) $tid ) ), '', '', '', "mod_project ON mod_projecttasks.projectid=mod_project.id", '', '', '', "mod_project ON mod_projecttasks.projectid=mod_project.id");
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $code .= "<option value=\"" . $data['id'] . "\"";
-        $code .= ">" . $data['projectid'] . " - " . $data['title'] . " - " . $data['task'] . "</option>";
-    }
-    $code .= "</select><br />\n<div class=\"label\">Or Create New Task</div>\n<input type=\"text\" name=\"title\" class=\"title\" />\n<br />\n<div align=\"center\"><input type=\"button\" value=\"Start\" onclick=\"projectstarttimersubmit();return false\" class=\"create\" /> <input type=\"button\" value=\"Cancel\" class=\"create\" onclick=\"projectpopupcancel();return false\" /></div>\n</form>\n</div>\n</div>\n\n<div class=\"createnewproject\" id=\"popupendtimer\" style=\"display:none\">\n<div class=\"title\">Stop Time Tracking</div>\n<form id=\"ajaxendtimerform\">\n<input type=\"hidden\" id=\"ajaxendtimerformprojectid\" name=\"projectid\">\n<br />\n<b>Active Timers</b>:<br /><br />\n<div id=\"activetimers\">\n";
-    $result = select_query('mod_projecttimes', "mod_projecttimes.id, mod_projecttimes.projectid, mod_project.title, mod_projecttimes.taskid, mod_projecttasks.task, mod_projecttimes.start", array( "mod_projecttimes.adminid" => $_SESSION['adminid'], "mod_projecttimes.end" => '', "mod_project.ticketids" => array( 'sqltype' => 'LIKE', 'value' => (int) $tid ) ), '', '', '', "mod_projecttasks ON mod_projecttimes.taskid=mod_projecttasks.id INNER JOIN mod_project ON mod_projecttimes.projectid=mod_project.id");
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $code .= "<div class=\"stoptimer" . $data['id'] . "\" style=\"padding-bottom:10px;\"><em>" . $data['title'] . " - Project ID " . $data['projectid'] . "</em><br />&nbsp;&raquo; " . $data['task'] . "<br />Started at " . fromMySQLDate(date("Y-m-d H:i:s", $data['start']), 1) . ":" . date('s', $data['start']) . " - <a href=\"#\" onclick=\"projectendtimersubmit('" . $data['projectid'] . "','" . $data['id'] . "');return false\"><strong>Stop Timer</strong></a></div>";
-    }
-    $code .= "\n</div>\n<br />\n<div align=\"center\"><input type=\"button\" value=\"Cancel\" class=\"create\" onclick=\"projectpopupcancel();return false\" /></div>\n</form>\n</div>\n\n</div>\n\n</div>\n\n";
-    return $code;
-}
-function widget_project_management($vars)
-{
-    global $whmcs;
-    global $_ADMINLANG;
-    $title = "Project Management";
-    if( $whmcs->get_req_var('getprojectmanagementoverview') )
-    {
-        echo "<div class=\"tabs\"><div onclick=\"loadProjects('recentactivity')\"";
-        if( $_POST['getprojectmanagementtab'] == 'recentactivity' )
-        {
-            echo " class=\"active\"";
-        }
-        echo ">Recent Activity</div><div onclick=\"loadProjects('dueprojects')\"";
-        if( $_POST['getprojectmanagementtab'] == 'dueprojects' )
-        {
-            echo " class=\"active\"";
-        }
-        echo ">Due Projects</div><div onclick=\"loadProjects('myassigned')\"";
-        if( $_POST['getprojectmanagementtab'] == 'myassigned' || !$_POST['getprojectmanagementtab'] )
-        {
-            echo " class=\"active\"";
-        }
-        echo ">My Assigned</div></div>\n<div class=\"clear\"></div>\n<div class=\"overviewcontainer\">\n<table width=\"100%\" bgcolor=\"#cccccc\" cellspacing=\"1\">";
-        $noprojects = true;
-        if( isset($_POST['getprojectmanagementtab']) && $_POST['getprojectmanagementtab'] == 'recentactivity' )
-        {
-            echo "<tr bgcolor=\"#efefef\" style=\"text-align:center;font-weight:bold;\"><td>Date</td><td>Log Entry</td><td>Admin User</td></tr>";
-            $result = select_query('mod_projectlog', "mod_projectlog.projectid,mod_projectlog.date,mod_project.title,mod_projectlog.msg,mod_projectlog.adminid", '', 'date', 'DESC', '5', "mod_project ON mod_projectlog.projectid=mod_project.id");
-            while( $data = mysqli_fetch_array($result) )
-            {
-                $projectid = $data['projectid'];
-                $date = $data['date'];
-                $title = $data['title'];
-                $msg = $data['msg'];
-                $date = fromMySQLDate($date, 1);
-                $admin = getAdminName($data['adminid']);
-                echo "<tr bgcolor=\"#ffffff\"><td align=\"center\">" . $date . "</td><td align=\"center\"><a href=\"addonmodules.php?module=project_management&m=view&projectid=" . $projectid . "\">" . $title . "</a> - " . $msg . "</td><td align=\"center\">" . $admin . "</td></tr>";
-                $noprojects = false;
-            }
-            if( $noprojects )
-            {
-                echo "<tr bgcolor=\"#ffffff\"><td colspan=\"3\" align=\"center\">No Records Found</td></tr>";
-            }
-        }
-        else
-        {
-            echo "<tr bgcolor=\"#efefef\" style=\"text-align:center;font-weight:bold;\"><td>Title</td><td>Due Date</td><td>Days Left / Due In</td><td>Status</td></tr>";
-            if( isset($_POST['getprojectmanagementtab']) && $_POST['getprojectmanagementtab'] == 'myassigned' )
-            {
-                $result = select_query('mod_project', '', array( 'completed' => 0, 'adminid' => $_SESSION['adminid'] ), 'duedate', 'ASC');
-            }
-            else
-            {
-                if( isset($_POST['getprojectmanagementtab']) && $_POST['getprojectmanagementtab'] == 'dueprojects' )
-                {
-                    $result = select_query('mod_project', '', "completed=0 AND duedate<='" . date('Y-m-d', mktime(0, 0, 0, date('m'), date('d') + 7, date('Y'))) . "'", 'duedate', 'ASC');
-                }
-            }
-            while( $data = mysqli_fetch_array($result) )
-            {
-                $id = $data['id'];
-                $title = $data['title'];
-                $duedate = fromMySQLDate($data['duedate']);
-                $daysleft = project_management_hook_daysleft($data['duedate']);
-                $status = $data['status'];
-                echo "<tr bgcolor=\"#ffffff\"><td align=\"center\"><a href=\"addonmodules.php?module=project_management&m=view&projectid=" . $id . "\">" . $title . "</a></td><td align=\"center\">" . $duedate . "</td><td align=\"center\">" . $daysleft . "</td><td align=\"center\">" . $status . "</td></tr>";
-                $noprojects = false;
-            }
-            if( $noprojects )
-            {
-                echo "<tr bgcolor=\"#ffffff\"><td colspan=\"4\" align=\"center\">No Records Found</td></tr>";
-            }
-        }
-        echo "</table></div>";
-        exit( dirname(__FILE__) . " | line".__LINE__ );
-    }
-    $content = "\n<style>\n.tabs div {\n    float: right;\n    margin: 0 5px 5px 0;\n    padding: 2px 7px;\n    background-color:#1A4D80;\n    border: 1px solid #1A4D80;\n    font-size: 11px;\n    color:#fff;\n    -moz-border-radius: 6px;\n    -webkit-border-radius: 6px;\n    -o-border-radius: 6px;\n    border-radius: 6px;\n}\n.tabs div.active {\n    background-color: #fff;\n    border: 1px solid #1A4D80;\n    color: #1A4D80;\n}\n.tabs div:hover {\n    background-color:#E5E5E5;\n    color:#000;\n    cursor: hand;\n    cursor: pointer;\n}\n#overviewcontainer {\n    max-height:150px;\n    overflow:auto;\n    padding-bottom: 10px;\n}\n</style>\n<div id=\"overviewtable\">" . $vars['loading'] . "</div>\n";
-    $jscode = "function loadProjects(tab) {\n    \$(\"#overviewcontainer\").html(\"" . str_replace("\"", "\\\"", $vars['loading']) . "\");\n    jQuery.post(\"index.php\", { getprojectmanagementoverview: 1, getprojectmanagementtab: tab },\n        function(data){\n            jQuery(\"#overviewtable\").html(data);\n        });\n}";
-    $jquerycode = "loadProjects(\"myassigned\");";
-    return array( 'title' => $title, 'content' => $content, 'jquerycode' => $jquerycode, 'jscode' => $jscode );
-}
-function project_management_hook_daysleft($duedate)
-{
-    $datetime = strtotime('now');
-    $date2 = strtotime($duedate);
-    $days = ceil(($date2 - $datetime) / 86400);
-    if( $days == '-0' )
-    {
-        $days = 0;
-    }
-    $dueincolor = $days < 2 ? 'cc0000' : '73BC10';
-    if( 0 <= $days )
-    {
-        return "<span style=\"color:#" . $dueincolor . "\">Due In " . $days . " Days</span>";
-    }
-    return "<span style=\"color:#" . $dueincolor . "\">Due " . $days * (0 - 1) . " Days Ago</span>";
-}
-function hook_project_management_calendar($vars)
-{
-    $events = array(  );
-    $result = select_query('mod_project', '', "duedate BETWEEN '" . date('Y-m-d', $vars['start']) . "' AND '" . date('Y-m-d', $vars['end']) . "'");
-    while( $data = simulate_fetch_assoc($result) )
-    {
-        $projecttitle = "Project Due: " . $data['title'] . "\nStatus: " . $data['status'];
-        if( $data['adminid'] )
-        {
-            $projecttitle .= " (" . getAdminName($data['adminid']) . ")";
-        }
-        $events[] = array( 'id' => 'prj' . $data['id'], 'title' => $projecttitle, 'start' => strtotime($data['duedate']), 'allDay' => true, 'url' => "addonmodules.php?module=project_management&m=view&projectid=" . $data['id'] );
-    }
-    return $events;
-}
-function hook_project_management_calendar_tasks($vars)
-{
-    $events = array(  );
-    $result = select_query('mod_projecttasks', "mod_projecttasks.*,(SELECT title FROM mod_project WHERE mod_project.id=mod_projecttasks.projectid) AS projecttitle", "duedate BETWEEN '" . date('Y-m-d', $vars['start']) . "' AND '" . date('Y-m-d', $vars['end']) . "'");
-    while( $data = simulate_fetch_assoc($result) )
-    {
-        $projecttitle = "Task Due: " . $data['task'] . "\n" . "Project: " . $data['projecttitle'] . "\nStatus: " . ($data['completed'] ? 'Completed' : 'Pending');
-        if( $data['adminid'] )
-        {
-            $projecttitle .= " (" . getAdminName($data['adminid']) . ")";
-        }
-        $events[] = array( 'id' => 'prj' . $data['id'], 'title' => $projecttitle, 'start' => strtotime($data['duedate']), 'allDay' => true, 'url' => "addonmodules.php?module=project_management&m=view&projectid=" . $data['projectid'] );
-    }
-    return $events;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

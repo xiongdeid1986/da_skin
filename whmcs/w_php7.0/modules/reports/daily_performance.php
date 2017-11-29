@@ -21,32 +21,32 @@ $reportdata["tableheadings"] = array(
 $reportvalues = array();
 $query = "SELECT date_format(date, '%e'),COUNT(id) FROM tblorders WHERE date LIKE '" . $year . "-" . $month . "-%' AND status='Active' GROUP BY date_format(date, '%e') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $reportvalues['orders_active'][$data[0]] = $data[1];
 }
 $query = "SELECT date_format(date, '%e'),COUNT(id) FROM tblinvoices WHERE date LIKE '" . $year . "-" . $month . "-%' GROUP BY date_format(date, '%e') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $reportvalues['invoices_new'][$data[0]] = $data[1];
 }
 $query = "SELECT date_format(datepaid, '%e'),COUNT(id) FROM tblinvoices WHERE datepaid LIKE '" . $year . "-" . $month . "-%' GROUP BY date_format(datepaid, '%e') ORDER BY datepaid ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $reportvalues['invoices_paid'][$data[0]] = $data[1];
 }
 $query = "SELECT date_format(date, '%e'),COUNT(id) FROM tbltickets WHERE date LIKE '" . $year . "-" . $month . "-%' GROUP BY date_format(date, '%e') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $reportvalues['tickets_new'][$data[0]] = $data[1];
 }
 $query = "SELECT date_format(date, '%e'),COUNT(id) FROM tblticketreplies WHERE date LIKE '" . $year . "-" . $month . "-%' AND admin!='' GROUP BY date_format(date, '%e') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $reportvalues['tickets_staff_replies'][$data[0]] = $data[1];
 }
 $query = "SELECT date_format(date, '%e'),COUNT(id) FROM tblcancelrequests WHERE date LIKE '" . $year . "-" . $month . "-%' GROUP BY date_format(date, '%e') ORDER BY date ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $reportvalues['cancellations_new'][$data[0]] = $data[1];
 }
 

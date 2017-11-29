@@ -10,7 +10,7 @@ $reportdata["tableheadings"] = array("Invoice ID","Client Name","Invoice Date","
 
 $query = "SELECT tblinvoices.*,tblclients.firstname,tblclients.lastname,tblclients.bankname,tblclients.banktype,tblclients.bankcode,tblclients.bankacct FROM tblinvoices INNER JOIN tblclients ON tblclients.id=tblinvoices.userid WHERE tblinvoices.paymentmethod='directdebit' AND tblinvoices.status='Unpaid' ORDER BY duedate ASC";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
 
     $id = $data["id"];
     $userid = $data["userid"];

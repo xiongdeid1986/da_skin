@@ -52,7 +52,7 @@ if ($action=="phpinfo") {
     $secs = str_pad($uptime%60,2,"0",STR_PAD_LEFT);
 
     $phpver = phpversion();
-    $mysqlver = (function_exists("mysqli_get_client_info")) ? mysqli_get_client_info($GLOBALS['whmcsmysql']) : '-';
+    $mysqlver = (function_exists("mysql_get_client_info")) ? mysql_get_client_info() : '-';
     $zendver = (function_exists("zend_version")) ? zend_version() : '-';
 
     echo "<load>$load</load>\n";

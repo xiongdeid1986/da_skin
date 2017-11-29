@@ -13,7 +13,7 @@
  *
  * @package    WHMCS
  * @author     WHMCS Limited <development@whmcs.com>
- * @copyright  Copyright (c) WHMCS Limited 2005-2014
+ * @copyright  Copyright (c) WHMCS Limited 2005-2015
  * @license    http://www.whmcs.com/license/ WHMCS Eula
  * @version    $Id$
  * @link       http://www.whmcs.com/
@@ -21,7 +21,7 @@
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
 
-$_LANG['isocode'] = "ca";
+$_LANG['locale'] = "ca_AD";
 
 $_LANG['accountinfo'] = "Informació de Compte";
 $_LANG['accountstats'] = "Estadístiques del seu Compte";
@@ -282,6 +282,9 @@ $_LANG['creditcardsecuritynotice'] = "Qualsevol dada que vostè ingressi aquí �
 $_LANG['creditcarduseexisting'] = "Utilitzar Targeta Existent";
 $_LANG['customfieldvalidationerror'] = "El camp no és vàlid";
 $_LANG['days'] = "Dies";
+$_LANG['hours'] = "Hours";
+$_LANG['minutes'] = "Minutes";
+$_LANG['seconds'] = "Seconds";
 $_LANG['defaultbillingcontact'] = "contacte de Facturació per defecte";
 $_LANG['domainalternatives'] = "Provi aquestes alternatives";
 $_LANG['domainavailable'] = "Disponible! Comprar ara";
@@ -292,7 +295,6 @@ $_LANG['domainbulksearch'] = "Cerca Massiva de Dominis";
 $_LANG['domainbulksearchintro'] = "El cercador massiu en temps real de dominis li permet buscar fins a 20 dominis d'una sola vegada. Introdueixi els dominis en els camps de sota, un per línia - no escrigui www ni http://";
 $_LANG['domainbulktransferdescription'] = "Pot transferir els seus dominis existents cap a nosaltres avui mateix. Per començar, només cal introduir els dominis abaix, un per línia - no incloure www. O http://";
 $_LANG['domainbulktransfersearch'] = "Transferència massiva de Dominis";
-$_LANG['domaincheckerdescription'] = "Comprovi la disponibilitat d'un domini";
 $_LANG['domaincontactinfo'] = "Informació de contacte";
 $_LANG['domaincurrentrenewaldate'] = "Data Actual de Renovació";
 $_LANG['domaindnsaddress'] = "Direcció";
@@ -335,7 +337,7 @@ $_LANG['domainregisterns'] = "Registrar nameserver";
 $_LANG['domainregisternscurrentip'] = "Adreça IP actual";
 $_LANG['domainregisternsdel'] = "Eliminar un nameserver";
 $_LANG['domainregisternsdelsuccess'] = "El nameserver ha estat eliminat amb èxit";
-$_LANG['domainregisternsexplanation'] = "Des d'aquí pot crear i administrar servidors de nom pel seu domini (per exemple: NS1.TUDOMINIO.COM, NS2.TUDOMINIO.COM ...).";
+$_LANG['domainregisternsexplanation'] = "Des d'aquí pot crear i administrar servidors de nom pel seu domini (per exemple: NS1.EXAMPLE.COM, NS2.EXAMPLE.COM ...).";
 $_LANG['domainregisternsip'] = "Adreça IP";
 $_LANG['domainregisternsmod'] = "Modificar IP de nameserver";
 $_LANG['domainregisternsmodsuccess'] = "El nameserver ha estat modificat amb èxit";
@@ -374,6 +376,9 @@ $_LANG['domaintransfer'] = "Transferir Domini";
 $_LANG['domainunavailable'] = "No disponible";
 $_LANG['domainunavailable1'] = "Ho Lamentem!";
 $_LANG['domainunavailable2'] = "ja està registrat!";
+$_LANG['domainreserved'] = "Reserved";
+$_LANG['domainreserved1'] = "Domain";
+$_LANG['domainreserved2'] = "is available, but reserved.";
 $_LANG['domainviewwhois'] = "veure l'informe Whois";
 $_LANG['downloaddescription'] = "Descripció";
 $_LANG['downloadloginrequired'] = "Accés denegat - Ha d'ingressar en el seu compte per poder descarregar-lo.";
@@ -424,7 +429,6 @@ $_LANG['invoicesdatecreated'] = "Data de la factura";
 $_LANG['invoicesdatedue'] = "Data de Venciment";
 $_LANG['invoicesdescription'] = "Descripció";
 $_LANG['invoicesdownload'] = "Descarregar";
-$_LANG['invoicesdue'] = "Factura vençuda";
 $_LANG['invoiceserror'] = "S'ha produït un error. Si us plau torni a provar.";
 $_LANG['invoicesinvoicedto'] = "Facturat a";
 $_LANG['invoicesinvoicenotes'] = "Notes de la factura";
@@ -448,12 +452,14 @@ $_LANG['invoicestransgateway'] = "Mètode / Gateway";
 $_LANG['invoicestransid'] = "ID Transacció";
 $_LANG['invoicestransnonefound'] = "No s'han trobat transaccions relacionades";
 $_LANG['invoicesunpaid'] = "No Pagada";
+$_LANG['invoicesdraft'] = "Draft";
 $_LANG['invoicesview'] = "Veure Factura";
 $_LANG['jobtitle'] = "Job Title";
 $_LANG['kbsuggestions'] = "Suggeriments en Base de Coneixements";
 $_LANG['kbsuggestionsexplanation'] = "Els següents articles han estat trobats a la base de Coneixements i podrien resoldre el seu dubte. Revisi els suggeriments abans de contactar-nos.";
 $_LANG['knowledgebasearticles'] = "Articles";
 $_LANG['knowledgebasecategories'] = "Categories";
+$_LANG['nokbcategories'] = "No categories exist";
 $_LANG['knowledgebasedescription'] = "Descobrir la base de coneixements per a les preguntes més freqüents";
 $_LANG['knowledgebasefavorites'] = "Afegir als preferits";
 $_LANG['knowledgebasehelpful'] = "Ha estat útil la resposta?";
@@ -473,6 +479,7 @@ $_LANG['knowledgebaseviews'] = "Vistes";
 $_LANG['knowledgebasevote'] = "Votar";
 $_LANG['knowledgebasevotes'] = "Vots";
 $_LANG['knowledgebaseyes'] = "Si";
+$_LANG['knowledgebaseArticleRatingThanks'] = "Thanks for rating the article for us";
 $_LANG['language'] = "Idioma";
 $_LANG['latefee'] = "Càrrec per demora";
 $_LANG['latefeeadded'] = "Afegir";
@@ -623,6 +630,7 @@ $_LANG['orderpromoinvalid'] = "Aquest codi no és aplicable a aquest Prodcute / 
 $_LANG['orderpromomaxusesreached'] = "El codi de promoció ha estat utilitzat";
 $_LANG['orderpromotioncode'] = "Codi de Promoció";
 $_LANG['orderpromovalidatebutton'] = "Validar Codi >>";
+$_LANG['orderPromoCodePlaceholder'] = "Enter promo code if you have one";
 $_LANG['orderprorata'] = "Prorrateig";
 $_LANG['orderreceived'] = "Gràcies per la seva comanda. Rebrà un email de confirmació en breu.";
 $_LANG['orderregisterdomain'] = "Registrar un Nou Domini";
@@ -631,7 +639,7 @@ $_LANG['ordersecure'] = "Per motius de seguretat guardarem la seva IP actual, la
 $_LANG['ordersecure2'] = "ha estat guardada a la nostra base de dades.";
 $_LANG['orderserverhostname'] = "Nom de Servidors d'allotjament";
 $_LANG['orderservernameservers'] = "Nom de Servidors";
-$_LANG['orderservernameserversdescription'] = "Els prefixos que vostè ingressi aquí han de determinar els noms de servidors per defecte per al servidor. P.ex. ns1.sudominio.com i ns2.sudominio.com";
+$_LANG['orderservernameserversdescription'] = "Els prefixos que vostè ingressi aquí han de determinar els noms de servidors per defecte per al servidor. P.ex. ns1.example.com i ns2.example.com";
 $_LANG['orderservernameserversprefix1'] = "Prefix 1";
 $_LANG['orderservernameserversprefix2'] = "Prefix 2";
 $_LANG['orderserverrootpassword'] = "Contrasenya Root";
@@ -667,6 +675,7 @@ $_LANG['proformainvoicenumber'] = "Factura Proforma número";
 $_LANG['promoexistingclient'] = "Cal que tingui algun producte / servei actiu per utilitzar aquest codi";
 $_LANG['promoonceperclient'] = "Aquest codi només es pot utilitzar una vegada per client";
 $_LANG['pwstrengthfail'] = "La contrasenya que ha introduït no és prou complexa - si us plau, introdueixi una contrasenya més complexa";
+$_LANG['pwdoesnotmatch'] = "The passwords entered do not match";
 $_LANG['quicknav'] = "Accessos directes";
 $_LANG['recordsfound'] = "Registres trobats";
 $_LANG['recurring'] = "Recurrent";
@@ -778,7 +787,9 @@ $_LANG['supportticketsticketurgencyhigh'] = "Alta";
 $_LANG['supportticketsticketurgencylow'] = "Baixa";
 $_LANG['supportticketsticketurgencymedium'] = "Mitjana";
 $_LANG['supportticketsuploadfailed'] = "No s'ha pogut pujar el fitxer adjunt";
+$_LANG['supportticketsuploadtoolarge'] = "Uploaded file was too large. Please try uploading a smaller file.";
 $_LANG['supportticketsviewticket'] = "Veure ticket";
+$_LANG['supportticketclosedmsg'] = "This ticket is closed.  You may reply to this ticket to reopen it.";
 $_LANG['telesignincorrectpin'] = "Pin Incorrecte!";
 $_LANG['telesigninitiatephone'] = "No podem iniciar la verificació de telèfon per al seu número. Posis en contacte amb nosaltres.";
 $_LANG['telesigninvalidnumber'] = "Número de telèfon Invàlid";
@@ -887,6 +898,7 @@ $_LANG['subaccountpermsorders'] = "Establir Noves Sol · licituds / Actualitzaci
 $_LANG['subaccountpermissiondenied'] = "No té els permisos necessaris per accedir a aquesta pàgina";
 $_LANG['subaccountallowedperms'] = "Els seus permisos autoritzats són:";
 $_LANG['subaccountcontactmaster'] = "Contacti amb el propietari del compte principal si vostè creu que això és un error.";
+$_LANG['subaccountSsoDenied'] = "You do not have permission to login using Single Sign-On.";
 
 $_LANG['knowledgebasealsoread'] = "Llegir també";
 
@@ -1151,6 +1163,7 @@ $_LANG['domainmassrenew'] = "Renovar Dominis";
 $_LANG['captchatitle'] = "Verificació anti-spam";
 $_LANG['captchaverify'] = "Si us plau, introdueix dins de la caixa de text els caràcters que veu a la imatge de sota. Això és requerit per evitar enviaments automàtics.";
 $_LANG['captchaverifyincorrect'] = "Els caràcters que ha introduït no es corresponen amb els de la imatge. Torni-ho a provar de nou.";
+$_LANG['googleRecaptchaIncorrect'] = "Please complete the captcha and try again.";
 $_LANG['recaptcha-invalid-site-private-key'] = "S'ha produït un error, si us plau, contacti amb suport (codi d'error: cap1)";
 $_LANG['recaptcha-invalid-request-cookie'] = "S'ha produït un error, si us plau torni-ho a provar (codi d'error: cap2)";
 $_LANG['recaptcha-incorrect-captcha-sol'] = "Els caràcters que ha introduït no es corresponen amb la paraula de verificació. Torni-ho a provar de nou.";
@@ -1179,12 +1192,14 @@ $_LANG['bundlewarningdomainaddon'] = "El paquet seleccionat requereix que selecc
 
 $_LANG['navservices'] = "Serveis";
 $_LANG['navservicesorder'] = "Comprar Nou Servei";
+$_LANG['navservicesplaceorder'] = "Place a New Order";
 $_LANG['navdomains'] = "Dominis";
 $_LANG['navrenewdomains'] = "Renovar Dominis";
 $_LANG['navregisterdomain'] = "Registrar un Nou Domini";
 $_LANG['navtransferdomain'] = "transferir un Domini";
-$_LANG['navwhoislookup'] = "Whois Lookup";
+$_LANG['navdomainsearch'] = "Domain Search";
 $_LANG['navbilling'] = "Facturació";
+$_LANG['navinvoices'] = "Invoices";
 $_LANG['navsupport'] = "suport";
 $_LANG['navtickets'] = "Tiquets";
 $_LANG['navopenticket'] = "Tiquet Obert";
@@ -1192,6 +1207,7 @@ $_LANG['navmanagecc'] = "Gestionar targeta de crèdit";
 $_LANG['navemailssent'] = "Emails enviats";
 
 $_LANG['hello'] = "Hola";
+$_LANG['helloname'] = "Hola, %s!";
 $_LANG['account'] = "Compte";
 $_LANG['login'] = "Entrada";
 $_LANG['register'] = "Registrar-se";
@@ -1232,7 +1248,6 @@ $_LANG['supportticketsintro'] = "Enviï i segueixi qualsevol qüestió que tingu
 $_LANG['addfundsintro'] = "Dipositar diners per avançat";
 $_LANG['registerintro'] = "Crear un compte amb nosaltres ...";
 $_LANG['masspayintro'] = "Pagar totes les factures llistades avall en una única i senzilla transacció escollint un mètode de pagament";
-$_LANG['domaincheckerintro'] = "Comenci la seva elecció de Allotjament Web comprovant aquí si el seu domini està disponible ...";
 $_LANG['networkstatusintro'] = "Informació de l'Estat del Servei i Anuncis de la Xarxa";
 
 $_LANG['creditcardyourinfo'] = "Informació de facturació";
@@ -1247,6 +1262,8 @@ $_LANG['supportticketsnoneopen'] = "Actualment no hi ha cap tiquet de suport obe
 $_LANG['invoicesnoneunpaid'] = "Actualment no hi ha factures sense pagar";
 
 $_LANG['registerdisablednotice'] = "Per registrar-se, si us plau, faci una <strong><a href=\"cart.php\">comanda</a></strong>";
+$_LANG['registerCreateAccount'] = "To create an account, please";
+$_LANG['registerCreateAccountOrder'] = "place an order with us";
 
 $_LANG['pwstrength'] = "Seguretat de la contrasenya";
 $_LANG['pwstrengthenter'] = "Introduir una contrasenya";
@@ -1285,12 +1302,9 @@ $_LANG['creditcardexpirydateinvalid'] = "La data de caducitat ha de ser introdu�
 
 $_LANG['domaincheckerchoosedomain'] = "Esculli un domini ...";
 $_LANG['domaincheckerchecknewdomain'] = "Comprovi la disponibilitat d'un domini";
-$_LANG['domaincheckerdomainexample'] = "ex. Tudominio.com";
-$_LANG['domaincheckerinvalidtld'] = "no és un TLD vàlid. Torni-ho a provar de nou.";
+$_LANG['domaincheckerdomainexample'] = "ex. example.com";
 $_LANG['domaincheckerhostingonly'] = "Comprar només allotjament";
-$_LANG['domaincheckeravailtransfer'] = "Disponible per Transferir";
 $_LANG['domaincheckerenterdomain'] = "Comenci a provar els nostres serveis introduint un domini que vulgui registrar o transferir, o simplement compri un allotjament web abaix ...";
-$_LANG['domaincheckerbulkinvaliddomain'] = "Un o més dels dominis que ha introduït adalt no són vàlids i han estat omesos en els resultats";
 
 $_LANG['kbquestionsearchere'] = "Té alguna pregunta? Comenci la cerca aquí.";
 $_LANG['contactus'] = "Contacti'ns";
@@ -1363,23 +1377,13 @@ $_LANG['billableitemshour'] = "Hora";
 $_LANG['invoicefilename'] = "Factura-";
 $_LANG['quotefilename'] = "Cotització-";
 
-# Licensing Addon
-
-$_LANG['licensingkey'] = "license Key";
-$_LANG['licensingvaliddomains'] = "Valid domains";
-$_LANG['licensingvalidips'] = "Valid IP";
-$_LANG['licensingvaliddirectory'] = "Valid Directory";
-$_LANG['licensingstatus'] = "license Status";
-$_LANG['licensingreissue'] = "Reissue license";
-$_LANG['licensingreissued'] = "The Valid domain, IP and Directory will be Detected & saved the next time the license is used.";
-
 # Domain Addons
 
 $_LANG['domainaddons'] = "Complements";
 $_LANG['domainaddonsinfo'] = "Els complements següents estan disponibles per al seu (s) domini (s) ...";
 $_LANG['domainaddonsdnsmanagement'] = "DNS Host Record Management";
 $_LANG['domainaddonsidprotectioninfo'] = "Protegeixi la seva informació personal i redueixi la quantitat d'spam a la safata d'entrada, activant la protecció d'identitat.";
-$_LANG['domainaddonsdnsmanagementinfo'] = "External DNS Hosting can help speed up your website and improve availability with reduced redundancy.";
+$_LANG['domainaddonsdnsmanagementinfo'] = "External DNS Hosting can help speed up your website and improve availability with increased redundancy.";
 $_LANG['domainaddonsemailforwardinginfo'] = "Get emails forwarded to alternate email addresses of your choice sobre that you can monitor all from a single account.";
 $_LANG['domainaddonsbuynow'] = "Buy Now for";
 $_LANG['domainaddonsperyear'] = "/ Any";
@@ -1427,6 +1431,8 @@ $_LANG['feedbackworst'] = "Worst";
 $_LANG['feedbackbest'] = "Best";
 $_LANG['feedbackimprove'] = "How may we make your experience better in the future?";
 $_LANG['pleaserate2'] = "handled this support request";
+$_LANG['feedbacksupplyrating'] = "Please supply at least a rating for :staffname (comments are optional)";
+
 $_LANG['returnclient'] = "Return to Client Area";
 
 $_LANG['clientareanavsecurity'] = "Security Settings";
@@ -1447,7 +1453,7 @@ $_LANG['twofaactivationcomplete'] = "Two-Factor Authentication Setup is Complete
 $_LANG['twofadisableconfirmation'] = "Two-Factor Authentication has now been disabled for your account.";
 $_LANG['twofabackupcodeis'] = "Your Backup Code is";
 $_LANG['twofanewbackupcodeis'] = "Your New Backup Code is";
-$_LANG['twofabackupcodelogin'] = "Enter Your Backup Code Above to Login";
+$_LANG['twofabackupcodelogin'] = "Enter Your Backup Code to Login";
 $_LANG['twofabackupcodeexpl'] = "Write this down on paper and keep it safe.<br />It will be needed if you ever lose your 2nd factor device or it is unavailable to you.";
 $_LANG['twofaconfirmpw'] = "Enter Your Password";
 $_LANG['twofa2ndfactorreq'] = "Your second factor is required to complete login.";
@@ -1505,9 +1511,9 @@ $_LANG['domaincontactdetails']['Phone'] = "Phone";
 $_LANG['domaincontactdetails']['Phone Number'] = "Phone Number";
 $_LANG['domaincontactdetails']['Fax'] = "Fax";
 
-$_LANG['serverhostnameexample'] = "eg. server1(.yourdomain.com)";
-$_LANG['serverns1prefixexample'] = "eg. ns1(.yourdomain.com)";
-$_LANG['serverns2prefixexample'] = "eg. ns2(.yourdomain.com)";
+$_LANG['serverhostnameexample'] = "eg. server1(.example.com)";
+$_LANG['serverns1prefixexample'] = "eg. ns1(.example.com)";
+$_LANG['serverns2prefixexample'] = "eg. ns2(.example.com)";
 
 $_LANG['hosting'] = "Hosting";
 
@@ -1528,6 +1534,186 @@ $_LANG['maxmind_checkconfiguration'] = "An error occurred with the Fraud Check. 
 $_LANG['maxmind_addressinvalid'] = "Your address is not recognised. Please check and re-enter.";
 $_LANG['maxmind_invalidip'] = "IP Address invalid or a local address. Please contact support.";
 
+$_LANG['ssounabletologin'] = "Unable to auto-login. Please contact support.";
+$_LANG['ssofatalerror'] = "A fatal error occurred. Please contact support.";
+
+# Version 6.0
+
+$_LANG['announcementschoosemonth'] = "Choose Month";
+$_LANG['announcementsbymonth'] = "By Month";
+$_LANG['announcementsolder'] = "Older Announcements";
+$_LANG['createnewcontact'] = "New Contact...";
+$_LANG['due'] = "Due";
+$_LANG['affiliatessignups'] = "Nombre de membres";
+$_LANG['affiliatesconversionrate'] = "Tipus de canvi";
+$_LANG['affiliatesclicks'] = "Clicks";
+$_LANG['contacts'] = "Contacts";
+$_LANG['backtoservicedetails'] = "Back to Service Details";
+$_LANG['invoicesintro'] = "Abaix pot veure un historial complert de les factures.";
+
+$_LANG['sidebars']['viewAccount']['yourAccount'] = "Your Account";
+$_LANG['sidebars']['viewAccount']['myDetails'] = "My Details";
+$_LANG['sidebars']['viewAccount']['billingInformation'] = "Billing Information";
+$_LANG['sidebars']['viewAccount']['contacts/subAccounts'] = "Contacts/Sub-Accounts";
+$_LANG['sidebars']['viewAccount']['changePassword'] = "Change Password";
+$_LANG['sidebars']['viewAccount']['securitySettings'] = "Security Settings";
+$_LANG['sidebars']['viewAccount']['emailHistory'] = "Email History";
+
+$_LANG['aboutsecurityquestions'] = "Why security questions?";
+$_LANG['registersecurityquestionblurb'] = "Setting a security question will provide extra security, as all changes to your account require providing the additional information from your question.";
+
+$_LANG['update'] = "Update";
+$_LANG['yourinfo'] = "Your Info";
+$_LANG['shortcuts'] = "Shortcuts";
+
+$_LANG['yourservices'] = "Your Services";
+$_LANG['yourdomains'] = "Your Domains";
+$_LANG['yourtickets'] = "Your Tickets";
+$_LANG['managecontacts'] = "Manage Contacts";
+$_LANG['billingdetails'] = "Billing Details";
+$_LANG['homechooseproductservice'] = "Choose a product/service to manage:";
+
+$_LANG['invoicesdue'] = "Factura vençuda";
+$_LANG['invoicesduemsg'] = "You have %s invoice(s) currently unpaid with a total balance of %s";
+$_LANG['noinvoicesduemsg'] = "You have no unpaid invoices at this time.";
+
+$_LANG['expiringsoon'] = "Expiring Soon";
+
+$_LANG['notice'] = "Notice";
+$_LANG['networkstatussubtitle'] = "News & Information";
+
+$_LANG['myaccount'] = "My Account";
+
+$_LANG['manageproduct'] = "Manage Product";
+$_LANG['overview'] = "Overview";
+$_LANG['servername'] = "Server";
+$_LANG['visitwebsite'] = "Visit Website";
+$_LANG['whoisinfo'] = "WHOIS Info";
+
+$_LANG['tableshowing'] = "Showing _START_ to _END_ of _TOTAL_ entries";
+$_LANG['tableempty'] = "Showing 0 to 0 of 0 entries";
+$_LANG['tablefiltered'] = "(filtered from _MAX_ total entries)";
+$_LANG['tablelength'] = "Show _MENU_ entries";
+$_LANG['tableloading'] = "Loading...";
+$_LANG['tableprocessing'] = "Processing...";
+$_LANG['tablepagesfirst'] = "First";
+$_LANG['tablepageslast'] = "Last";
+$_LANG['tablepagesnext'] = "Next";
+$_LANG['tablepagesprevious'] = "Previous";
+$_LANG['tableviewall'] = "All";
+$_LANG['tableentersearchterm'] = "Enter search term...";
+
+$_LANG['actions'] = "Actions";
+
+$_LANG['upgradedowngradeshort'] = "Up/Downgrade";
+
+$_LANG['masspayintro'] = "Pagar totes les factures llistades avall en una única i senzilla transacció escollint un mètode de pagament";
+$_LANG['masspaymentselectgateway'] = "Select Mass Payment Gateway";
+
+$_LANG['ticketfeedbackrequest'] = "Feedback Request";
+$_LANG['ticketfeedbackforticket'] = "for Ticket #";
+
+$_LANG['notifications'] = "Notifications";
+$_LANG['notificationsnone'] = "You have no notifications at this time.";
+
+$_LANG['creditcardnonestored'] = "No card on file";
+
+$_LANG['kbviewingarticlestagged'] = "Viewing articles tagged";
+
+$_LANG['domainprivatenameservers'] = "Private Nameservers";
+
+$_LANG['transferinadomain'] = "Transfer in a Domain";
+
+$_LANG['nodomainextensions'] = "There are no Domain Extensions currently configured for purchase";
+
+$_LANG['homebegin'] = "Begin the search for your perfect domain name...";
+$_LANG['howcanwehelp'] = "How can we help today?";
+$_LANG['exampledomain'] = "eg. example.com";
+$_LANG['buyadomain'] = "Buy A Domain";
+$_LANG['orderhosting'] = "Order Hosting";
+$_LANG['makepayment'] = "Make Payment";
+$_LANG['getsupport'] = "Get Support";
+
+$_LANG['news'] = "News";
+$_LANG['allthelatest'] = "All the latest from";
+$_LANG['readmore'] = "Read More";
+$_LANG['noannouncements'] = "No announcements to display";
+
+$_LANG['kbsearchexplain'] = "Have a question? Start your search here.";
+$_LANG['readyforquestions'] = "We're ready and waiting for your questions";
+
+$_LANG['restrictedpage'] = "This page is restricted";
+$_LANG['enteremail'] = "Enter email";
+
+$_LANG['passwordtips'] = "<strong>Tips for a good password</strong><br />Use both upper and lowercase characters<br />Include at least one symbol (# $ ! % &amp; etc...)<br />Don't use dictionary words";
+
+$_LANG['regdate'] = "Reg Date";
+$_LANG['nextdue'] = "Next Due";
+
+$_LANG['findyourdomain'] = "Find your new domain name";
+$_LANG['searchtermrequired'] = "You must enter a domain name or keyword to look for";
+$_LANG['unabletolookup'] = "Sorry, unable to lookup the term as provided";
+$_LANG['invalidchars'] = "Please remove spaces or special punctuation characters";
+$_LANG['bulkoptions'] = "Bulk Options";
+$_LANG['checkingdomain'] = "Checking if the domain you requested is available...";
+$_LANG['domainsgotocheckout'] = "Go to checkout";
+$_LANG['domainssearchresults'] = "Search Results";
+$_LANG['domainssuggestions'] = "Suggestions";
+$_LANG['domainsothersuggestions'] = "You might also be interested in the following alternative names";
+$_LANG['domainsmoresuggestions'] = "Give me more suggestions!";
+$_LANG['domainssuggestionswarnings'] = "Domain name suggestions may not always be available. Availability is checked in real-time at the point of adding to the cart.";
+$_LANG['disclaimers'] = "Disclaimers";
+$_LANG['tldpricing'] = "TLD Pricing";
+$_LANG['alltldpricing'] = "All TLD Pricing";
+
+$_LANG['quotesdesc'] = "Quotes we have generated for you";
+$_LANG['quotesrejected'] = "Rejected";
+
+$_LANG['ticketsyourhistory'] = "Your ticket history";
+
+$_LANG['clientareaemaildesc'] = "Your email history with us";
+
+$_LANG['sslconfssl'] = "Configure SSL";
+$_LANG['sslnoconfigurationpossible'] = "Configuration has already been completed!  Please contact support if you are experiencing issues.";
+
+$_LANG['adminloggedin'] = "You are currently logged in as an admin.";
+$_LANG['returntoadminarea'] = "Logout & return to Admin Area";
+$_LANG['adminmasqueradingasclient'] = "You are currently masquerading as a client.";
+$_LANG['logoutandreturntoadminarea'] = "Click here to logout & return to Admin Area";
+
+$_LANG['supportAndUpdatesExpired'] = "Support & Updates are expired.";
+$_LANG['supportAndUpdatesExpiredLicense'] = "Your Support & Updates period for this license has expired";
+$_LANG['supportAndUpdatesRenewalRequired'] = "Support & Updates access needs to be renewed before you can access this download.";
+$_LANG['supportAndUpdatesClickHereToRenew'] = "Click Here to Renew";
+
+$_LANG['pwresetemailneeded'] = "Forgotten your password? Enter your email address below to begin the reset process.";
+
+$_LANG['quotestageexpired'] = "Expired";
+
+$_LANG['ticketinfo'] = "Ticket Information";
+$_LANG['customfield'] = "Custom Fields";
+
+$_LANG['domainsActive'] = "Active";
+$_LANG['domainsExpired'] = "Expired";
+$_LANG['domainsCancelled'] = "Cancelled";
+$_LANG['domainsFraud'] = "Fraud";
+$_LANG['domainsPending'] = "Pending";
+$_LANG['domainsPendingTransfer'] = "Pending Transfer";
+$_LANG['domainsTransferredAway'] = "Transferred Away";
+$_LANG['domainsExpiringInTheNext30Days'] = "Expiring within 30 Days";
+$_LANG['domainsExpiringInTheNext90Days'] = "Expiring within 90 Days";
+$_LANG['domainsExpiringInTheNext180Days'] = "Expiring within 180 Days";
+$_LANG['domainsExpiringInMoreThan180Days'] = "Expiring in 180+ Days";
+
+$_LANG['kbtagcloud'] = "Tag Cloud";
+
+$_LANG['cancellationrequestedexplanation'] = "There is an outstanding cancellation request for this product/service";
+$_LANG['cancellationrequested'] = "Cancellation Requested";
+
+$_LANG['yourrecenttickets'] = "Your Recent Tickets";
+
+$_LANG['domains']['deTermsDescription1'] = "To register a new domain, transfer or change registrant information the registrant must explicitly accept the .DE terms and conditions.";
+$_LANG['domains']['deTermsDescription2'] = "(See full text of .de terms and conditions: http://www.denic.de/en/bedingungen.html.)";
 $_LANG['directDebitPageTitle'] = "Direct Debit Payment";
 $_LANG['directDebitHeader'] = "Direct Debit Payment";
 $_LANG['directDebitErrorNoBankName'] = "You must enter your banks name";
@@ -1546,3 +1732,535 @@ $_LANG['directDebitConfirmAccNumber'] = "Confirm Account Number";
 $_LANG['directDebitSubmit'] = "Submit";
 $_LANG['directDebitChecking'] = "Checking";
 $_LANG['directDebitSavings'] = "Savings";
+
+$_LANG['outOfStockProductRemoved'] = "An out of stock product was automatically removed from the cart";
+
+$_LANG['subaccountpermsquotes'] = "View & Accept Quotes";
+
+$_LANG['chooselanguage'] = "Choose language";
+
+$_LANG['success'] = "Success";
+$_LANG['error'] = "Error";
+$_LANG['print'] = "Print";
+$_LANG['invoicelineitems'] = "Invoice Items";
+
+$_LANG['quotelineitems'] = "Quote Items";
+
+$_LANG['quoteproposal'] = "Proposal";
+$_LANG['quoteacceptagreetos'] = "To accept the quote, please confirm your acceptance of our terms of service.";
+$_LANG['quoteacceptcontractwarning'] = "Please be aware that accepting a quote is considered entering into a contract and you will not be able to cancel once accepted.";
+
+// Client alerts
+$_LANG['clientAlerts']['creditCardExpiring'] = "Your credit card :creditCardType-:creditCardLastFourDigits expires within :days days. Please update it at your earliest convenience.";
+$_LANG['clientAlerts']['domainsExpiringSoon'] = "You have :numberOfDomains domain(s) expiring within the next :days days.";
+$_LANG['clientAlerts']['invoicesUnpaid'] = "You have :numberOfInvoices unpaid invoice(s). Pay them early for peace of mind.";
+$_LANG['clientAlerts']['invoicesOverdue'] = "You have :numberOfInvoices overdue invoice(s) with a total balance due of :balanceDue. Pay them now to avoid any interruptions in service.";
+$_LANG['clientAlerts']['creditBalance'] = "You have a credit balance of :creditBalance.";
+
+// Client homepage panels
+$_LANG['clientHomePanels']['unpaidInvoices'] = "Unpaid Invoices";
+$_LANG['clientHomePanels']['unpaidInvoicesMsg'] = "You have :numberOfInvoices unpaid invoice(s) with a total balance due of :balanceDue. Pay them early for peace of mind.";
+$_LANG['clientHomePanels']['overdueInvoices'] = "Overdue Invoices";
+$_LANG['clientHomePanels']['overdueInvoicesMsg'] = "You have :numberOfInvoices overdue invoice(s) with a total balance due of :balanceDue. Pay them now to avoid any interruptions in service.";
+$_LANG['clientHomePanels']['domainsExpiringSoon'] = "Domains Expiring Soon";
+$_LANG['clientHomePanels']['domainsExpiringSoonMsg'] = "You have :numberOfDomains domain(s) expiring within the next :days days. Renew them today for peace of mind.";
+$_LANG['clientHomePanels']['activeProductsServices'] = "Your Active Products/Services";
+$_LANG['clientHomePanels']['activeProductsServicesNone'] = "It appears you do not have any products/services with us yet. <a href=\"cart.php\">Place an order to get started</a>.";
+$_LANG['clientHomePanels']['recentNews'] = "Recent News";
+$_LANG['clientHomePanels']['affiliateProgram'] = "Affiliate Program";
+$_LANG['clientHomePanels']['recentSupportTickets'] = "Recent Support Tickets";
+$_LANG['clientHomePanels']['recentSupportTicketsNone'] = "No Recent Tickets Found. If you need any help, please <a href=\"submitticket.php\">open a ticket</a>.";
+$_LANG['clientHomePanels']['affiliateSummary'] = "Your current commission balance is :commissionBalance. You only need another :amountUntilWithdrawalLevel before you can withdraw your earnings.";
+$_LANG['clientHomePanels']['affiliateSummaryWithdrawalReady'] = "Your current commission balance is :commissionBalance. You may withdraw your earnings now.";
+
+$_LANG['upgradeNotPossible'] = "Upgrading this product is not possible.  If you believe you've reached this page in error, please notify our support department.  Otherwise, go back and double check your selection.";
+
+$_LANG['hostingInfo'] = "Hosting Information";
+$_LANG['additionalInfo'] = "Additional Information";
+$_LANG['resourceUsage'] = "Resource Usage";
+$_LANG['primaryIP'] = "Primary IP";
+$_LANG['assignedIPs'] = "Assigned IPs";
+$_LANG['diskSpace'] = "Disk Space";
+$_LANG['bandwidth'] = "Bandwidth";
+$_LANG['registered'] = "Registered";
+$_LANG['upgrade'] = "Upgrade";
+
+$_LANG['downdoadsdesc'] = "Manuals, programs, and other files";
+
+$_LANG['doToday'] = "What would you like to do today?";
+$_LANG['changeDomainNS'] = "Change the nameservers your domain points to";
+$_LANG['updateWhoisContact'] = "Update the WHOIS contact information for your domain";
+$_LANG['changeRegLock'] = "Change the registrar lock status for your domain";
+$_LANG['renewYourDomain'] = "Renew Your Domain";
+
+$_LANG['oops'] = "Oops";
+$_LANG['goback'] = "Go Back";
+$_LANG['returnhome'] = "Return Home";
+$_LANG['blankCustomField'] = "(no value)";
+
+$_LANG['viewAll'] = "View All";
+$_LANG['moreDetails'] = "More Details";
+
+$_LANG['clientHomeSearchKb'] = "Enter a question here to search our knowledgebase for answers...";
+
+$_LANG['whoisContactWarning'] = "It is important to keep your domain WHOIS contact information up-to-date at all times to avoid losing control of your domain.";
+
+$_LANG['paymentstodate'] = "Payments to Date";
+$_LANG['balancedue'] = "Balance Due";
+$_LANG['submitpayment'] = "Submit Payment";
+
+$_LANG['domaincheckeravailable'] = "Available";
+$_LANG['domaincheckertransferable'] = "Available to Transfer";
+$_LANG['domaincheckertaken'] = "Taken";
+$_LANG['domaincheckeradding'] = "Adding";
+$_LANG['domaincheckeradded'] = "Added";
+$_LANG['domaincheckernomoresuggestions'] = "That's all the results we have for you! If you still haven't found what you're looking for, please try a different search term or keyword.";
+$_LANG['domaincheckerunabletooffertld'] = "Unfortunately we are unable to register this TLD at this time";
+$_LANG['domaincheckerbulkplaceholder'] = "Enter up to 20 domain names.\nEach name must be on a separate line.\n\nExamples:\nexample.com\nexample.net";
+
+$_LANG['domainchecker']['suggestiontakentitle'] = "Domain Unavailable";
+$_LANG['domainchecker']['suggestiontakenmsg'] = "Unfortunately the domain you selected is unavailable. This can sometimes occur if the domain has been registered recently. Please go back and choose another domain.";
+$_LANG['domainchecker']['suggestiontakenchooseanother'] = "Choose another domain";
+
+$_LANG['domainchecker']['alreadyincarttitle'] = "Already In Cart";
+$_LANG['domainchecker']['alreadyincartmsg'] = "This domain is already in your shopping cart. Proceed to checkout now to complete your purchase.";
+$_LANG['domainchecker']['alreadyincartcheckoutnow'] = "Checkout Now";
+
+$_LANG['genericerror']['title'] = "Oops, something went wrong!";
+$_LANG['genericerror']['msg'] = "Please try again and if the problem persists, please contact our support team.";
+
+# Licensing Addon
+
+$_LANG['licensingaddon']['mylicenses'] = "My Licenses";
+$_LANG['licensingaddon']['latestdownload'] = "Latest Download";
+$_LANG['licensingaddon']['downloadnow'] = "Download Now";
+$_LANG['licensingaddon']['licensekey'] = "License Key";
+$_LANG['licensingaddon']['validdomains'] = "Valid Domains";
+$_LANG['licensingaddon']['validips'] = "Valid IPs";
+$_LANG['licensingaddon']['validdirectory'] = "Valid Directory";
+$_LANG['licensingaddon']['status'] = "License Status";
+$_LANG['licensingaddon']['reissue'] = "Reissue";
+$_LANG['licensingaddon']['reissuestatusmsg'] = "The Valid Domain, IP and Directory will be detected & saved the next time the license is accessed.";
+$_LANG['licensingaddon']['manageLicense'] = "Manage License";
+
+$_LANG['affiliateWithdrawalSummary'] = "You will be able to request a withdrawal as soon as your balance reaches the minimum required amount of :amountForWithdrawal.";
+
+$_LANG['projectManagement']['activeProjects'] = "Your Active Projects";
+
+# cPanel Module
+
+$_LANG['cPanel']['packageDomain'] = "Package/Domain";
+$_LANG['cPanel']['addonsExtras'] = "Addons & Extras";
+$_LANG['cPanel']['purchaseActivate'] = "Purchase & Activate";
+
+$_LANG['cPanel']['usageStats'] = "Usage Statistics";
+$_LANG['cPanel']['diskUsage'] = "Disk Usage";
+$_LANG['cPanel']['bandwidthUsage'] = "Bandwidth Usage";
+$_LANG['cPanel']['usageStatsBwLimitNear'] = "You are nearing your bandwidth limit.";
+$_LANG['cPanel']['usageStatsDiskLimitNear'] = "You are nearing your disk space limit.";
+$_LANG['cPanel']['usageUpgradeNow'] = "Upgrade Now";
+$_LANG['cPanel']['usageLastUpdated'] = "Last Updated";
+
+$_LANG['cPanel']['quickShortcuts'] = "Quick Shortcuts";
+$_LANG['cPanel']['emailAccounts'] = "Email Accounts";
+$_LANG['cPanel']['forwarders'] = "Forwarders";
+$_LANG['cPanel']['autoresponders'] = "Autoresponders";
+$_LANG['cPanel']['fileManager'] = "File Manager";
+$_LANG['cPanel']['backup'] = "Backup";
+$_LANG['cPanel']['subdomains'] = "Subdomains";
+$_LANG['cPanel']['addonDomains'] = "Addon Domains";
+$_LANG['cPanel']['cronJobs'] = "Cron Jobs";
+$_LANG['cPanel']['mysqlDatabases'] = "MySQL Databases";
+$_LANG['cPanel']['phpMyAdmin'] = "phpMyAdmin";
+$_LANG['cPanel']['awstats'] = "Awstats";
+
+$_LANG['cPanel']['createEmailAccount'] = "Quick Create Email Account";
+$_LANG['cPanel']['usernamePlaceholder'] = "Yourname";
+$_LANG['cPanel']['passwordPlaceholder'] = "Desired Password";
+$_LANG['cPanel']['create'] = "Create";
+$_LANG['cPanel']['emailAccountCreateSuccess'] = "Email account created successfully!";
+$_LANG['cPanel']['emailAccountCreateFailed'] = "Email account creation failed: ";
+
+$_LANG['cPanel']['packageNotActive'] = "This hosting package is currently";
+$_LANG['cPanel']['statusPendingNotice'] = "You cannot begin using this hosting account until it is activated.";
+$_LANG['cPanel']['statusSuspendedNotice'] = "You cannot continue to use or manage this package until it is reactivated.";
+
+$_LANG['cPanel']['billingOverview'] = "Billing Overview";
+
+$_LANG['liveHelp']['chatNow'] = "Chat Now";
+
+$_LANG['quotes'] = "Quotes";
+
+$_LANG['productMustBeActiveForModuleCmds'] = "Product must be active to perform this action";
+$_LANG['domainCannotBeManagedUnlessActive'] = "This domain is not currently active. Domains cannot be managed unless active.";
+
+$_LANG['actionRequiresAtLeastOneDomainSelected'] = "Please select at least one domain to perform the selected action on.";
+
+$_LANG['clientAreaProductDownloadsAvailable'] = "The following download items are available for your product/service";
+$_LANG['clientAreaProductAddonsAvailable'] = "Addons are available for your product/service. <a href=\"cart.php?gid=addons\">Click here to view &amp; order &raquo;</a>";
+$_LANG['clientAreaSecurityTwoFactorAuthRecommendation'] = "We strongly encourage you to enable Two-Factor Authentication for added security.";
+$_LANG['clientAreaSecurityNoSecurityQuestions'] = "Setting a security question and answer helps protect your account from unauthorized password resets and allows us to verify your identity when requesting account changes.";
+$_LANG['clientAreaSecuritySecurityQuestionOtherError'] = "The security question helps protect your account from unauthorized password resets and allows us to verify your identity when requesting account changes.";
+
+$_LANG['billingAddress'] = "Billing Address";
+
+$_LANG['noPasswordResetWhenLoggedIn'] = "You cannot request a password reset when logged in. Please logout to begin.";
+
+$_LANG['unableToLoadShoppingCart'] = "Unable to load your shopping cart. Please contact support.";
+
+$_LANG['showMenu'] = "Show Menu";
+$_LANG['hideMenu'] = "Hide Menu";
+
+$_LANG['from'] = "From";
+$_LANG['featuredProduct'] = "Most Popular";
+$_LANG['shoppingCartProductPerMonth'] = "<span>:price</span>/:countmo";
+$_LANG['shoppingCartProductPerYear'] = "<span>:price</span>/:countyr";
+
+$_LANG['orderForm']['findNewDomain'] = "Find your new domain name. Enter your name or keywords below to check availability.";
+$_LANG['orderForm']['transferExistingDomain'] = "Transfer your existing domain names to us and save.";
+$_LANG['orderForm']['www'] = "www.";
+$_LANG['orderForm']['check'] = "Check";
+$_LANG['orderForm']['returnToClientArea'] = "Return to Client Area";
+$_LANG['orderForm']['checkout'] = "Checkout";
+$_LANG['orderForm']['alreadyRegistered'] = "Already Registered?";
+$_LANG['orderForm']['createAccount'] = "Create a New Account";
+$_LANG['orderForm']['enterPersonalDetails'] = "Please enter your personal details and billing information to checkout.";
+$_LANG['orderForm']['correctErrors'] = "Please correct the following errors before continuing";
+$_LANG['orderForm']['existingCustomerLogin'] = "Existing Customer Login";
+$_LANG['orderForm']['emailAddress'] = "Email Address";
+$_LANG['orderForm']['personalInformation'] = "Personal Information";
+$_LANG['orderForm']['firstName'] = "First Name";
+$_LANG['orderForm']['lastName'] = "Last Name";
+$_LANG['orderForm']['phoneNumber'] = "Phone Number";
+$_LANG['orderForm']['billingAddress'] = "Billing Address";
+$_LANG['orderForm']['companyName'] = "Company Name";
+$_LANG['orderForm']['optional'] = "Optional";
+$_LANG['orderForm']['streetAddress'] = "Street Address";
+$_LANG['orderForm']['streetAddress2'] = "Street Address 2";
+$_LANG['orderForm']['city'] = "City";
+$_LANG['orderForm']['state'] = "State";
+$_LANG['orderForm']['country'] = "Country";
+$_LANG['orderForm']['postcode'] = "Postcode";
+$_LANG['orderForm']['domainAlternativeContact'] = "You may specify alternative registered contact details for the domain registration(s) in your order when placing an order on behalf of another person or entity. If you do not require this, you can skip this section.";
+$_LANG['orderForm']['accountSecurity'] = "Account Security";
+$_LANG['orderForm']['mediumStrength'] = "Medium Strength";
+$_LANG['orderForm']['paymentDetails'] = "Payment Details";
+$_LANG['orderForm']['preferredPaymentMethod'] = "Please choose your preferred method of payment.";
+$_LANG['orderForm']['cardNumber'] = "Card Number";
+$_LANG['orderForm']['cvv'] = "CVV Security Number";
+$_LANG['orderForm']['additionalNotes'] = "Additional Notes";
+$_LANG['orderForm']['continueToClientArea'] = "Continue To Client Area";
+$_LANG['orderForm']['reviewDomainAndAddons'] = "Please review your domain name selections and any addons that are available for them.";
+$_LANG['orderForm']['addToCart'] = "Add to Cart";
+$_LANG['orderForm']['addedToCartRemove'] = "Added to Cart (Remove)";
+$_LANG['orderForm']['configureDesiredOptions'] = "Configure your desired options and continue to checkout.";
+$_LANG['orderForm']['haveQuestionsContact'] = "Have questions? Contact our sales team for assistance.";
+$_LANG['orderForm']['haveQuestionsClickHere'] = "Click here";
+$_LANG['orderForm']['use'] = "Use";
+$_LANG['orderForm']['check'] = "Check";
+$_LANG['orderForm']['transfer'] = "Transfer";
+$_LANG['orderForm']['domainAddedToCart'] = "This domain has been added to your cart.";
+$_LANG['orderForm']['registerLongerAndSave'] = "Register for longer and save!";
+$_LANG['orderForm']['tryRegisteringInstead'] = "Try registering this domain instead.";
+$_LANG['orderForm']['domainAvailabilityCached'] = "Domain availability results are cached which may lead to recently registered domains being shown as available.";
+$_LANG['orderForm']['submitTicket'] = "Submit a Ticket";
+$_LANG['orderForm']['promotionAccepted'] = "Promotion Code Accepted! Your order total has been updated.";
+$_LANG['orderForm']['productOptions'] = "Product/Options";
+$_LANG['orderForm']['qty'] = "Qty";
+$_LANG['orderForm']['priceCycle'] = "Price/Cycle";
+$_LANG['orderForm']['edit'] = "Edit";
+$_LANG['orderForm']['update'] = "Update";
+$_LANG['orderForm']['remove'] = "Remove";
+$_LANG['orderForm']['applyPromoCode'] = "Apply Promo Code";
+$_LANG['orderForm']['estimateTaxes'] = "Estimate Taxes";
+$_LANG['orderForm']['removePromotionCode'] = "Remove Promotion Code";
+$_LANG['orderForm']['updateTotals'] = "Update Totals";
+$_LANG['orderForm']['continueShopping'] = "Continue Shopping";
+$_LANG['orderForm']['removeItem'] = "Remove Item";
+$_LANG['orderForm']['yes'] = "Yes";
+$_LANG['orderForm']['cancel'] = "Cancel";
+$_LANG['orderForm']['close'] = "Close";
+$_LANG['orderForm']['totals'] = "Totals";
+$_LANG['orderForm']['includedWithPlans'] = "Included With Every Plan";
+$_LANG['orderForm']['whatIsIncluded'] = "What is Included?";
+$_LANG['orderForm']['errorNoProductGroup'] = "Could not load any product groups.";
+$_LANG['orderForm']['errorNoProducts'] = "Product group does not contain any visible products";
+
+$_LANG['cloudSlider']['feature01Title'] = "Maximum Server Uptime";
+$_LANG['cloudSlider']['feature01Description'] = "Server uptime is critical for all businesses - consider it the heart beat of hosting your business. File and databases servers, email and web servers are an indispensable part of most business processes, and downtimes have direct negative effects on productivity, sales, employee and customer satisfaction. That's why ensuring the maximum server uptime is so important to us - we want to make sure your business processes are running healthy so your customers are happy.";
+$_LANG['cloudSlider']['feature01DescriptionTwo'] = "By trusting us with your business needs, we promise you a 99.9% uptime on any services we provide, outside of any standard maintenance we may provide.";
+$_LANG['cloudSlider']['feature02Title'] = "World Wide Data Delivery";
+$_LANG['cloudSlider']['feature02Description'] = "Our services are powered by hundreds of servers and data centers located all over the world, so you can rest easy knowing that customers can access your website from anywhere. In addition, we provide monitoring tools to provide you with expert analytics - website traffic is an important step in improving your site's efficiency and popularity, as well as keeping track of where your visitors are coming from, what time of day they're visiting you, and how long they're staying. Our dedication to a global marketplace extends to domain registrations, as we offer the most popular TLD's for registration.";
+$_LANG['cloudSlider']['feature02DescriptionTwo'] = "Our dedication to customer support reaches across the globe as well. We are here to help you with your hosting in any way possible, and you can reach us via phone, email, or live chat.";
+$_LANG['cloudSlider']['feature03Title'] = "Top Tier Security";
+$_LANG['cloudSlider']['feature03Description'] = "Rest easy knowing that we provide 24/7 security monitoring and DDoS protection. You take protecting your customer's data seriously, and so do we. Our security team and safeguards are on the job all day, every day to provide the level of security needed in today's digital age.";
+$_LANG['cloudSlider']['feature03DescriptionTwo'] = "A wide range of security tools are at your disposal, including SSL certificates, firewall configuration, security monitoring services, VPN access, and more.";
+$_LANG['cloudSlider']['selectProductLevel'] = "Select the Perfect Level for You!";
+
+$_LANG['domainChecker.additionalPricingOptions'] = "Additional Pricing Options For :domain";
+
+$_LANG['orderpaymenttermfree'] = "Free";
+
+$_LANG['cPanel']['usageStatsBwOverLimit'] = "You have exceeded your bandwidth limit.";
+$_LANG['cPanel']['usageStatsDiskOverLimit'] = "You have exceeded your disk space limit.";
+$_LANG['insufficientstockmessage'] = "We are currently low on stock on certain items so the cart quantities have been adjusted accordingly. For further information, please contact us.";
+
+$_LANG['only'] = "Only";
+$_LANG['startingat'] = "Starting at";
+
+$_LANG['yourdomainplaceholder'] = "example";
+$_LANG['yourtldplaceholder'] = "com";
+
+$_LANG['subaccountpermsproductsso'] = "Perform Single Sign-On";
+
+$_LANG['sso']['title'] = "Single Sign-On";
+$_LANG['sso']['summary'] = "Third party applications leverage the Single Sign-On functionality to provide direct access to your billing account without you having to re-authenticate.";
+$_LANG['sso']['disablenotice'] = "You may wish to disable this functionality if you provide access to any of your third party applications to users who you do not wish to be able to access your billing account.";
+$_LANG['sso']['enabled'] = "Single Sign-On is currently permitted for your account.";
+$_LANG['sso']['disabled'] = "Single Sign-On is currently disabled for your account.";
+$_LANG['sso']['redirectafterlogin'] = "You will be redirected after login";
+
+$_LANG['oauth']['badTwoFactorAuthModule'] = "Bad Two-Factor Auth Module. Please contact support.";
+$_LANG['oauth']['permAccessNameAndEmail'] = "Access your name and email address";
+
+$_LANG['errorButTryAgain'] = "An error occurred.  Please try again.";
+$_LANG['emailSent'] = "Email Sent";
+$_LANG['verificationKeyExpired'] = "This email verification key has expired. Please login to request a new one.";
+$_LANG['emailAddressVerified'] = "Thank you for confirming your email address.";
+$_LANG['emailKeyExpired'] = "This email verification key has expired. Please request a new one.";
+$_LANG['verifyEmailAddress'] = "Please check your email and follow the link to verify your email address.";
+$_LANG['resendEmail'] = "Resend Verification Email";
+
+// Markdown Editor Help
+$_LANG['markdown']['title'] = "Markdown Guide";
+$_LANG['markdown']['emphasis'] = "Emphasis";
+$_LANG['markdown']['bold'] = "bold";
+$_LANG['markdown']['italics'] = "italics";
+$_LANG['markdown']['strikeThrough'] = "strikethrough";
+$_LANG['markdown']['headers'] = "Headers";
+$_LANG['markdown']['bigHeader'] = "Big header";
+$_LANG['markdown']['mediumHeader'] = "Medium header";
+$_LANG['markdown']['smallHeader'] = "Small header";
+$_LANG['markdown']['tinyHeader'] = "Tiny header";
+$_LANG['markdown']['lists'] = "Lists";
+$_LANG['markdown']['genericListItem'] = "Generic list item";
+$_LANG['markdown']['numberedListItem'] = "Numbered list item";
+$_LANG['markdown']['links'] = "Links";
+$_LANG['markdown']['textToDisplay'] = "Text to display";
+$_LANG['markdown']['exampleLink'] = "http://www.example.com";
+$_LANG['markdown']['quotes'] = "Quotes";
+$_LANG['markdown']['thisIsAQuote'] = "This is a quote.";
+$_LANG['markdown']['quoteMultipleLines'] = "It can span multiple lines!";
+$_LANG['markdown']['tables'] = "Tables";
+$_LANG['markdown']['columnOne'] = "Column 1";
+$_LANG['markdown']['columnTwo'] = "Column 2";
+$_LANG['markdown']['columnThree'] = "Column 3";
+$_LANG['markdown']['withoutAligning'] = "Or without aligning the columns...";
+$_LANG['markdown']['john'] = "John";
+$_LANG['markdown']['doe'] = "Doe";
+$_LANG['markdown']['male'] = "Male";
+$_LANG['markdown']['mary'] = "Mary";
+$_LANG['markdown']['smith'] = "Smith";
+$_LANG['markdown']['female'] = "Female";
+$_LANG['markdown']['displayingCode'] = "Displaying code";
+$_LANG['markdown']['spanningMultipleLines'] = "Or spanning multiple lines...";
+$_LANG['markdown']['saved'] = "saved";
+$_LANG['markdown']['saving'] = "autosaving";
+
+$_LANG['oauth']['authoriseAppToAccess'] = "Authorise :appName<br />to access your account?";
+$_LANG['oauth']['willBeAbleTo'] = "This application will be able to";
+$_LANG['oauth']['authorise'] = "Authorise";
+$_LANG['oauth']['currentlyLoggedInAs'] = "You are currently logged in as :firstName :lastName";
+$_LANG['oauth']['notYou'] = "Not You?";
+$_LANG['oauth']['returnToApp'] = "Return to :appName";
+$_LANG['oauth']['copyrightFooter'] = "Copyright &copy; :dateYear :companyName. All Rights Reserved.";
+$_LANG['oauth']['loginToGrantApp'] = "Login to grant :appName<br />access to your account";
+$_LANG['oauth']['redirectDescriptionOne'] = "Redirecting you back to the application. This may take a few moments.";
+$_LANG['oauth']['redirectDescriptionTwo'] = "If your browser doesn't redirect you, please";
+$_LANG['oauth']['redirectDescriptionThree'] = "click here to continue";
+$_LANG['downloadLoginRequiredTagline'] = "Please login to access the requested file download";
+
+$_LANG['orderForm']['year'] = "Year";
+$_LANG['orderForm']['years'] = "Years";
+$_LANG['orderForm']['domainOrKeyword'] = "Enter a domain or keyword";
+$_LANG['orderForm']['searching'] = "Searching";
+$_LANG['orderForm']['domainIsUnavailable'] = "<strong>:domain</strong> is unavailable";
+$_LANG['orderForm']['add'] = "Add";
+$_LANG['orderForm']['suggestedDomains'] = "Suggested Domains";
+$_LANG['orderForm']['generatingSuggestions'] = "Generating suggestions for you";
+$_LANG['orderForm']['addHosting'] = "Add Web Hosting";
+$_LANG['orderForm']['chooseFromRange'] = "Choose from a range of web hosting packages";
+$_LANG['orderForm']['packagesForBudget'] = "We have packages designed to fit every budget";
+$_LANG['orderForm']['exploreNow'] = "Explore packages now";
+$_LANG['orderForm']['transferToUs'] = "Transfer your domain to us";
+$_LANG['orderForm']['transferExtend'] = "Transfer now to extend your domain by 1 year!";
+$_LANG['orderForm']['transferDomain'] = "Transfer a domain";
+$_LANG['orderForm']['extendExclusions'] = "Excludes certain TLDs and recently renewed domains";
+$_LANG['orderForm']['singleTransfer'] = "Single domain transfer";
+$_LANG['orderForm']['enterDomain'] = "Please enter your domain";
+$_LANG['orderForm']['authCode'] = "Authorization Code";
+$_LANG['orderForm']['authCodePlaceholder'] = "Epp Code / Auth Code";
+$_LANG['orderForm']['authCodeTooltip'] = "To initiate a transfer you will need to obtain the authorization code from your current registrar. These can often be referred to as either the epp code or auth code. They act as a password and are unique to the domain name.";
+$_LANG['orderForm']['help'] = "Help";
+$_LANG['orderForm']['required'] = "Required";
+
+$_LANG['orderForm']['checkingAvailability'] = "Checking availability";
+$_LANG['orderForm']['verifyingTransferEligibility'] = "Verifying transfer eligibility";
+$_LANG['orderForm']['verifyingDomain'] = "Verifying your domain selection";
+$_LANG['orderForm']['transferEligible'] = "Your domain is eligible for transfer";
+$_LANG['orderForm']['transferUnlockBeforeContinuing'] = "Please ensure you have unlocked your domain at your current registrar before continuing.";
+$_LANG['orderForm']['transferNotEligible'] = "Not Eligible for Transfer";
+$_LANG['orderForm']['transferNotRegistered'] = "The domain you entered does not appear to be registered.";
+$_LANG['orderForm']['trasnferRecentlyRegistered'] = "If the domain was registered recently, you may need to try again later.";
+$_LANG['orderForm']['transferAlternativelyRegister'] = "Alternatively, you can perform a search to register this domain.";
+$_LANG['orderForm']['domainInvalid'] = "Invalid domain name provided";
+$_LANG['orderForm']['domainInvalidCheckEntry'] = "Please check your entry and try again.";
+$_LANG['orderForm']['domainPriceRegisterLabel'] = "Continue to register this domain for";
+$_LANG['orderForm']['domainPriceTransferLabel'] = "Transfer to us and extend by 1 year* for";
+
+$_LANG['change'] = "Change";
+
+$_LANG['filemanagement']['nofileuploaded'] = "No file uploaded.";
+$_LANG['filemanagement']['invalidname'] = "Valid filenames contain only alpha-numeric, dot, hyphen and underscore characters.";
+$_LANG['filemanagement']['couldNotSaveFile'] = "Could not save uploaded file.";
+$_LANG['filemanagement']['checkPermissions'] = "Please check permissions.";
+$_LANG['filemanagement']['checkAvailableDiskSpace'] = "Please check available disk space.";
+$_LANG['filemanagement']['fileAlreadyExists'] = "File already exists.";
+$_LANG['filemanagement']['noUniqueName'] = "Unable to find a unique filename.";
+
+$_LANG['cartSimpleCaptcha'] = "Please enter the code shown below";
+
+$_LANG['clientHomePanels']['showingRecent100'] = "Showing the most recent 100 records";
+$_LANG['orderForm']['domainLetterOrNumber'] = "Domains must begin with a letter or a number";
+$_LANG['orderForm']['domainLengthRequirements'] = " and be between <span class=\"min-length\"></span> and <span class=\"max-length\"></span> characters in length";
+
+$_LANG['clientareatransferredaway'] = "Transferred Away";
+$_LANG['clientareacompleted'] = "Completed";
+$_LANG['domainContactUs'] = "Contact Us";
+
+$_LANG['orderForm']['shortPerYear'] = "/:yearsyr";
+$_LANG['orderForm']['shortPerYears'] = "/:yearsyrs";
+
+$_LANG['domainCheckerSalesGroup']['sale'] = "Sale";
+$_LANG['domainCheckerSalesGroup']['hot'] = "Hot";
+$_LANG['domainCheckerSalesGroup']['new'] = "New";
+
+$_LANG['pricing']['browseExtByCategory'] = "Browse extensions by category";
+$_LANG['pricing']['register'] = "New Price";
+$_LANG['pricing']['transfer'] = "Transfer";
+$_LANG['pricing']['renewal'] = "Renewal";
+$_LANG['pricing']['selectExtCategory'] = "Please choose a category from above.";
+
+$_LANG['navStore'] = "Store";
+$_LANG['navBrowseProductsServices'] = "Browse All";
+
+$_LANG['navWebsiteSecurity'] = "Website & Security";
+$_LANG['navMarketConnectService']['symantec'] = "SSL Certificates";
+$_LANG['navMarketConnectService']['weebly'] = "Website Builder";
+$_LANG['navMarketConnectService']['spamexperts'] = "E-mail Services";
+
+$_LANG['store']['emailServices']['title'] = "E-mail Services";
+$_LANG['store']['ssl']['title'] = "SSL Certificates";
+$_LANG['store']['ssl']['dv']['title'] = "Domain Validated SSL";
+$_LANG['store']['ssl']['ov']['title'] = "Organization Validation SSL";
+$_LANG['store']['ssl']['ev']['title'] = "Extended Validation SSL";
+$_LANG['store']['ssl']['wildcard']['title'] = "Wildcard SSL";
+$_LANG['store']['websiteBuilder']['title'] = "Website Builder";
+$_LANG['store']['configure']['configureProduct'] = "Configure Product";
+
+$_LANG['store']['ssl']['dv']['tagline'] = "Secure your website in just a few minutes!";
+$_LANG['store']['ssl']['dv']['descriptionTitle'] = "What is Standard DV SSL?";
+$_LANG['store']['ssl']['dv']['descriptionContent'] = "<p>Domain Validation certificates offer an economical and quick way to implement SSL to your website. Domain Validated certificates verify you own the domain, but do not perform any additional organization level validation.</p><p>Domain Validated certificates are ideal for personal websites, blogs and social media, or any sites that are not transmitting private and confidential information.  A Domain Validated certificate activates the browser padlock and enables the use of https to assure your website visitors and customers that you take their privacy seriously.</p>";
+
+$_LANG['store']['ssl']['ov']['tagline'] = "High assurance SSL shows website visitors your authenticated identity";
+$_LANG['store']['ssl']['ov']['descriptionTitle'] = "What is Organization Validation SSL?";
+$_LANG['store']['ssl']['ov']['descriptionContent'] = "<p>Organization Validated SSL Certificates provide instant identity confirmation and strong SSL protection for your website and business.</p><p>OV SSL is an organization validated certificate that gives your website a step up in credibility over domain validated SSL Certificates. It activates the browser padlock and https, shows your corporate identity, and assures your customers that you take security very seriously. Site visitors can verify that the website is operated by a legitimate company and is not an imposter site.</p>";
+
+$_LANG['store']['ssl']['ev']['tagline'] = "Activate the green address bar for the highest trust and conversions";
+$_LANG['store']['ssl']['ev']['descriptionTitle'] = "What is Extended Validation SSL?";
+$_LANG['store']['ssl']['ev']['descriptionContent'] = "<p>EV SSL is an Extended Validation Certificate, the highest class of SSL available today and gives more credibility and trust to your website compared to using an organization or domain validated SSL Certificate.</p><p>Extended Validation SSL activates the green address bar and displays your company or organization name in the browser address bar. These prominent visual security indicators let visitors know that extra steps were taken to confirm the site they're visiting, increasing user trust in your website and its credibility – this is why most large companies and organizations choose EV certificates.</p>";
+
+$_LANG['store']['ssl']['wildcard']['tagline'] = "Secure unlimited subdomains on a single certificate.";
+$_LANG['store']['ssl']['wildcard']['descriptionTitle'] = "What is a Wildcard SSL Certificate?";
+$_LANG['store']['ssl']['wildcard']['descriptionContent'] = "<p>Wildcard SSL allows you to secure an unlimited number of subdomains on a single certificate. It’s a great solution for anyone who hosts or manages multiple sites or pages that exist on the same domain. The one-time cost of the certificate covers you for additional subdomains you may add in the future.</p><p>Unlike a standard SSL Certificate that is issued to a single Fully Qualified Domain Name only, e.g. www.yourdomain.com, which means it can only be used to secure the exact domain to which it has been issued, a Wildcard SSL Certificate is issued to *.yourdomain.com, where the asterisk represents all possible subdomains.</p><p>Wildcard SSL is an option available for DV and OV SSL Certificates.</p>";
+
+$_LANG['store']['websiteBuilder']['headline'] = "Building a Website Has Never Been Easier";
+$_LANG['store']['websiteBuilder']['tagline'] = "Create the perfect site with powerful drag and drop tools";
+$_LANG['store']['websiteBuilder']['introduction'] = "Weebly’s drag and drop website builder makes it easy to create a powerful, professional website without any technical skills. Over 40 million entrepreneurs and small businesses have already used Weebly to build their online presence with a website, blog or store.";
+
+$_LANG['store']['emailServices']['headline'] = "Email Security, Built for You";
+$_LANG['store']['emailServices']['tagline'] = "Take back control of your inbox";
+$_LANG['store']['emailServices']['blockSpamHeadline'] = "Block nearly 100% of viruses, malware and spam before they ever reach your inbox";
+
+$_LANG['navManageSsl'] = "Manage SSL Certificates";
+
+$_LANG['invoicesPaymentPending'] = "Payment Pending";
+
+$_LANG['ssl']['changeApproverEmail'] = "Change Approver Email";
+$_LANG['ssl']['reissueCertificate'] = "Reissue Certificate";
+$_LANG['ssl']['retrieveCertificate'] = "Retrieve Certificate";
+
+$_LANG['upgradeCredit'] = "Upgrade Credit";
+$_LANG['upgradeCreditDescription'] = "Calculation based on :daysRemaining unused days of :totalDays totals days in the current billing cycle.";
+
+$_LANG['orderForm']['domainExtensionTransferNotSupported'] = "Your domain is not supported for transfer to us at this time. Please try another domain.";
+$_LANG['orderForm']['domainExtensionTransferPricingNotConfigured'] = "Your domain is not eligible for transfer to us. Please try another domain.";
+
+$_LANG['remoteAuthn']['success'] = "Success!";
+$_LANG['remoteAuthn']['errorExclamation'] = "Error!";
+$_LANG['remoteAuthn']['error'] = "Error";
+$_LANG['remoteAuthn']['linkInitiated'] = "Link Initiated!";
+$_LANG['remoteAuthn']['areYouSure'] = "Are you sure?";
+$_LANG['remoteAuthn']['yesUnlinkIt'] = "Yes, unlink it!";
+$_LANG['remoteAuthn']['unlinked'] = "Unlinked!";
+$_LANG['remoteAuthn']['unavailable'] = "is unavailable at this time. Please try again later.";
+$_LANG['remoteAuthn']['connectError'] = "We were unable to connect your account. Please contact your system administrator.";
+$_LANG['remoteAuthn']['completeSignIn'] = "Please complete sign in with your chosen service provider.";
+$_LANG['remoteAuthn']['redirecting'] = "Automatic sign-in successful! Redirecting...";
+$_LANG['remoteAuthn']['accountNowLinked'] = "Your account is now linked with your :displayName account.";
+$_LANG['remoteAuthn']['oneTimeAuthRequired'] = "Please complete sign in to associate this service with your existing account. You will only have to do this once.";
+$_LANG['remoteAuthn']['completeRegistrationForm'] = "Please complete the registration form below.";
+$_LANG['remoteAuthn']['completeNewAccountForm'] = "Please complete your new account information.";
+$_LANG['remoteAuthn']['linkedToAnotherClient'] = "This account is already connected to an existing account with us. Please choose a different account at the third party authentication provider.";
+$_LANG['remoteAuthn']['alreadyLinkedToYou'] = "This account is already connected to your account with us. Please choose a different account at the third party authentication provider.";
+$_LANG['remoteAuthn']['saveTimeByLinking'] = "Save time by signing up using an existing account with any of the services below.";
+$_LANG['remoteAuthn']['unlinkDesc'] = "This permanently unlinks the authorized account.";
+$_LANG['remoteAuthn']['mayHaveMultipleLinks'] = "Connect your account with any of the services below to simplify your sign-in experience. We only use this information to verify your account and will never post on your behalf.";
+$_LANG['remoteAuthn']['titleSignUpVerb'] = "Sign Up";
+$_LANG['remoteAuthn']['titleOr'] = "Or";
+$_LANG['remoteAuthn']['titleLinkedAccounts'] = "Linked Accounts";
+$_LANG['remoteAuthn']['provider'] = "Provider";
+$_LANG['remoteAuthn']['name'] = "Name";
+$_LANG['remoteAuthn']['emailAddress'] = "Email Address";
+$_LANG['remoteAuthn']['actions'] = "Actions";
+$_LANG['remoteAuthn']['noLinkedAccounts'] = "No linked accounts found";
+$_LANG['remoteAuthn']['signInWith'] = "Sign in with :provider";
+$_LANG['remoteAuthn']['connectWith'] = "Connect with :provider";
+$_LANG['remoteAuthn']['signUpWith'] = "Sign Up with :provider";
+
+$_LANG['unlink'] = "Unlink";
+
+$_LANG['invoicePaymentSuccessAwaitingNotify'] = "Thank you for completing the payment process. We are awaiting notification to confirm the payment you just made. We will send you an email confirmation as soon as this has been received.";
+
+$_LANG['errorPage']['404']['title'] = "Oops!";
+$_LANG['errorPage']['404']['subtitle'] = "We couldn't find that page";
+$_LANG['errorPage']['404']['description'] = "Please try navigating using the options below.";
+$_LANG['errorPage']['404']['home'] = "Homepage";
+$_LANG['errorPage']['404']['submitTicket'] = "Contact Support";
+
+$_LANG['creditCard']['removeDescription'] = "Are you sure you wish to remove your credit card details?";
+
+$_LANG['marketConnect']['weebly']['ftpHost'] = "FTP Host";
+$_LANG['marketConnect']['weebly']['ftpUsername'] = "FTP Username";
+$_LANG['marketConnect']['weebly']['ftpPassword'] = "FTP Password";
+$_LANG['marketConnect']['weebly']['ftpPath'] = "FTP Path";
+$_LANG['marketConnect']['weebly']['updateFtp'] = "Update FTP Credentials";
+$_LANG['marketConnect']['weebly']['manage'] = "Login to Weebly";
+
+$_LANG['domainChecker']['contactSupport'] = "Contact Support to Purchase";
+
+$_LANG['cart']['availableCreditBalance'] = "Your available credit balance is :amount.";
+$_LANG['cart']['applyCreditAmount'] = "Apply <span>:amount</span> from my credit balance to this order and I will pay the remaining amount via the payment method selected below.";
+$_LANG['cart']['applyCreditAmountNoFurtherPayment'] = "Apply <span>:amount</span> from my credit balance to this order. No further payment will be due.";
+$_LANG['cart']['applyCreditSkip'] = "Do not apply any credit from my credit balance to this order. I will pay for it using the payment method selected below.";
+////////// End of catalan language file.  Do not place any translation strings below this line!

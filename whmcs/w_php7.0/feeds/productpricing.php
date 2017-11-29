@@ -1,5 +1,7 @@
 <?php
 
+use WHMCS\Application;
+
 require("../init.php");
 
 /*
@@ -10,14 +12,14 @@ require("../init.php");
 <script language="javascript" src="feeds/productpricing.php?pid=5&currency=2"></script>
 
 */
-    $whmcs = WHMCS_Application::getInstance();
+    $whmcs = Application::getInstance();
     $pid = $whmcs->get_req_var('pid');
     $currencyid = $whmcs->get_req_var('currencyid');
 
     // Verify user input for pid exists, is numeric, and as is a valid id
     if (is_numeric($pid)) {
         $result = select_query("tblproducts", "", array("id" => $pid));
-        $data = mysqli_fetch_array($result);
+        $data = mysql_fetch_array($result);
         $pid = $data['id'];
         $paytype = $data['paytype'];
     } else {
@@ -45,7 +47,7 @@ require("../init.php");
     $currencyid = $currency['id'];
 
     $result = select_query("tblpricing","",array("type"=>"product","currency"=>$currencyid,"relid"=>$pid));
-    $data = mysqli_fetch_array($result);
+    $data = mysql_fetch_array($result);
     $msetupfee = $data['msetupfee'];
     $qsetupfee = $data['qsetupfee'];
     $ssetupfee = $data['ssetupfee'];
@@ -59,9 +61,9 @@ require("../init.php");
     $biennially = $data['biennially'];
     $triennially = $data['triennially'];
 
-    $systemurl = ($CONFIG['SystemSSLURL']) ? $CONFIG['SystemSSLURL'] : $CONFIG['SystemURL'];
+    $systemurl = App::getSystemUrl();
 
-    $output = '<form method="post" action="'.$systemurl.'/cart.php?a=add&pid='.$pid.'">';
+    $output = '<form method="post" action="' . $systemurl . 'cart.php?a=add&pid=' . $pid . '">';
 
     if ($paytype=="free") {
 
@@ -124,5 +126,3 @@ function widgetoutput($value) {
     echo "document.write('".addslashes($value)."');";
     exit;
 }
-
-?>

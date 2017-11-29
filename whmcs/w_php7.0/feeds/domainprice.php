@@ -1,5 +1,7 @@
 <?php
 
+use WHMCS\Application;
+
 require("../init.php");
 
 /*
@@ -10,7 +12,7 @@ require("../init.php");
 <script language="javascript" src="feeds/domainprice.php?tld=.com&type=register&regperiod=1&currency=1&format=1"></script>
 
 */
-$whmcs = WHMCS_Application::getInstance();
+$whmcs = Application::getInstance();
 
 $tld = $whmcs->get_req_var('tld');
 $type = $whmcs->get_req_var('type');
@@ -22,7 +24,7 @@ if (!is_numeric($regperiod) || $regperiod < 1) {
 }
 
 $result = select_query("tbldomainpricing","id",array("extension"=>$tld));
-$data = mysqli_fetch_array($result);
+$data = mysql_fetch_array($result);
 $did = $data['id'];
 
 $currency = ($currency) ? getCurrency('',$currency) : getCurrency();
@@ -34,7 +36,7 @@ if (!in_array($type, $validDomainActionRequests)) {
 }
 
 $result = select_query("tblpricing","msetupfee,qsetupfee,ssetupfee,asetupfee,bsetupfee,tsetupfee,monthly,quarterly,semiannually,annually,biennially,triennially",array("type"=>"domain".$type,"currency"=>$currency['id'],"relid"=>$did));
-$data = mysqli_fetch_array($result);
+$data = mysql_fetch_array($result);
 
 if ($regperiod < 6) {
     $regperiod = $regperiod - 1;
@@ -47,5 +49,3 @@ if ($format) {
 }
 
 echo "document.write('".$price."');";
-
-?>

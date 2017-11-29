@@ -13,7 +13,7 @@ if ( !isset($_SESSION["uid"]) && !isset($_SESSION['adminid']) ) {
 
 $GATEWAY = array();
 $gwresult = select_query("tblpaymentgateways","",array("gateway"=>"boleto"));
-while ($data = mysqli_fetch_array($gwresult)) {
+while ($data = mysql_fetch_array($gwresult)) {
     $gVgwsetting = $data["setting"];
     $gVgwvalue = $data["value"];
     $GATEWAY[$gVgwsetting] = $gVgwvalue;
@@ -21,7 +21,7 @@ while ($data = mysqli_fetch_array($gwresult)) {
 if (!in_array($GATEWAY['banco'],array('banestes','bb','bradesco','cef','hsbc','itau','nossacaixa','real','unibanco'))) exit;
 
 $result = select_query("tblinvoices","",array("id"=>(int)$invoiceid));
-$data = mysqli_fetch_array($result);
+$data = mysql_fetch_array($result);
 $id = $data["id"];
 $userid = $data["userid"];
 $date = $data["date"];
@@ -60,9 +60,9 @@ $dadosboleto["data_processamento"] = date("d/m/Y");
 $dadosboleto["valor_boleto"] = $valor_boleto;
 
 // DADOS DO SEU CLIENTE
-$dadosboleto["sacado"] = $clientsdetails["firstname"]." ".$clientsdetails["lastname"];
+$dadosboleto["sacado"] = $clientsdetails["firstname"]." ".$clientsdetails["lastname"]; 
 $dadosboleto["endereco1"] = $clientsdetails["address1"];
-$dadosboleto["endereco2"] = $clientsdetails["city"].", ".$clientsdetails["state"].", ".$clientsdetails["postcode"];
+$dadosboleto["endereco2"] = $clientsdetails["city"].", ".$clientsdetails["state"].", ".$clientsdetails["postcode"]; 
 
 // INFORMACOES PARA O CLIENTE
 // The information below needs to be configurable in the admin, it's some optional information for client's receipt (top portion of the boleto and intructions for cashier in the boleto itself.
@@ -77,8 +77,8 @@ $dadosboleto["instrucoes4"] = "&nbsp; Emitido pelo sistema Projeto BoletoPhp - w
 // DADOS OPCIONAIS DE ACORDO COM O BANCO OU CLIENTE
 $dadosboleto["quantidade"] = "";
 $dadosboleto["valor_unitario"] = "";
-$dadosboleto["aceite"] = "NÃO"; // FIELD NAME IN ADMIN: Aceite (SIM ou NÃO)
-$dadosboleto["uso_banco"] = "";
+$dadosboleto["aceite"] = "NÃO"; // FIELD NAME IN ADMIN: Aceite (SIM ou NÃO)       
+$dadosboleto["uso_banco"] = "";     
 $dadosboleto["especie"] = "R$";
 $dadosboleto["especie_doc"] = "DM"; // FIELD NAME IN ADMIN: Espécie Doc
 $dadosboleto["carteira"] = "SR";  // Each bank has its own. Needs to be configurable. FIELD NAME IN ADMIN: Carteira
@@ -87,7 +87,7 @@ $dadosboleto["carteira"] = "SR";  // Each bank has its own. Needs to be configur
 // This will be used for all banks
 $dadosboleto["agencia"] = $GATEWAY["agencia"]; // FIELD NAME IN ADMIN: Agência (sem o dígito)
 $dadosboleto["conta"] = $GATEWAY["conta"];  // FIELD NAME IN ADMIN: Nº da conta (sem o dígito)
-$dadosboleto["conta_cedente_dv"] = $GATEWAY["conta_cedente_dv"]; // FIELD NAME IN ADMIN: Dígito da conta
+$dadosboleto["conta_cedente_dv"] = $GATEWAY["conta_cedente_dv"]; // FIELD NAME IN ADMIN: Dígito da conta 
 
 // DADOS PERSONALIZADOS - Personalized fields for each bank
 // BANCO DO BRASIL - boleto_bb.php
@@ -98,7 +98,7 @@ $dadosboleto["variacao_carteira"] = "-019";  // FIELD NAME IN ADMIN: Variação 
 $dadosboleto["formatacao_convenio"] = "7"; // // FIELD NAME IN ADMIN: Formatação do Convênio (8 p/Convênio c/8 dígitos, 7 p/Convênio c/7 dígitos, 6 p/Convênio c/6 dígitos)
 $dadosboleto["formatacao_nosso_numero"] = "2"; // FIELD NAME IN ADMIN: Formatação do Nosso Número (Apenas p/Convênio c/6 dígitos: informe 1 para Nosso Número de até 5 dígitos ou 2 para Nosso Número de até 17 dígitos)
 
-// DADOS PERSONALIZADOS - BANESTES - boleto_banestes.php
+// DADOS PERSONALIZADOS - BANESTES - boleto_banestes.php 
 $dadosboleto["tipo_cobranca"] = "2";  // FIELD NAME IN ADMIN: Tipo de cobrança (2- Sem registro; 3- Caucionada; 4,5,6 e 7- Com registro)
 
 // DADOS PERSONALIZADOS - BRADESCO - boleto_bradesco.php
@@ -114,8 +114,8 @@ $dadosboleto["inicio_nosso_numero"] = $invoiceid;  // It's not the invoice ID. I
 // DADOS PERSONALIZADOS - HSBC - boleto_hsbc.php
 $dadosboleto["codigo_cedente"] = "1122334"; // FIELD NAME IN ADMIN: Código do Cedente (Somente 7 digitos)
 
-// DADOS PERSONALIZADOS - NOSSA CAIXA - boleto_nossacaixa.php
-$dadosboleto["conta_cedente"] = "001131";  // Same as $dadosboleto["conta"] = $GATEWAY["conta"]
+// DADOS PERSONALIZADOS - NOSSA CAIXA - boleto_nossacaixa.php 
+$dadosboleto["conta_cedente"] = "001131";  // Same as $dadosboleto["conta"] = $GATEWAY["conta"] 
 $dadosboleto["conta_cedente_dv"] = "1"; // Same as $dadosboleto["conta_dv"]
 $dadosboleto["modalidade_conta"] = "04";  // FIELD NAME IN ADMIN: Modalidade da conta
 

@@ -15,7 +15,11 @@
 
 {else}
 
-    <form method="post" action="creditcard.php" class="form-horizontal" role="form">
+    <script>
+        var stateNotRequired = true;
+    </script>
+    <script type="text/javascript" src="{$BASE_PATH_JS}/StatesDropdown.js"></script>
+    <form id="frmPayment" method="post" action="creditcard.php" class="form-horizontal" role="form">
         <input type="hidden" name="action" value="submit" />
         <input type="hidden" name="invoiceid" value="{$invoiceid}" />
 
@@ -25,6 +29,8 @@
                 {if $errormessage}
                     {include file="$template/includes/alert.tpl" type="error" errorshtml=$errormessage}
                 {/if}
+
+                <div class="alert alert-danger text-center gateway-errors hidden"></div>
 
                 <div class="form-group">
                     <div class="col-sm-8 col-sm-offset-4">
@@ -41,12 +47,12 @@
                     </div>
                 </div>
                 <div class="form-group{if $userDetailsValidationError} hidden{/if}" id="billingAddressSummary">
-                    <label for="cctype" class="col-sm-4 control-label">Billing Address</label>
+                    <label for="cctype" class="col-sm-4 control-label">{$LANG.billingAddress}</label>
                     <div class="col-sm-6">
-                        {if $clientsdetails.companyname}{$clientsdetails.companyname}{else}{$firstname} {$lastname}{/if} <button type="button" id="btnEditBillingAddress" onclick="editBillingAddress()" class="btn btn-default btn-sm"{if $cardOnFile} disabled="disabled"{/if}><i class="fa fa-edit"></i> Change</button><br />
-                        {$clientsdetails.address1}{if $clientsdetails.address2}, {$clientsdetails.address2}{/if}<br />
-                        {$clientsdetails.city}, {$clientsdetails.state}, {$clientsdetails.postcode}<br />
-                        {$clientsdetails.countryname}
+                        {if $companyname}{$companyname}{else}{$firstname} {$lastname}{/if} <button type="button" id="btnEditBillingAddress" onclick="editBillingAddress()" class="btn btn-default btn-sm"{if $cardOnFile} disabled="disabled"{/if}><i class="fa fa-edit"></i> {$LANG.change}</button><br />
+                        {$address1}{if $address2}, {$address2}{/if}<br />
+                        {$city}, {$state}, {$postcode}<br />
+                        {$countryname}
                     </div>
                 </div>
                 <div class="form-group cc-billing-address{if !$userDetailsValidationError} hidden{/if}">
@@ -118,7 +124,7 @@
                 <div class="form-group cc-details{if !$addingNewCard} hidden{/if}">
                     <label for="inputCardNumber" class="col-sm-4 control-label">{$LANG.creditcardcardnumber}</label>
                     <div class="col-sm-7">
-                        <input type="number" name="ccnumber" id="inputCardNumber" size="30" value="{if $ccnumber}{$ccnumber}{/if}" autocomplete="off" class="form-control newccinfo" />
+                        <input type="tel" name="ccnumber" id="inputCardNumber" size="30" value="{if $ccnumber}{$ccnumber}{/if}" autocomplete="off" class="form-control newccinfo" />
                     </div>
                 </div>
                 {if $showccissuestart}
@@ -184,7 +190,10 @@
                 {/if}
                 <div class="form-group">
                     <div class="text-center">
-                        <input type="submit" class="btn btn-primary btn-lg" value="{$LANG.submitpayment}" onclick="this.value='{$LANG.pleasewait}'" id="btnSubmit" />
+                        <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit" value="{$LANG.submitpayment}">
+                            <span class="pay-text">{$LANG.submitpayment}</span>
+                            <span class="click-text hidden">{$LANG.pleasewait}</span>
+                        </button>
                     </div>
                 </div>
 

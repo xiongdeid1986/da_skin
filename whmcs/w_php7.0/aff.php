@@ -10,6 +10,8 @@
  * @link       http://www.whmcs.com/
  */
 
+use WHMCS\Cookie;
+
 define("CLIENTAREA",true);
 
 require("init.php");
@@ -17,8 +19,17 @@ require("init.php");
 // if affiliate id is present, update visitor count & set cookie
 if ($aff = $whmcs->get_req_var('aff')) {
     update_query("tblaffiliates",array("visitors"=>"+1"),array("id"=>$aff));
-    WHMCS_Cookie::set('AffiliateID',$aff,'3m');
+    Cookie::set('AffiliateID',$aff,'3m');
 }
+
+/**
+ * Executes when a user has clicked an affiliate referral link.
+ *
+ * @param int $affiliateId The unique id of the affiliate that the link belongs to
+ */
+run_hook("AffiliateClickthru", array(
+    'affiliateId' => $aff,
+));
 
 // if product id passed in, redirect to order form
 if ($pid = $whmcs->get_req_var('pid')) redir("a=add&pid=".(int)$pid,"cart.php");

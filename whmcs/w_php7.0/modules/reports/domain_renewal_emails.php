@@ -1,5 +1,7 @@
 <?php
 
+use WHMCS\Input\Sanitize;
+
 if (!defined("WHMCS")) {
     die("This file cannot be accessed directly");
 }
@@ -8,11 +10,11 @@ if (!function_exists('getRegistrarsDropdownMenu')) {
     require(ROOTDIR . '/includes/registrarfunctions.php');
 }
 
-$whmcs = WHMCS_Application::getInstance();
+$whmcs = App::self();
 
 $reportdata["title"] = $aInt->lang('reports', 'domainRenewalEmailsTitle');
 
-$userID = $whmcs->get_req_var('client');
+$userID = $whmcs->get_req_var('userid');
 $domain = $whmcs->get_req_var('domain');
 $dateFrom = $whmcs->get_req_var('dateFrom') ? toMySQLDate($whmcs->get_req_var('dateFrom')) : '';
 $dateTo = $whmcs->get_req_var('dateTo') ? toMySQLDate($whmcs->get_req_var('dateTo')) : '';
@@ -35,7 +37,7 @@ $reportHeader = '';
 if (!$print) {
     $reportHeader = <<<REPORT_HEADER
 <form method="post" action="reports.php?report=domain_renewal_emails">
-{$aInt->lang('fields', 'clientid')}: {$aInt->clientsDropDown($userID, '', 'client', true)}
+{$aInt->lang('fields', 'clientid')}: {$aInt->clientsDropDown($userID, '', 'userid', true)}
 {$aInt->lang('fields', 'domain')}: <input type="text" name="domain" value="{$domain}" size="30" />
 {$aInt->lang('fields', 'registrar')}: {$registrarList}
 {$aInt->lang('fields', 'daterange')}:
@@ -89,7 +91,7 @@ if ($userID) {
     $where['tblclients.id'] = (int) $userID;
 }
 if ($domain) {
-    $where['tbldomains.domain'] = WHMCS_Input_Sanitize::encode($domain);
+    $where['tbldomains.domain'] = Sanitize::encode($domain);
 }
 if ($dateFrom && !$dateTo) {
     $where['date'] = array('sqltype' => '>=', 'value' => str_replace('-', '', $dateFrom));
@@ -102,7 +104,7 @@ if ($registrar) {
 }
 
 $result = select_query($table, $fields, $where, $sort, $sortOrder, '', $join);
-while (($data = mysqli_fetch_array($result))) {
+while (($data = mysql_fetch_array($result))) {
     if ((($dateFrom && $dateFrom != '') && ($dateTo && $dateTo != ''))) {
         $from = new DateTime(str_replace('-', '', $dateFrom));
         $to = new DateTime(str_replace('-', '', $dateTo));

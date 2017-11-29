@@ -40,10 +40,19 @@ jQuery(document).ready(function() {
         },
     });
 
+    jQuery('.truncate').each(function () {
+        jQuery(this).attr('title', jQuery(this).text())
+            .attr('data-toggle', 'tooltip')
+            .attr('data-placement', 'bottom');
+    });
+
     // Default catch for all other popovers
     jQuery('[data-toggle="popover"]').popover({
         html: true
     });
+
+    // Enable tooltips
+    jQuery('[data-toggle="tooltip"]').tooltip();
 
     // Logic to dismiss popovers on click outside
     jQuery('body').on('click', function (e) {
@@ -67,6 +76,24 @@ jQuery(document).ready(function() {
             window.location.hash = '#' + urlFragment;
         }
     });
+
+    // Sidebar minimise/maximise
+    jQuery('.panel-minimise').click(function(e) {
+        e.preventDefault();
+        if (jQuery(this).hasClass('minimised')) {
+            jQuery(this).parents('.panel').find('.panel-body, .list-group').slideDown();
+            jQuery(this).removeClass('minimised');
+        } else {
+            jQuery(this).parents('.panel').find('.panel-body, .list-group').slideUp();
+            jQuery(this).addClass('minimised');
+        }
+    });
+
+    // Minimise sidebar panels by default on small devices
+    if (jQuery('.container').width() <= 720) {
+        jQuery('.panel-sidebar').find('.panel-body, .list-group').hide();
+        jQuery('.panel-sidebar').find('.panel-minimise').addClass('minimised');
+    }
 
     // Internal page tab selection handling via location hash
     if (jQuery(location).attr('hash').substr(1) != "") {
@@ -176,6 +203,74 @@ jQuery(document).ready(function() {
         jQuery.post("clientarea.php", jQuery("#frmSingleSignOn").serialize());
     });
 
+    // Single Sign-On call for Product/Service
+    jQuery('.btn-service-sso').on('click', function(e) {
+        e.preventDefault();
+        var button = jQuery(this);
+
+        var form = button.parents('form');
+
+        if (form.length == 0) {
+            form = button.find('form');
+        }
+        if (form.hasClass('disabled')) {
+            return;
+        }
+
+        button.find('.loading').removeClass('hidden').show().end()
+            .attr('disabled', 'disabled');
+        jQuery.post(
+            window.location.href,
+            form.serialize(),
+            function (data) {
+                button.find('.loading').hide().end().removeAttr('disabled');
+                form.find('.login-feedback').html('');
+                if (data.error) {
+                    form.find('.login-feedback').html(data.error);
+                }
+                if (data.redirect !== undefined && data.redirect.substr(0, 7) === 'window|') {
+                    window.open(data.redirect.substr(7), '_blank');
+                }
+            },
+            'json'
+        );
+    });
+    jQuery('.btn-sidebar-form-submit').on('click', function(e) {
+        e.preventDefault();
+        jQuery(this).find('.loading').removeClass('hidden').show().end()
+            .attr('disabled', 'disabled');
+
+        var form = jQuery(this).parents('form');
+
+        if (form.length == 0) {
+            form = jQuery(this).find('form');
+        }
+
+        if (form.length !== 0 && form.hasClass('disabled') === false) {
+            form.submit();
+        } else {
+            jQuery(this).find('.loading').hide().end().removeAttr('disabled');
+        }
+    });
+
+    // Email verification close
+    jQuery('.email-verification .btn.close').click(function(e) {
+        e.preventDefault();
+        jQuery.post('clientarea.php', 'action=dismiss-email-banner&token=' + csrfToken);
+        jQuery('.email-verification').hide();
+    });
+
+    // Back to top animated scroll
+    jQuery('.back-to-top').click(function(e) {
+        e.preventDefault();
+        jQuery('body,html').animate({scrollTop: 0}, 500);
+    });
+
+    // Prevent page scroll on language choose click
+    jQuery('.choose-language').click(function(e) {
+        e.preventDefault();
+    });
+
     /**
      * Code will loop through each element that has the class markdown-editor and
      * enable the Markdown editor.
@@ -230,8 +325,9 @@ jQuery(document).ready(function() {
                     url: 'clientarea.php',
                     async: false,
                     data: {token: csrfToken, action: 'parseMarkdown', content: originalContent},
+                    dataType: 'json',
                     success: function (data) {
-                        parsedContent = JSON.parse(data);
+                        parsedContent = data;
                     }
                 });
 
@@ -245,7 +341,6 @@ jQuery(document).ready(function() {
                         title: "Help",
                         hotkey: "Ctrl+F1",
                         btnClass: "btn open-modal",
-                        href: "submitticket.php?action=markdown",
                         icon: {
                             glyph: 'glyphicons glyphicons-question-sign',
                             fa: 'fa fa-question-circle',
@@ -253,17 +348,18 @@ jQuery(document).ready(function() {
                         },
                         callback: function(e) {
                             e.$editor.removeClass("md-fullscreen-mode");
-                        },
-                        additionalAttr: [
-                            {
-                                name: 'data-modal-title',
-                                value: markdownGuide
-                            }
-                        ]
+                        }
                     }]
                 }]
+            ],
+            hiddenButtons: [
+                'cmdImage'
             ]
         });
+
+        jQuery('button[data-handler="bootstrap-markdown-cmdHelp"]')
+            .attr('data-modal-title', markdownGuide)
+            .attr('href', 'submitticket.php?action=markdown');
 
         jQuery(this).closest("form").bind({
             submit: function() {
@@ -281,7 +377,7 @@ jQuery(document).ready(function() {
                 'token': csrfToken,
                 'action': 'resendVerificationEmail'
             }).done(function(data) {
-                jQuery('#btnResendVerificationEmail').prop('disabled', true);
+                jQuery('#btnResendVerificationEmail').html('Email Sent').prop('disabled', true);
             });
     });
 
@@ -296,7 +392,7 @@ jQuery(document).ready(function() {
     function parseMdeFooter(content, auto_save, saveText)
     {
         saveText = saveText || saving;
-        var pattern = /[a-zA-Z0-9_\u0392-\u03c9]+|[\u4E00-\u9FFF\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\uac00-\ud7af]+/g,
+        var pattern = /[^\s]+/g,
             m = [],
             word_count = 0,
             line_count = 0;
@@ -304,11 +400,13 @@ jQuery(document).ready(function() {
             m = content.match(pattern);
             line_count = content.split(/\\r\\n|\\r|\\n/).length;
         }
-        for(var i = 0; i < m.length; i++) {
-            if(m[i].charCodeAt(0) >= 0x4E00) {
-                word_count += m[i].length;
-            } else {
-                word_count += 1;
+        if (m) {
+            for (var i = 0; i < m.length; i++) {
+                if (m[i].charCodeAt(0) >= 0x4E00) {
+                    word_count += m[i].length;
+                } else {
+                    word_count += 1;
+                }
             }
         }
         return '<div class="small-font">lines: ' + line_count
@@ -330,6 +428,45 @@ jQuery(document).ready(function() {
             setTimeout(doCountdown, 1000);
         }
     }
+
+    // Two-Factor Activation Process Modal Handler.
+    var frmTwoFactorActivation = jQuery('input[name=2fasetup]').parent('form');
+    frmTwoFactorActivation.submit(function(e) {
+        e.preventDefault();
+        openModal(frmTwoFactorActivation.attr('action'), frmTwoFactorActivation.serialize(), 'Loading...');
+    });
+
+    jQuery('#frmPayment').find('#btnSubmit').on('click', function(){
+        jQuery(this).find('span').toggleClass('hidden');
+    });
+
+    // SSL Manage Action Button.
+    jQuery('.btn-resend-approver-email').click(function () {
+        jQuery.post(
+            jQuery(this).data('url'),
+            {
+                addonId: jQuery(this).data('addonid'),
+                serviceId: jQuery(this).data('serviceid'),
+            },
+            function(data) {
+                if (data.success == true) {
+                    jQuery('.alert-table-ssl-manage').addClass('alert-success').text('Approver Email Resent').removeClass('hidden');
+                } else {
+                    jQuery('.alert-table-ssl-manage').addClass('alert-danger').text('Error: ' + data.message).removeClass('hidden');
+                }
+            }
+        );
+    });
+
+    // DataTable data-driven auto object registration
+    WHMCS.ui.dataTable.register();
+
+    // Bootstrap Confirmation popup auto object registration
+    WHMCS.ui.confirmation.register();
+
+    jQuery('#frmReply').submit(function(e) {
+        jQuery('#frmReply').find('input[type="submit"]').addClass('disabled').prop('disabled', true);
+    });
 });
 
 /**
@@ -445,17 +582,6 @@ function selectChangeNavigate(select) {
  */
 function extraTicketAttachment() {
     jQuery("#fileUploadsContainer").append('<input type="file" name="attachments[]" class="form-control" />');
-}
-
-/**
- * Two-Factor Authentication dialog submit handler.
- */
-function dialogSubmit() {
-    jQuery('div#twofaactivation form').attr('method', 'post');
-    jQuery('div#twofaactivation form').attr('action', 'clientarea.php?action=security');
-    jQuery('div#twofaactivation form').attr('onsubmit', '');
-    jQuery('div#twofaactivation form').submit();
-    return true;
 }
 
 /**
@@ -595,17 +721,4 @@ function getTicketSuggestions() {
         lastTicketMsg = userMsg;
     }
     setTimeout('getTicketSuggestions()', 3000);
-}
-
-/**
- * Confirm that the contact should be deleted and redirect.
- *
- * @param {string} confirmQuestion
- * @param {int} contactId
- */
-function deleteContact(confirmQuestion, contactId)
-{
-    if (confirm(confirmQuestion)) {
-        window.location = 'clientarea.php?action=contacts&delete=true&id=' + contactId + '&token=' + csrfToken;
-    }
 }

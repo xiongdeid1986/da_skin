@@ -11,9 +11,9 @@
             </tr>
         {/foreach}
         </table>
-        <img src="images/spacer.gif" height="10" width="1" /><br />
-        <div align="center">
-            <input type="submit" value="{$_ADMINLANG.global.savechanges}" class="button">
+        <div class="btn-container">
+            <input type="submit" value="{$_ADMINLANG.global.savechanges}" class="btn btn-primary" />
+            <input type="reset" value="{$_ADMINLANG.global.cancelchanges}" class="btn btn-default" />
         </div>
     </form>
 {/if}

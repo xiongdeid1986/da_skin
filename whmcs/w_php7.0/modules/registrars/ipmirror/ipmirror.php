@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,1208 +32,743 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function ipmirror_getConfigArray()
-{
-    $configarray = array( 'Username' => array( 'FriendlyName' => "User name", 'Type' => 'text', 'Size' => '20', 'Description' => "Enter your ccTLDBox username here" ), 'Password' => array( 'FriendlyName' => 'Password', 'Type' => 'password', 'Size' => '20', 'Description' => "Enter your ccTLDBox password here" ), 'ccTLDBoxUrl' => array( 'FriendlyName' => "ccTLDBox URL", 'Type' => 'text', 'Size' => '35', 'Description' => "URL to ccTLDBox Registrar API", 'Default' => "https://<partnerdomain>/RAPI/" ), 'AllowRegContactChange' => array( 'FriendlyName' => "Allow Registrant Contact Change", 'Type' => 'yesno', 'Description' => "Tick to allow a client to change the registrant contact of a domain", 'Default' => TRUE ), 'AllowAdminContactChange' => array( 'FriendlyName' => "Allow Admin Contact Change", 'Type' => 'yesno', 'Description' => "Tick to allow a client to change the administrative contact of a domain", 'Default' => FALSE ), 'AllowTechContactChange' => array( 'FriendlyName' => "Allow Technical Contact Change", 'Type' => 'yesno', 'Description' => "Tick to allow a client to change the technical contact of a domain", 'Default' => FALSE ), 'AllowBillContactChange' => array( 'FriendlyName' => "Allow Billing Contact Change", 'Type' => 'yesno', 'Description' => "Tick to allow a client to change the billing contact of a domain", 'Default' => FALSE ), 'DefaultRegContactId' => array( 'FriendlyName' => "Default Registrant Contact ID", 'Type' => 'text', 'Size' => '20', 'Description' => "ID of default ccTLDBox registrant contact (optional)" ), 'DefaultAdminContactId' => array( 'FriendlyName' => "Default Admin Contact ID", 'Type' => 'text', 'Size' => '20', 'Description' => "ID of default ccTLDBox administrative contact (optional)" ), 'DefaultTechContactId' => array( 'FriendlyName' => "Default Technical Contact ID", 'Type' => 'text', 'Size' => '20', 'Description' => "ID of default ccTLDBox technical contact (optional)" ), 'DefaultBillContactId' => array( 'FriendlyName' => "Default Billing Contact ID", 'Type' => 'text', 'Size' => '20', 'Description' => "ID of default ccTLDBox billing contact (optional)" ), 'SingICCustomFld' => array( 'FriendlyName' => "Singapore IC custom field", 'Type' => 'text', 'Size' => '20', 'Description' => "Custom client field name for Singapore IC, required for Admin contact of .sg domains" ), 'ConnectionTimeout' => array( 'FriendlyName' => "Connection timeout", 'Type' => 'text', 'Size' => '2', 'Description' => "Connection to ccTLDBox timeout [seconds] (default=20)", 'Default' => 20 ), 'ExecutionTimeout' => array( 'FriendlyName' => "Execution timeout", 'Type' => 'text', 'Size' => '2', 'Description' => "Execution of ccTLDBox command timeout [seconds] (default=60)", 'Default' => 60 ) );
-    return $configarray;
-}
-function ipmirror_GetNameservers($params)
-{
-    return _ipmirror_GetNameservers($params);
-}
-function ipmirror_SaveNameservers($params)
-{
-    return _ipmirror_SaveNameservers($params);
-}
-function ipmirror_GetRegistrarLock($params)
-{
-    return _ipmirror_GetRegistrarLock($params);
-}
-function ipmirror_SaveRegistrarLock($params)
-{
-    return _ipmirror_SaveRegistrarLock($params);
-}
-function ipmirror_GetEmailForwarding($params)
-{
-    return _ipmirror_GetEmailForwarding($params);
-}
-function ipmirror_SaveEmailForwarding($params)
-{
-    return _ipmirror_SaveEmailForwarding($params);
-}
-function ipmirror_GetDNS($params)
-{
-    return _ipmirror_GetDNS($params);
-}
-function ipmirror_SaveDNS($params)
-{
-    return _ipmirror_SaveDNS($params);
-}
-function ipmirror_RegisterDomain($params)
-{
-    return _ipmirror_RegisterDomain($params);
-}
-function ipmirror_TransferDomain($params)
-{
-    return _ipmirror_TransferDomain($params);
-}
-function ipmirror_RenewDomain($params)
-{
-    return _ipmirror_RenewDomain($params);
-}
-function ipmirror_GetContactDetails($params)
-{
-    return _ipmirror_GetContactDetails($params);
-}
-function ipmirror_SaveContactDetails($params)
-{
-    return _ipmirror_SaveContactDetails($params);
-}
-function ipmirror_RegisterNameserver($params)
-{
-    return _ipmirror_RegisterNameserver($params);
-}
-function ipmirror_ModifyNameserver($params)
-{
-    return _ipmirror_ModifyNameserver($params);
-}
-function ipmirror_DeleteNameserver($params)
-{
-    return _ipmirror_DeleteNameserver($params);
-}
-function ipmirror_TransferSync($params)
-{
-    return _ipmirror_TransferSync($params);
-}
-function ipmirror_Sync($params)
-{
-    return _ipmirror_Sync($params);
-}
-function _ipmirror_init($params, $function)
-{
-    global $_IPMIRROR_CURR_FUNC;
-    global $_IPMIRROR_CONFIG;
-    $_IPMIRROR_CURR_FUNC = $function;
-    _ipmirror_initGlobals($params);
-    if( $_IPMIRROR_CONFIG['debugMode'] )
-    {
-        error_reporting(E_ALL);
-        $params['function'] = $function;
-        _ipmirror_printArray($params);
-    }
-}
-function _ipmirror_printArray($arr)
-{
-    foreach( $arr as $key => $value )
-    {
-        print_r($key);
-        print " => ";
-        print_r($value);
-        print "<br>\n";
-    }
-    print "<br>\n";
-}
-function _ipmirror_initGlobals($params)
-{
-    global $_IPMIRROR_CONFIG;
-    global $_IPMIRROR_ERR_MESS;
-    global $_IPMIRROR_CONTACT_HDRS;
-    global $_IPMIRROR_CONTACT_LBLS;
-    global $_IPMIRROR_SYNC;
-    $_IPMIRROR_CONFIG = array(  );
-    $_IPMIRROR_CONFIG['debugMode'] = FALSE;
-    $_IPMIRROR_CONFIG['module'] = basename(__FILE__, ".php");
-    $_IPMIRROR_CONFIG['isAdmin'] = $_IPMIRROR_SYNC || !empty($_SESSION['adminid']);
-    $_IPMIRROR_CONFIG['rapiUrl'] = $params['ccTLDBoxUrl'];
-    $_IPMIRROR_CONFIG['username'] = $params['Username'];
-    $_IPMIRROR_CONFIG['password'] = $params['Password'];
-    if( substr($_IPMIRROR_CONFIG['rapiURL'], 0 - 1) != '/' )
-    {
-        $_IPMIRROR_CONFIG['rapiURL'] .= '/';
-    }
-    $_IPMIRROR_CONFIG['connTimeout'] = empty($params['ConnectionTimeout']) ? 20 : $params['ConnectionTimeout'];
-    $_IPMIRROR_CONFIG['execTimeout'] = empty($params['ExecutionTimeout']) ? 60 : $params['ExecutionTimeout'];
-    $_IPMIRROR_CONFIG['allowRegContactChange'] = !empty($params['AllowRegContactChange']);
-    $_IPMIRROR_CONFIG['allowAdminContactChange'] = !empty($params['AllowAdminContactChange']);
-    $_IPMIRROR_CONFIG['allowTechContactChange'] = !empty($params['AllowTechContactChange']);
-    $_IPMIRROR_CONFIG['allowBillContactChange'] = !empty($params['AllowBillContactChange']);
-    $_IPMIRROR_CONFIG['showAllContactFlds'] = $_IPMIRROR_CONFIG['isAdmin'];
-    $_IPMIRROR_CONFIG['defRegContactId'] = $params['DefaultRegContactId'];
-    $_IPMIRROR_CONFIG['defAdminContactId'] = $params['DefaultAdminContactId'];
-    $_IPMIRROR_CONFIG['defTechContactId'] = $params['DefaultTechContactId'];
-    $_IPMIRROR_CONFIG['defBillContactId'] = $params['DefaultBillContactId'];
-    $_IPMIRROR_CONFIG['singICCustFld'] = $params['SingICCustomFld'];
-    $_IPMIRROR_CONFIG['autoCreateNs'] = TRUE;
-    $_IPMIRROR_CONFIG['zoneRecTypesDisp'] = array( 'A', 'CNAME', 'MX', 'TXT', 'redirect', 'cloak' );
-    $_IPMIRROR_CONFIG['zoneRecTypesWHMCS'] = array( 'A', 'CNAME', 'MX', 'TXT', 'URL', 'FRAME' );
-    $_IPMIRROR_CONFIG['defNsAddr'] = "10.1.1.1";
-    $_IPMIRROR_ERR_MESS = array( 'domain_already_reg' => "The domain is already registered", 'unknown_curl_error' => "Unknown CURL error" );
-    $_IPMIRROR_CONTACT_HDRS = array( 'Registrant', 'Administrative', 'Technical', 'Billing' );
-    $_IPMIRROR_CONTACT_LBLS = array( 'upd1' => array( 'ind' => 'Individual', 'org' => 'Organisation', 'id' => "Contact ID", 'type' => "Contact Type", 'rcbid' => "Comp. Reg. No.", 'icno' => "IC Number", 'company' => "Company Name", 'title' => 'Title', 'firstname' => "First Name", 'lastname' => "Last Name", 'address1' => "Address 1", 'address2' => "Address 2", 'city' => 'City', 'state' => 'State', 'country' => 'Country', 'postcode' => 'Postcode', 'phone' => "Phone Number", 'fax' => "Fax Number", 'email' => "Email Address" ), 'upd2' => array( 'firstname' => "First Name", 'lastname' => "Last Name", 'address1' => "Address 1", 'address2' => "Address 2", 'city' => 'City', 'state' => 'State', 'postcode' => 'Postcode', 'phone' => "Phone Number", 'email' => 'Email' ) );
-}
-function _ipmirror_callRapi($cmd, $params)
-{
-    global $_IPMIRROR_CONFIG;
-    global $_IPMIRROR_ERR_MSG;
-    global $_IPMIRROR_ERR_NO;
-    $param = '';
-    $first = true;
-    foreach( $params as $key => $value )
-    {
-        $param .= ($first ? '' : "&") . $key . "=" . rawurlencode($value);
-        $first = false;
-    }
-    $url = $_IPMIRROR_CONFIG['rapiUrl'] . $cmd . "?" . $param . "&loginID=" . $_IPMIRROR_CONFIG['username'] . "&password=" . $_IPMIRROR_CONFIG['password'];
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 1);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $_IPMIRROR_CONFIG['connTimeout']);
-    curl_setopt($ch, CURLOPT_TIMEOUT, $_IPMIRROR_CONFIG['execTimeout']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $output = curl_exec($ch);
-    if( $output === false || empty($output) )
-    {
-        $result = array( '0', curl_errno($ch), trim(curl_error($ch)) == '' ? $_IPMIRROR_ERR_MSG['unknown_curl_error'] : curl_error($ch) );
-        $resultString = implode(';', $result);
-    }
-    else
-    {
-        preg_match("/<BODY>(?:\\r\\n)*(.*)(?:\\r\\n)*<\\/BODY>/i", $output, $matches);
-        $resultString = $matches[1];
-        $result = explode(';', $resultString);
-        $last = array_pop($result);
-        if( !empty($result) && !empty($last) )
-        {
-            array_push($result, $last);
-        }
-        if( empty($result) )
-        {
-            $result = array( '0', $output );
-        }
-    }
-    curl_close($ch);
-    if( $_IPMIRROR_CONFIG['debugMode'] )
-    {
-        print $url . "<br><br>\n\n";
-        if( !empty($resultString) )
-        {
-            print $resultString . "<br><br>\n\n";
-        }
-    }
-    if( intval($result[0]) <= 0 )
-    {
-        $_IPMIRROR_ERR_NO = intval($result[0]);
-        $_IPMIRROR_ERR_MSG = implode('/', array_slice($result, 1));
-    }
-    else
-    {
-        $_IPMIRROR_ERR_NO = 1;
-        $_IPMIRROR_ERR_MSG = '';
-    }
-    logModuleCall($_IPMIRROR_CONFIG['module'], $cmd, $url, $resultString, $resultString, array( $_IPMIRROR_CONFIG['password'] ));
-    return $result;
-}
-function _ipmirror_getErrorMsg()
-{
-    global $_IPMIRROR_ERR_NO;
-    global $_IPMIRROR_ERR_MSG;
-    global $_IPMIRROR_CURR_FUNC;
-    if( $_IPMIRROR_ERR_NO != 1 )
-    {
-        $func = substr($_IPMIRROR_CURR_FUNC, 10);
-        return trim($func . "::" . $_IPMIRROR_ERR_NO . "::" . strtoupper($_IPMIRROR_ERR_MSG));
-    }
-    return '';
-}
-function _ipmirror_formatPhone($phone)
-{
-    if( empty($phone) )
-    {
-        return '';
-    }
-    return ltrim($phone, " +");
-}
-function _ipmirror_GetNameservers($params)
-{
-    _ipmirror_init($params, '_ipmirror_GetNameservers');
-    $values = array(  );
-    $result = _ipmirror_rapi_queryDomain($params['sld'] . "." . $params['tld']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-        return $values;
-    }
-    $values['ns1'] = $result[9];
-    $values['ns2'] = $result[10];
-    if( !empty($result[11]) )
-    {
-        $values['ns3'] = $result[11];
-    }
-    if( !empty($result[12]) )
-    {
-        $values['ns4'] = $result[12];
-    }
-    return $values;
-}
-function _ipmirror_SaveNameservers($params)
-{
-    global $_IPMIRROR_CONFIG;
-    _ipmirror_init($params, '_ipmirror_SaveNameservers');
-    $values = array(  );
-    if( $_IPMIRROR_CONFIG['autoCreateNs'] )
-    {
-        $error = _ipmirror_checkCreateNameservers($params);
-    }
-    else
-    {
-        $error = '';
-    }
-    if( empty($error) )
-    {
-        _ipmirror_rapi_changeDNS($params['sld'] . "." . $params['tld'], $params['ns1'], $params['ns2'], $params['ns3'], $params['ns4']);
-        $error = _ipmirror_geterrormsg();
-    }
-    if( !empty($error) )
-    {
-        $values['error'] = $error;
-    }
-    return $values;
-}
-function _ipmirror_RegisterNameserver($params)
-{
-    _ipmirror_init($params, '_ipmirror_RegisterNameserver');
-    $values = array(  );
-    _ipmirror_rapi_createHost($params['nameserver'], $params['ipaddress']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-    }
-    return $values;
-}
-function _ipmirror_ModifyNameserver($params)
-{
-    _ipmirror_init($params, '_ipmirror_ModifyNameserver');
-    $values = array(  );
-    _ipmirror_rapi_updateHost($params['nameserver'], $params['newipaddress']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-    }
-    return $values;
-}
-function _ipmirror_DeleteNameserver($params)
-{
-    _ipmirror_init($params, '_ipmirror_DeleteNameserver');
-    $values = array(  );
-    _ipmirror_rapi_deleteHost($params['nameserver']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-    }
-    return $values;
-}
-function _ipmirror_GetRegistrarLock($params)
-{
-    _ipmirror_init($params, '_ipmirror_GetRegistrarLock');
-    $result = _ipmirror_rapi_queryDomain($params['sld'] . "." . $params['tld']);
-    if( _ipmirror_geterrormsg() )
-    {
-        return 'unlocked';
-    }
-    return strtolower($result[2]);
-}
-function _ipmirror_SaveRegistrarLock($params)
-{
-    _ipmirror_init($params, '_ipmirror_SaveRegistrarLock');
-    $values = array(  );
-    _ipmirror_rapi_updateStatus($params['sld'] . "." . $params['tld'], strtoupper($params['lockenabled']) == 'LOCKED' ? 'LOCK' : 'UNLOCK');
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-    }
-    return $values;
-}
-function _ipmirror_GetEmailForwarding($params)
-{
-    _ipmirror_init($params, '_ipmirror_GetEmailForwarding');
-    $values = array(  );
-    $dName = $params['sld'] . "." . $params['tld'];
-    $zoneRecs = _ipmirror_getZoneRecords($dName);
-    if( !empty($zoneRecs['error']) )
-    {
-        return $values;
-    }
-    foreach( $zoneRecs as $zoneRec )
-    {
-        if( $zoneRec['type'] == 'email' )
-        {
-            $values[$zoneRec['id']]['prefix'] = $zoneRec['source'];
-            $values[$zoneRec['id']]['forwardto'] = $zoneRec['destination'];
-        }
-    }
-    session_start();
-    $_SESSION['_IPMIRROR_EMAIL_FWD'] = $values;
-    return $values;
-}
-function _ipmirror_SaveEmailForwarding($params)
-{
-    _ipmirror_init($params, '_ipmirror_SaveEmailForwarding');
-    $values = array(  );
-    $dName = $params['sld'] . "." . $params['tld'];
-    $recsOld = $_SESSION['_IPMIRROR_EMAIL_FWD'];
-    foreach( $params['prefix'] as $id => $newSource )
-    {
-        $newDestination = $params['forwardto'][$id];
-        if( empty($newDestination) && !empty($newSource) || empty($newSource) && !empty($newDestination) )
-        {
-            continue;
-        }
-        if( empty($recsOld[$id]) )
-        {
-            if( !empty($newSource) && !empty($newDestination) )
-            {
-                _ipmirror_rapi_createEmailForwardingRecord($dName, $newSource, $newDestination);
-                if( $error = _ipmirror_geterrormsg() )
-                {
-                    $values['error'] = $error;
-                    return $values;
-                }
-            }
-            continue;
-        }
-        if( empty($newSource) && empty($newDestination) )
-        {
-            _ipmirror_rapi_deleteEmailForwardingRecord($dName, $id);
-            if( $error = _ipmirror_geterrormsg() )
-            {
-                $values['error'] = $error;
-                return $values;
-            }
-            continue;
-        }
-        $oldSource = $recsOld[$id]['prefix'];
-        $oldDestination = $recsOld[$id]['forwardto'];
-        if( $newSource != $oldSource || $newDestination != $oldDestination )
-        {
-            _ipmirror_rapi_updateEmailForwardingRecord($dName, $id, $newSource, $newDestination);
-            if( $error = _ipmirror_geterrormsg() )
-            {
-                $values['error'] = $error;
-                return $values;
-            }
-        }
-    }
-    return $values;
-}
-function _ipmirror_GetDNS($params)
-{
-    global $_IPMIRROR_CONFIG;
-    _ipmirror_init($params, '_ipmirror_GetDNS');
-    $values = array(  );
-    $dName = $params['sld'] . "." . $params['tld'];
-    $zoneRecs = _ipmirror_getZoneRecords($dName);
-    if( !empty($zoneRecs['error']) )
-    {
-        return $values;
-    }
-    foreach( $zoneRecs as $zoneRec )
-    {
-        if( in_array($zoneRec['type'], $_IPMIRROR_CONFIG['zoneRecTypesDisp']) )
-        {
-            if( $zoneRec['type'] == 'redirect' )
-            {
-                $whmcsType = 'URL';
-            }
-            else
-            {
-                if( $zoneRec['type'] == 'cloak' )
-                {
-                    $whmcsType = 'FRAME';
-                }
-                else
-                {
-                    $whmcsType = $zoneRec['type'];
-                }
-            }
-            $values[] = array( 'id' => $zoneRec['id'], 'hostname' => $zoneRec['source'], 'type' => $whmcsType, 'address' => $zoneRec['destination'], 'priority' => $zoneRec['priority'] );
-        }
-    }
-    session_start();
-    $_SESSION['_IPMIRROR_HOST_RECORDS'] = $values;
-    return $values;
-}
-function _ipmirror_SaveDNS($params)
-{
-    global $_IPMIRROR_CONFIG;
-    _ipmirror_init($params, '_ipmirror_SaveDNS');
-    $values = array(  );
-    $dName = $params['sld'] . "." . $params['tld'];
-    $dnsRecsNew = $params['dnsrecords'];
-    $dnsRecsOld = $_SESSION['_IPMIRROR_HOST_RECORDS'];
-    $mxRecPriorities = array(  );
-    foreach( $dnsRecsOld as $dnsRecOld )
-    {
-        if( $dnsRecOld['type'] == 'MX' )
-        {
-            if( empty($mxRecPriorities[$dnsRecOld['hostname']]) )
-            {
-                $mxRecPriorities[$dnsRecOld['hostname']] = $dnsRecOld['priority'];
-            }
-            else
-            {
-                $mxRecPriorities[$dnsRecOld['hostname']] = max($mxRecPriorities[$dnsRecOld['hostname']], $dnsRecOld['priority']);
-            }
-        }
-    }
-    foreach( $dnsRecsNew as $i => $dnsRecNew )
-    {
-        if( !in_array($dnsRecNew['type'], $_IPMIRROR_CONFIG['zoneRecTypesWHMCS']) )
-        {
-            continue;
-        }
-        if( empty($dnsRecsOld[$i]) )
-        {
-            if( empty($dnsRecNew['address']) )
-            {
-                continue;
-            }
-            if( $dnsRecNew['type'] == 'MX' )
-            {
-                if( empty($mxRecPriorities[$dnsRecNew['hostname']]) )
-                {
-                    $priority = 20;
-                }
-                else
-                {
-                    $priority = min($mxRecPriorities[$dnsRecNew['hostname']] + 5, 250);
-                }
-                $mxRecPriorities[$dnsRecNew['hostname']] = $priority;
-            }
-            else
-            {
-                $priority = 0;
-            }
-            switch( $dnsRecNew['type'] )
-            {
-                case 'A':
-                case 'CNAME':
-                    break;
-                case 'MX':
-                    break;
-                case 'TXT':
-                    _ipmirror_rapi_createZoneRecord($dName, $dnsRecNew['type'], $dnsRecNew['hostname'], $priority, $dnsRecNew['address']);
-                    break;
-                case 'URL':
-                    _ipmirror_rapi_createWebForwardingRecord($dName, 'redirect', $dnsRecNew['hostname'], $dnsRecNew['address'], '', '', '');
-                    break;
-                case 'FRAME':
-                    _ipmirror_rapi_createWebForwardingRecord($dName, 'cloak', $dnsRecNew['hostname'], $dnsRecNew['address'], '', '', '');
-            }
-            if( $error = _ipmirror_geterrormsg() )
-            {
-                $values['error'] = $error;
-                return $values;
-            }
-            continue;
-            break;
-        }
-        $dnsRecOld = $dnsRecsOld[$i];
-        if( empty($dnsRecNew['hostname']) && empty($dnsRecNew['address']) )
-        {
-            if( $dnsRecNew['type'] == 'URL' || $dnsRecNew['type'] == 'FRAME' )
-            {
-                _ipmirror_rapi_deleteWebForwardingRecord($dName, $dnsRecOld['id']);
-            }
-            else
-            {
-                _ipmirror_rapi_deleteZoneRecord($dName, $dnsRecOld['id']);
-            }
-            if( $error = _ipmirror_geterrormsg() )
-            {
-                $values['error'] = $error;
-                return $values;
-            }
-            continue;
-        }
-        if( !empty($dnsRecNew['address']) && ($dnsRecNew['hostname'] != $dnsRecOld['hostname'] || $dnsRecNew['address'] != $dnsRecOld['address']) )
-        {
-            switch( $dnsRecNew['type'] )
-            {
-                case 'A':
-                case 'CNAME':
-                    break;
-                case 'MX':
-                    break;
-                case 'TXT':
-                    _ipmirror_rapi_updateZoneRecord($dName, $dnsRecOld['id'], $dnsRecNew['hostname'], $dnsRecOld['priority'], $dnsRecNew['address']);
-                    break;
-                case 'URL':
-                    _ipmirror_rapi_updateWebForwardingRecord($dName, $dnsRecOld['id'], 'redirect', $dnsRecNew['hostname'], $dnsRecNew['address'], '', '', '');
-                    break;
-                case 'FRAME':
-                    _ipmirror_rapi_updateWebForwardingRecord($dName, $dnsRecOld['id'], 'cloak', $dnsRecNew['hostname'], $dnsRecNew['address'], '', '', '');
-            }
-            if( $error = _ipmirror_geterrormsg() )
-            {
-                $values['error'] = $error;
-                return $values;
-            }
-            break;
-        }
-    }
-    return $values;
-}
-function _ipmirror_getZoneRecords($dName)
-{
-    $zoneRecs = array(  );
-    $result = _ipmirror_rapi_queryZone($dName);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $zoneRecs['error'] = $error;
-        return $zoneRecs;
-    }
-    $zoneRecIds = array_slice($result, 2);
-    foreach( $zoneRecIds as $zoneRecId )
-    {
-        $result = _ipmirror_rapi_queryZoneRecord($zoneRecId);
-        if( $error = _ipmirror_geterrormsg() )
-        {
-            continue;
-        }
-        $zoneRec['id'] = $zoneRecId;
-        $zoneRec['type'] = $result[2];
-        $zoneRec['source'] = $result[3];
-        $zoneRec['destination'] = $result[4];
-        $zoneRec['priority'] = empty($result[5]) ? 0 : $result[5];
-        $zoneRecs[] = $zoneRec;
-    }
-    return $zoneRecs;
-}
-function _ipmirror_RegisterDomain($params)
-{
-    _ipmirror_init($params, '_ipmirror_RegisterDomain');
-    return _ipmirror_createTransferDomain('C', $params);
-}
-function _ipmirror_TransferDomain($params)
-{
-    _ipmirror_init($params, '_ipmirror_TransferDomain');
-    return _ipmirror_createTransferDomain('T', $params);
-}
-function _ipmirror_createTransferDomain($mode, $params)
-{
-    global $_IPMIRROR_CONFIG;
-    global $_IPMIRROR_ERR_MESS;
-    $values = array(  );
-    $dName = $params['sld'] . "." . $params['tld'];
-    _ipmirror_rapi_queryDomain($dName);
-    $error = _ipmirror_geterrormsg();
-    if( empty($error) )
-    {
-        $values['error'] = $_IPMIRROR_ERR_MESS('domain_already_reg');
-        return $values;
-    }
-    foreach( array( 'Reg', 'Admin', 'Tech', 'Bill' ) as $contactCode )
-    {
-        $contactIDs[$contactCode] = _ipmirror_createContact($params, $contactCode);
-        if( $contactIDs[$contactCode]['contactId'] == FALSE )
-        {
-            $values['error'] = _ipmirror_geterrormsg();
-            foreach( $contactIDs as $contactData )
-            {
-                if( $contactData['contactId'] !== FALSE && !$contactData['hasDefault'] )
-                {
-                    _ipmirror_rapi_deleteContact($contactData['contactId']);
-                }
-            }
-            return $values;
-        }
-    }
-    if( $mode == 'C' )
-    {
-        if( $_IPMIRROR_CONFIG['autoCreateNs'] )
-        {
-            $error = _ipmirror_checkCreateNameservers($params);
-        }
-        else
-        {
-            $error = '';
-        }
-        if( empty($error) )
-        {
-            _ipmirror_rapi_createDomain($dName, $params['regperiod'], $contactIDs['Reg']['contactId'], $contactIDs['Admin']['contactId'], $contactIDs['Tech']['contactId'], $contactIDs['Bill']['contactId'], $params['ns1'], $params['ns2'], $params['ns3'], $params['ns4'], $params['idprotection']);
-            $error = _ipmirror_geterrormsg();
-        }
-    }
-    else
-    {
-        _ipmirror_rapi_transferIn($dName, $params['regperiod'], $params['transfersecret'], $contactIDs['Reg']['contactId'], $contactIDs['Admin']['contactId'], $contactIDs['Tech']['contactId'], $contactIDs['Bill']['contactId']);
-        $error = _ipmirror_geterrormsg();
-    }
-    if( !empty($error) )
-    {
-        $values['error'] = $error;
-        foreach( $contactIDs as $contactData )
-        {
-            if( $contactData['contactId'] !== FALSE && !$contactData['hasDefault'] )
-            {
-                _ipmirror_rapi_deleteContact($contactData['contactId']);
-            }
-        }
-    }
-    return $values;
-}
-function _ipmirror_createContact($params, $contactCode)
-{
-    global $_IPMIRROR_CONFIG;
-    $defContactId = _ipmirror_getClientDefContact($params['userid'], $contactCode);
-    if( empty($defContactId) )
-    {
-        $defContactId = $_IPMIRROR_CONFIG['def' . $contactCode . 'ContactId'];
-    }
-    if( !empty($defContactId) )
-    {
-        return array( 'contactId' => $defContactId, 'hasDefault' => TRUE );
-    }
-    $prefix = $contactCode == 'Reg' ? '' : 'admin';
-    $orgName = $params[$prefix . 'companyname'];
-    $title = "Mr.";
-    $firstName = $params[$prefix . 'firstname'];
-    $lastName = $params[$prefix . 'lastname'];
-    $street1 = $params[$prefix . 'address1'];
-    $street2 = $params[$prefix . 'address2'];
-    $city = $params[$prefix . 'city'];
-    $postalCode = $params[$prefix . 'postcode'];
-    $state = $params[$prefix . 'state'];
-    $country = $params[$prefix . 'country'];
-    $tel = _ipmirror_formatphone($params[$prefix . 'fullphonenumber']);
-    $fax = '';
-    $email = $params[$prefix . 'email'];
-    if( substr($params['tld'], 0 - 2) == 'sg' )
-    {
-        if( $contactCode == 'Reg' )
-        {
-            $type = $params['additionalfields']["Registrant Type"] == 'Individual' ? '2' : '1';
-            $rcbId = $params['additionalfields']["RCB Singapore ID"];
-        }
-        else
-        {
-            $type = '2';
-            $rcbId = _ipmirror_getClientCustFieldValue($params['userid'], $_IPMIRROR_CONFIG['singICCustFld']);
-        }
-    }
-    else
-    {
-        $type = empty($params[$prefix . 'companyname']) ? '2' : '1';
-        $rcbId = 'n/a';
-    }
-    $results = _ipmirror_rapi_createContact($type, $orgName, $rcbId, $title, $firstName, $lastName, $street1, $street2, $city, $postalCode, $state, $country, $tel, $fax, $email);
-    if( _ipmirror_geterrormsg() )
-    {
-        return array( 'contactId' => FALSE, 'hasDefault' => FALSE );
-    }
-    return array( 'contactId' => $results[2], 'hasDefault' => FALSE );
-}
-function _ipmirror_getClientDefContact($clientId, $contactCode)
-{
-    $fieldName = 'Default_' . $contactCode . '_Contact_Id';
-    return _ipmirror_getClientCustFieldValue($clientId, $fieldName);
-}
-function _ipmirror_getClientCustFieldValue($clientId, $fieldName)
-{
-    global $_IPMIRROR_CONFIG;
-    $fieldValue = '';
-    $table = 'tblcustomfields';
-    $fields = "tblcustomfieldsvalues.value";
-    $where = array( "tblcustomfields.fieldname" => $fieldName, "tblcustomfieldsvalues.relid" => $clientId );
-    $sort = '';
-    $sortorder = '';
-    $limits = '';
-    $join = "tblcustomfieldsvalues ON tblcustomfields.id=tblcustomfieldsvalues.fieldid";
-    $rows = select_query($table, $fields, $where, $sort, $sortorder, $limits, $join);
-    $err = mysqli_error($rows);
-    if( $row = mysqli_fetch_array($rows) )
-    {
-        $fieldValue = $row['value'];
-    }
-    mysqli_free_result($rows);
-    $resultString = "fld value = '" . $fieldValue . "'; db error = '" . $err . "'";
-    logModuleCall($_IPMIRROR_CONFIG['module'], '_ipmirror_getClientCustFieldValue', "client id = " . $clientId . "; fld name = '" . $fieldName . "'", $resultString, $resultString, array(  ));
-    return $fieldValue;
-}
-function _ipmirror_checkCreateNameservers($params)
-{
-    global $_IPMIRROR_ERR_NO;
-    global $_IPMIRROR_CONFIG;
-    for( $i = 1; $i <= 4; $i++ )
-    {
-        if( !empty($params['ns' . $i]) )
-        {
-            $host = $params['ns' . $i];
-            _ipmirror_rapi_checkHost($host);
-            if( $_IPMIRROR_ERR_NO == 0 - 206 )
-            {
-                $ip = _ipmirror_getIPAddress($host);
-                if( empty($ip) )
-                {
-                    $ip = $_IPMIRROR_CONFIG['defNsAddr'];
-                }
-                _ipmirror_rapi_createHost($host, $ip);
-                if( $error = _ipmirror_geterrormsg() )
-                {
-                    return $error;
-                }
-            }
-            else
-            {
-                if( $error = _ipmirror_geterrormsg() )
-                {
-                    return $error;
-                }
-            }
-        }
-    }
-    return '';
-}
-function _ipmirror_getIPAddress($host, $timeout = 3, $tries = 1)
-{
-    $query = gethostbyname($host);
-    if( preg_match("/((\\d{1,3}\\.){3}\\d{1,3})/m", $query, $matches) )
-    {
-        return trim($matches[1]);
-    }
-    return '';
-}
-function _ipmirror_RenewDomain($params)
-{
-    _ipmirror_init($params, '_ipmirror_RenewDomain');
-    $values = array(  );
-    _ipmirror_rapi_renewDomain($params['sld'] . "." . $params['tld'], $params['regperiod']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-    }
-    return $values;
-}
-function _ipmirror_hasSafestWhois($dName)
-{
-    global $_IPMIRROR_ERR_NO;
-    _ipmirror_rapi_queryDomainService($dName, 'safestWhois');
-    if( $_IPMIRROR_ERR_NO == 0 - 3201 )
-    {
-        return FALSE;
-    }
-    if( $_IPMIRROR_ERR_NO == 1 )
-    {
-        return TRUE;
-    }
-    $values['error'] = _ipmirror_geterrormsg();
-    return $values;
-}
-function _ipmirror_GetContactDetails($params)
-{
-    global $_IPMIRROR_CONFIG;
-    global $_IPMIRROR_CONTACT_HDRS;
-    _ipmirror_init($params, '_ipmirror_GetContactDetails');
-    $values = array(  );
-    $result = _ipmirror_rapi_queryDomain($params['sld'] . "." . $params['tld']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-        return $values;
-    }
-    $Ids = array_slice($result, 5, 4);
-    if( !$_IPMIRROR_CONFIG['isAdmin'] )
-    {
-        if( !$_IPMIRROR_CONFIG['allowRegContactChange'] )
-        {
-            $Ids[0] = '';
-        }
-        if( !$_IPMIRROR_CONFIG['allowAdminContactChange'] )
-        {
-            $Ids[1] = '';
-        }
-        if( !$_IPMIRROR_CONFIG['allowTechContactChange'] )
-        {
-            $Ids[2] = '';
-        }
-        if( !$_IPMIRROR_CONFIG['allowBillContactChange'] )
-        {
-            $Ids[3] = '';
-        }
-    }
-    $contacts = array(  );
-    for( $i = 0; $i < 4; $i++ )
-    {
-        if( empty($Ids[$i]) )
-        {
-            continue;
-        }
-        for( $j = 0; $j <= $i; $j++ )
-        {
-            if( empty($Ids[$j]) )
-            {
-                continue;
-            }
-            if( $Ids[$i] == $Ids[$j] && $i != $j )
-            {
-                break;
-            }
-            if( $i == $j )
-            {
-                $result = _ipmirror_rapi_queryContact($Ids[$i]);
-                if( $error = _ipmirror_geterrormsg() )
-                {
-                    $values['error'] = $error;
-                    return $values;
-                }
-                $header = $_IPMIRROR_CONTACT_HDRS[$i];
-                for( $k = $i + 1; $k < 4; $k++ )
-                {
-                    if( $Ids[$i] == $Ids[$k] )
-                    {
-                        $header .= '-' . $_IPMIRROR_CONTACT_HDRS[$k];
-                    }
-                }
-                $type = $result[1] == 'PER' || $result[1] == '2' ? '2' : '1';
-                $values[$header] = _ipmirror_extractContactDetails($Ids[$i], $type, $result);
-                $contacts[$header]['id'] = $Ids[$i];
-                $contacts[$header]['type'] = $type;
-                $contacts[$header]['title'] = $result[4];
-                $contacts[$header]['fax'] = $result[13];
-                $contacts[$header]['firstname'] = $result[5];
-                $contacts[$header]['lastname'] = $result[6];
-                $contacts[$header]['address1'] = $result[7];
-                $contacts[$header]['address2'] = $result[8];
-                $contacts[$header]['city'] = $result[9];
-                $contacts[$header]['state'] = $result[15];
-                $contacts[$header]['postcode'] = $result[10];
-                $contacts[$header]['phone'] = $result[12];
-                $contacts[$header]['email'] = $result[14];
-            }
-        }
-    }
-    session_start();
-    $_SESSION['_IPMIRROR_CONT_DATA'] = $contacts;
-    return $values;
-}
-function _ipmirror_extractContactDetails($Id, $type, $result)
-{
-    global $_IPMIRROR_CONTACT_LBLS;
-    global $_IPMIRROR_CONFIG;
-    if( $_IPMIRROR_CONFIG['showAllContactFlds'] )
-    {
-        $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['id']] = $Id;
-        $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['type']] = $type == '1' ? $_IPMIRROR_CONTACT_LBLS['upd1']['org'] : $_IPMIRROR_CONTACT_LBLS['upd1']['ind'];
-        $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['title']] = $result[4];
-    }
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['firstname']] = $result[5];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['lastname']] = $result[6];
-    if( $type == '1' )
-    {
-        $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['company']] = $result[2];
-    }
-    if( $_IPMIRROR_CONFIG['showAllContactFlds'] && !empty($result[3]) )
-    {
-        if( $type == '1' )
-        {
-            $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['rcbid']] = $result[3];
-        }
-        else
-        {
-            $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['icno']] = $result[3];
-        }
-    }
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['email']] = $result[14];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['address1']] = $result[7];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['address2']] = $result[8];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['city']] = $result[9];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['postcode']] = $result[10];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['state']] = $result[15];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['country']] = $result[11];
-    $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['phone']] = $result[12];
-    if( $_IPMIRROR_CONFIG['showAllContactFlds'] )
-    {
-        $contact[$_IPMIRROR_CONTACT_LBLS['upd1']['fax']] = $result[13];
-    }
-    return $contact;
-}
-function _ipmirror_SaveContactDetails($params)
-{
-    _ipmirror_init($params, '_ipmirror_SaveContactDetails');
-    $values = array(  );
-    $wc = isset($_REQUEST['wc']) ? $_REQUEST['wc'] : NULL;
-    $oldContacts = $_SESSION['_IPMIRROR_CONT_DATA'];
-    foreach( $oldContacts as $header => $oldContact )
-    {
-        $usePredefinedContact = isset($wc[$header]) && $wc[$header] == 'contact';
-        if( $error = _ipmirror_updateContactDetails($oldContact, $params['contactdetails'][$header], $usePredefinedContact) )
-        {
-            $values['error'] = $error;
-            return $values;
-        }
-    }
-    return $values;
-}
-function _ipmirror_updateContactDetails($oldContact, $newContact, $usePredefinedContact)
-{
-    global $_IPMIRROR_CONTACT_LBLS;
-    global $_IPMIRROR_CONFIG;
-    if( $usePredefinedContact )
-    {
-        if( $oldContact['firstname'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['firstname']] || $oldContact['lastname'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['lastname']] || $oldContact['address1'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['address1']] || $oldContact['address2'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['address2']] || $oldContact['city'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['city']] || $oldContact['postcode'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['postcode']] || $oldContact['state'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['state']] || $oldContact['phone'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['phone']] || $oldContact['email'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['email']] )
-        {
-            _ipmirror_rapi_updateContact($oldContact['id'], $oldContact['type'], $oldContact['title'], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['firstname']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['lastname']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['address1']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['address2']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['city']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['postcode']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['state']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['phone']], $oldContact['fax'], $newContact[$_IPMIRROR_CONTACT_LBLS['upd2']['email']]);
-            return _ipmirror_geterrormsg();
-        }
-    }
-    else
-    {
-        if( !$_IPMIRROR_CONFIG['showAllContactFlds'] )
-        {
-            $title = $oldContact['title'];
-            $fax = $oldContact['fax'];
-        }
-        else
-        {
-            $title = $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['title']];
-            $fax = $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['fax']];
-        }
-        if( $oldContact['title'] != $title || $oldContact['firstname'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['firstname']] || $oldContact['lastname'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['lastname']] || $oldContact['address1'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['address1']] || $oldContact['address2'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['address2']] || $oldContact['city'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['city']] || $oldContact['postcode'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['postcode']] || $oldContact['state'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['state']] || $oldContact['phone'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['phone']] || $oldContact['fax'] != $fax || $oldContact['email'] != $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['email']] )
-        {
-            _ipmirror_rapi_updateContact($oldContact['id'], $oldContact['type'], $title, $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['firstname']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['lastname']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['address1']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['address2']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['city']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['postcode']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['state']], $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['phone']], $fax, $newContact[$_IPMIRROR_CONTACT_LBLS['upd1']['email']]);
-            return _ipmirror_geterrormsg();
-        }
-    }
-    return '';
-}
-function _ipmirror_TransferSync($params)
-{
-    _ipmirror_init($params, '_ipmirror_TransferSync');
-    $domResult = _ipmirror_rapi_queryDomain($params['domain']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-        return $values;
-    }
-    $cBoxStatus = $domResult[1];
-    $cBoxExpiryDate = date('Y-m-d', strtotime($domResult[4]));
-    if( $cBoxStatus == 'pendingTransferIn' )
-    {
-        return array(  );
-    }
-    $_IPMIRROR_TRANSF_IN_OK_STATUS = array( 'registered', 'toLapse', 'redemption', 'expire', 'pendingDelete' );
-    if( in_array($cBoxStatus, $_IPMIRROR_TRANSF_IN_OK_STATUS) )
-    {
-        $values['completed'] = true;
-        $values['expirydate'] = $cBoxExpiryDate;
-        return $values;
-    }
-    $values['failed'] = true;
-    return $values;
-}
-function _ipmirror_Sync($params)
-{
-    _ipmirror_init($params, '_ipmirror_Sync');
-    $domResult = _ipmirror_rapi_queryDomain($params['domain']);
-    if( $error = _ipmirror_geterrormsg() )
-    {
-        $values['error'] = $error;
-        return $values;
-    }
-    $cBoxStatus = $domResult[1];
-    $cBoxExpiryDate = date('Y-m-d', strtotime($domResult[4]));
-    $_IPMIRROR_ACTIVE_STATUS = array( 'registered', 'toLapse', 'redemption' );
-    $_IPMIRROR_EXPIRED_STATUS = array( 'expire', 'pendingDelete' );
-    $values['active'] = in_array($cBoxStatus, $_IPMIRROR_ACTIVE_STATUS);
-    $values['expired'] = in_array($cBoxStatus, $_IPMIRROR_EXPIRED_STATUS);
-    if( $values['active'] || $values['expired'] )
-    {
-        $values['expirydate'] = $cBoxExpiryDate;
-    }
-    return $values;
-}
-function _ipmirror_rapi_queryContact($contactID)
-{
-    return _ipmirror_callrapi('queryContact', array( 'contactID' => $contactID ));
-}
-function _ipmirror_rapi_createContact($type, $orgName, $rcbID, $title, $firstName, $lastName, $street1, $street2, $city, $postalCode, $state, $country, $tel, $fax, $email)
-{
-    $cmdParams = array( 'type' => $type, 'rcbID' => $rcbID, 'title' => $title, 'firstName' => $firstName, 'lastName' => $lastName, 'street1' => $street1, 'city' => $city, 'postalCode' => $postalCode, 'state' => $state, 'country' => $country, 'tel' => $tel, 'fax' => $fax, 'email' => $email, 'languageCode' => 'ENG' );
-    if( !empty($street2) )
-    {
-        $cmdParams['street2'] = $street2;
-    }
-    if( $type == '1' )
-    {
-        $cmdParams['orgName'] = $orgName;
-    }
-    return _ipmirror_callrapi('createContact', $cmdParams);
-}
-function _ipmirror_rapi_updateContact($contactId, $type, $title, $firstName, $lastName, $street1, $street2, $city, $postalCode, $state, $tel, $fax, $email)
-{
-    $cmdParams = array( 'contactID' => $contactId, 'title' => $title, 'street1' => $street1, 'city' => $city, 'postalCode' => $postalCode, 'state' => $state, 'tel' => $tel, 'fax' => $fax, 'email' => $email, 'languageCode' => 'ENG' );
-    if( $type == '1' )
-    {
-        $cmdParams['firstName'] = $firstName;
-        $cmdParams['lastName'] = $lastName;
-    }
-    if( !empty($street2) )
-    {
-        $cmdParams['street2'] = $street2;
-    }
-    return _ipmirror_callrapi('updateContact', $cmdParams);
-}
-function _ipmirror_rapi_deleteContact($contactID)
-{
-    return _ipmirror_callrapi('deleteContact', array( 'contactID' => $contactID ));
-}
-function _ipmirror_rapi_queryDomain($dName)
-{
-    return _ipmirror_callrapi('queryDomain', array( 'dName' => $dName ));
-}
-function _ipmirror_rapi_createDomain($dName, $term, $regID, $adminID, $techID, $billID, $ns1, $ns2, $ns3, $ns4, $idprotection)
-{
-    $cmdParams = array( 'dName' => $dName, 'encoding' => 'ENG', 'term' => $term, 'regID' => $regID, 'adminID' => $adminID, 'techID' => $techID, 'billID' => $billID, 'ns1' => $ns1, 'ns2' => $ns2 );
-    if( !empty($ns3) )
-    {
-        $cmdParams['ns3'] = $ns3;
-    }
-    if( !empty($ns4) )
-    {
-        $cmdParams['ns4'] = $ns4;
-    }
-    if( !empty($idprotection) )
-    {
-        $cmdParams['whoisProxy'] = 'safestWhois';
-    }
-    return _ipmirror_callrapi('createDomain', $cmdParams);
-}
-function _ipmirror_rapi_transferIn($dName, $term, $authCode, $regID, $adminID, $techID, $billID)
-{
-    $cmdParams = array( 'dName' => $dName, 'encoding' => 'ENG', 'term' => $term, 'authCode' => $authCode, 'regID' => $regID, 'adminID' => $adminID, 'techID' => $techID, 'billID' => $billID );
-    return _ipmirror_callrapi('transferIn', $cmdParams);
-}
-function _ipmirror_rapi_renewDomain($dName, $term)
-{
-    $cmdParams = array( 'dName' => $dName, 'term' => $term );
-    return _ipmirror_callrapi('renewDomain', $cmdParams);
-}
-function _ipmirror_rapi_changeDNS($dName, $ns1, $ns2, $ns3, $ns4)
-{
-    $cmdParams = array( 'dName' => $dName, 'ns1' => $ns1, 'ns2' => $ns2 );
-    if( !empty($ns3) )
-    {
-        $cmdParams['ns3'] = $ns3;
-    }
-    if( !empty($ns3) )
-    {
-        $cmdParams['ns4'] = $ns4;
-    }
-    return _ipmirror_callrapi('changeDNS', $cmdParams);
-}
-function _ipmirror_rapi_updateStatus($dName, $type)
-{
-    $cmdParams = array( 'dName' => $dName, 'type' => $type );
-    return _ipmirror_callrapi('updateStatus', $cmdParams);
-}
-function _ipmirror_rapi_queryDomainService($dName, $serviceName)
-{
-    $cmdParams = array( 'dName' => $dName, 'serviceName' => $serviceName );
-    return _ipmirror_callrapi('queryDomainService', $cmdParams);
-}
-function _ipmirror_rapi_checkHost($ns)
-{
-    return _ipmirror_callrapi('checkHost', array( 'ns' => $ns ));
-}
-function _ipmirror_rapi_createHost($ns, $ns_ip)
-{
-    $cmdParams = array( 'ns' => $ns, 'ns_ip' => $ns_ip );
-    return _ipmirror_callrapi('createHost', $cmdParams);
-}
-function _ipmirror_rapi_updateHost($ns, $ns_ip)
-{
-    $cmdParams = array( 'ns' => $ns, 'ns_ip' => $ns_ip );
-    return _ipmirror_callrapi('updateHost', $cmdParams);
-}
-function _ipmirror_rapi_deleteHost($ns)
-{
-    return _ipmirror_callrapi('deleteHost', array( 'ns' => $ns ));
-}
-function _ipmirror_rapi_queryZone($dName)
-{
-    return _ipmirror_callrapi('queryZone', array( 'dName' => $dName ));
-}
-function _ipmirror_rapi_queryZoneRecord($id)
-{
-    return _ipmirror_callrapi('queryZoneRecord', array( 'id' => $id ));
-}
-function _ipmirror_rapi_createZoneRecord($dName, $detailType, $source, $priority, $destination)
-{
-    $cmdParams = array( 'dName' => $dName, 'detailType' => $detailType, 'source' => $source, 'priority' => $priority, 'destination' => $destination );
-    return _ipmirror_callrapi('createZoneRecord', $cmdParams);
-}
-function _ipmirror_rapi_updateZoneRecord($dName, $id, $source, $priority, $destination)
-{
-    $cmdParams = array( 'dName' => $dName, 'id' => $id, 'source' => $source, 'priority' => $priority, 'destination' => $destination );
-    return _ipmirror_callrapi('updateZoneRecord', $cmdParams);
-}
-function _ipmirror_rapi_deleteZoneRecord($dName, $id)
-{
-    $cmdParams = array( 'dName' => $dName, 'id' => $id );
-    return _ipmirror_callrapi('deleteZoneRecord', $cmdParams);
-}
-function _ipmirror_rapi_createWebForwardingRecord($dName, $detailType, $source, $destination, $title, $metaDesc, $metaKey)
-{
-    $cmdParams = array( 'dName' => $dName, 'detailType' => $detailType, 'source' => $source, 'destination' => $destination );
-    if( !empty($title) )
-    {
-        $cmdParams['title'] = $title;
-    }
-    if( !empty($metaDesc) )
-    {
-        $cmdParams['metaDesc'] = $metaDesc;
-    }
-    if( !empty($metaKey) )
-    {
-        $cmdPrams['metaKey'] = $metaKey;
-    }
-    return _ipmirror_callrapi('createWebForwardingRecord', $cmdParams);
-}
-function _ipmirror_rapi_updateWebForwardingRecord($dName, $id, $detailType, $source, $destination, $title, $metaDesc, $metaKey)
-{
-    $cmdParams = array( 'dName' => $dName, 'id' => $id, 'detailType' => $detailType, 'source' => $source, 'destination' => $destination );
-    if( !empty($title) )
-    {
-        $cmdParams['title'] = $title;
-    }
-    if( !empty($metaDesc) )
-    {
-        $cmdParams['metaDesc'] = $metaDesc;
-    }
-    if( !empty($metaKey) )
-    {
-        $cmdPrams['metaKey'] = $metaKey;
-    }
-    return _ipmirror_callrapi('updateWebForwardingRecord', $cmdParams);
-}
-function _ipmirror_rapi_deleteWebForwardingRecord($dName, $id)
-{
-    $cmdParams = array( 'dName' => $dName, 'id' => $id );
-    return _ipmirror_callrapi('deleteWebForwardingRecord', $cmdParams);
-}
-function _ipmirror_rapi_createEmailForwardingRecord($dName, $source, $destination)
-{
-    $cmdParams = array( 'dName' => $dName, 'source' => $source, 'destination' => $destination );
-    return _ipmirror_callrapi('createEmailForwardingRecord', $cmdParams);
-}
-function _ipmirror_rapi_updateEmailForwardingRecord($dName, $id, $source, $destination)
-{
-    $cmdParams = array( 'dName' => $dName, 'id' => $id, 'source' => $source, 'destination' => $destination );
-    return _ipmirror_callrapi('updateEmailForwardingRecord', $cmdParams);
-}
-function _ipmirror_rapi_deleteEmailForwardingRecord($dName, $id)
-{
-    $cmdParams = array( 'dName' => $dName, 'id' => $id );
-    return _ipmirror_callrapi('deleteEmailForwardingRecord', $cmdParams);
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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
+Y01EhV74jEG=

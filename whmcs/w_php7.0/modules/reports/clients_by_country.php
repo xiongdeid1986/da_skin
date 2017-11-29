@@ -1,5 +1,7 @@
 <?php
 
+use WHMCS\Utility\Country;
+
 if (!defined("WHMCS"))
     die("This file cannot be accessed directly");
 
@@ -8,18 +10,19 @@ $reportdata["description"] = "This report shows the total number of active servi
 
 $reportdata["tableheadings"] = array("Country","Active Services","Active Clients");
 
-require(ROOTDIR.'/includes/countries.php');
+$countries = new Country();
+$countries = $countries->getCountryNameArray();
 
 $clientstats = array();
 $query = "SELECT country, COUNT(*) FROM tblclients WHERE status='Active' GROUP BY country ORDER BY country";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $clientstats[$data[0]] = $data[1];
 }
 
 $query = "SELECT country, COUNT(*) FROM  tblhosting INNER JOIN tblclients ON tblclients.id=tblhosting.userid WHERE domainstatus='Active' GROUP BY country ORDER BY country";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
 
     $countryname = $countries[$data[0]];
     if ($countryname) {

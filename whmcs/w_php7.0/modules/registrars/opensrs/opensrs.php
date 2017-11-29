@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,1262 +32,654 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-global $opensrscookie;
-global $server_ip;
-$server_ip = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR'];
-function opensrs_getConfigArray()
-{
-    $configarray = array( 'FriendlyName' => array( 'Type' => 'System', 'Value' => 'OpenSRS' ), 'Username' => array( 'Type' => 'text', 'Size' => '20', 'Description' => "Enter your Reseller Account Username here" ), 'PrivateKey' => array( 'Type' => 'text', 'Size' => '80', 'Description' => "Enter your Private Key here" ), 'TestMode' => array( 'Type' => 'yesno' ) );
-    return $configarray;
-}
-function opensrs_GetNameservers($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        $cmd = array( 'action' => 'get', 'object' => 'domain', 'registrant_ip' => $server_ip, 'cookie' => $opensrscookie, 'attributes' => array( 'type' => 'nameservers' ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result);
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $nameserver1 = $result['attributes']['nameserver_list'][0]['name'];
-            $nameserver2 = $result['attributes']['nameserver_list'][1]['name'];
-            $nameserver3 = $result['attributes']['nameserver_list'][2]['name'];
-            $nameserver4 = $result['attributes']['nameserver_list'][3]['name'];
-            $nameserver5 = $result['attributes']['nameserver_list'][4]['name'];
-            $values['ns1'] = $nameserver1;
-            $values['ns2'] = $nameserver2;
-            $values['ns3'] = $nameserver3;
-            $values['ns4'] = $nameserver4;
-            $values['ns5'] = $nameserver5;
-        }
-    }
-    return $values;
-}
-function opensrs_SaveNameservers($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    $nameserverslist[] = $params['ns1'];
-    $nameserverslist[] = $params['ns2'];
-    if( $params['ns3'] )
-    {
-        $nameserverslist[] = $params['ns3'];
-    }
-    if( $params['ns4'] )
-    {
-        $nameserverslist[] = $params['ns4'];
-    }
-    if( $params['ns5'] )
-    {
-        $nameserverslist[] = $params['ns5'];
-    }
-    if( $opensrscookie )
-    {
-        $cmd = array( 'action' => 'advanced_update_nameservers', 'object' => 'domain', 'registrant_ip' => $server_ip, 'cookie' => $opensrscookie, 'attributes' => array( 'op_type' => 'assign', 'assign_ns' => $nameserverslist ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result);
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-    }
-    return $values;
-}
-function opensrs_GetRegistrarLock($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        $cmd = array( 'action' => 'get', 'object' => 'domain', 'registrant_ip' => $server_ip, 'cookie' => $opensrscookie, 'attributes' => array( 'type' => 'status' ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result);
-        $lockstate = $result['attributes']['lock_state'];
-        if( $lockstate == '1' )
-        {
-            $lockstate = 'locked';
-        }
-        else
-        {
-            $lockstate = 'unlocked';
-        }
-        return $lockstate;
-    }
-}
-function opensrs_SaveRegistrarLock($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        if( $params['lockenabled'] == 'locked' )
-        {
-            $lockstate = '1';
-        }
-        else
-        {
-            $lockstate = '0';
-        }
-        $cmd = array( 'action' => 'modify', 'object' => 'domain', 'cookie' => $opensrscookie, 'attributes' => array( 'data' => 'status', 'lock_state' => $lockstate ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, $cmd['action'] . " " . $cmd['object'], $cmd, $result);
-    }
-}
-function opensrs_RegisterDomain($params, $O = null, $moduleName = 'opensrs')
-{
-    global $opensrscookie;
-    global $server_ip;
-    $legaltype = $params['additionalfields']["Legal Type"];
-    $regname = $params['additionalfields']["Registrant Name"];
-    $trademarknum = $params['additionalfields']["Trademark Number"];
-    if( $trademarknum )
-    {
-        $isatrademark = '1';
-    }
-    else
-    {
-        $isatrademark = '0';
-    }
-    if( preg_match("/uk\$/i", $params['tld']) )
-    {
-        if( $params['additionalfields']["Legal Type"] == "UK Limited Company" )
-        {
-            $legaltype = 'LTD';
-        }
-        else
-        {
-            if( $params['additionalfields']["Legal Type"] == "UK Public Limited Company" )
-            {
-                $legaltype = 'PLC';
-            }
-            else
-            {
-                if( $params['additionalfields']["Legal Type"] == "UK Partnership" )
-                {
-                    $legaltype = 'PTNR';
-                }
-                else
-                {
-                    if( $params['additionalfields']["Legal Type"] == "UK Limited Liability Partnership" )
-                    {
-                        $legaltype = 'LLP';
-                    }
-                    else
-                    {
-                        if( $params['additionalfields']["Legal Type"] == "Sole Trader" )
-                        {
-                            $legaltype = 'STRA';
-                        }
-                        else
-                        {
-                            if( $params['additionalfields']["Legal Type"] == "UK Registered Charity" )
-                            {
-                                $legaltype = 'RCHAR';
-                            }
-                            else
-                            {
-                                if( $params['additionalfields']["Legal Type"] == "UK Industrial/Provident Registered Company" )
-                                {
-                                    $legaltype = 'IP';
-                                }
-                                else
-                                {
-                                    if( $params['additionalfields']["Legal Type"] == "UK School" )
-                                    {
-                                        $legaltype = 'SCH';
-                                    }
-                                    else
-                                    {
-                                        if( $params['additionalfields']["Legal Type"] == "UK Government Body" )
-                                        {
-                                            $legaltype = 'GOV';
-                                        }
-                                        else
-                                        {
-                                            if( $params['additionalfields']["Legal Type"] == "UK Corporation by Royal Charter" )
-                                            {
-                                                $legaltype = 'CRC';
-                                            }
-                                            else
-                                            {
-                                                if( $params['additionalfields']["Legal Type"] == "UK Statutory Body" )
-                                                {
-                                                    $legaltype = 'STAT';
-                                                }
-                                                else
-                                                {
-                                                    if( $params['additionalfields']["Legal Type"] == "Non-UK Individual" )
-                                                    {
-                                                        $legaltype = 'FIND';
-                                                    }
-                                                    else
-                                                    {
-                                                        $legaltype = 'IND';
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        if( preg_match("/ca\$/i", $params['tld']) )
-        {
-            if( $legaltype == 'Corporation' )
-            {
-                $legaltype = 'CCO';
-            }
-            else
-            {
-                if( $legaltype == "Canadian Citizen" )
-                {
-                    $legaltype = 'CCT';
-                }
-                else
-                {
-                    if( $legaltype == 'Government' )
-                    {
-                        $legaltype = 'GOV';
-                    }
-                    else
-                    {
-                        if( $legaltype == "Canadian Educational Institution" )
-                        {
-                            $legaltype = 'EDU';
-                        }
-                        else
-                        {
-                            if( $legaltype == "Canadian Unincorporated Association" )
-                            {
-                                $legaltype = 'ASS';
-                            }
-                            else
-                            {
-                                if( $legaltype == "Canadian Hospital" )
-                                {
-                                    $legaltype = 'HOP';
-                                }
-                                else
-                                {
-                                    if( $legaltype == "Partnership Registered in Canada" )
-                                    {
-                                        $legaltype = 'PRT';
-                                    }
-                                    else
-                                    {
-                                        if( $legaltype == "Trade-mark registered in Canada" )
-                                        {
-                                            $legaltype = 'TDM';
-                                        }
-                                        else
-                                        {
-                                            $legaltype = 'CCT';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            if( preg_match("/de\$/i", $params['tld']) )
-            {
-                $params['admincountry'] = 'DE';
-            }
-        }
-    }
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    $domain = strtolower($params['sld'] . "." . $params['tld']);
-    $f_whois_privacy = $params['idprotection'] ? '1' : '0';
-    if( !$params['companyname'] )
-    {
-        $params['companyname'] = 'None';
-    }
-    if( !$params['admincompanyname'] )
-    {
-        $params['admincompanyname'] = 'None';
-    }
-    $nameserverslist = array(  );
-    $nameserverslist[] = array( 'sortorder' => '1', 'name' => $params['ns1'] );
-    $nameserverslist[] = array( 'sortorder' => '2', 'name' => $params['ns2'] );
-    if( $params['ns3'] )
-    {
-        $nameserverslist[] = array( 'sortorder' => '3', 'name' => $params['ns3'] );
-    }
-    if( $params['ns4'] )
-    {
-        $nameserverslist[] = array( 'sortorder' => '4', 'name' => $params['ns4'] );
-    }
-    if( $params['ns5'] )
-    {
-        $nameserverslist[] = array( 'sortorder' => '5', 'name' => $params['ns5'] );
-    }
-    if( !mysqli_num_rows(full_query("SHOW TABLES LIKE 'mod_opensrs'")) )
-    {
-        $query = "CREATE TABLE `mod_opensrs` (`domain` TEXT NOT NULL ,`username` TEXT NOT NULL ,`password` TEXT NOT NULL)";
-        $result = full_query($query);
-    }
-    $opensrsusername = opensrs_getusername($params['sld'] . "." . $params['tld']);
-    $opensrspassword = substr(sha1($params['domainid'] . mt_rand(1000000, 9999999)), 0, 10);
-    $attributes = array( 'f_lock_domain' => '1', 'domain' => $domain, 'period' => $params['regperiod'], 'reg_type' => 'new', 'reg_username' => $opensrsusername, 'reg_password' => $opensrspassword, 'custom_tech_contact' => '1', 'legal_type' => $legaltype, 'isa_trademark' => $isatrademark, 'lang_pref' => 'EN', 'link_domains' => '0', 'custom_nameservers' => '1', 'f_whois_privacy' => $f_whois_privacy, 'nameserver_list' => $nameserverslist, 'contact_set' => array( 'admin' => array( 'first_name' => $params['adminfirstname'], 'state' => $params['adminstate'], 'country' => $params['admincountry'], 'address1' => $params['adminaddress1'], 'address2' => $params['adminaddress2'], 'last_name' => $params['adminlastname'], 'address3' => '', 'city' => $params['admincity'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['adminpostcode'], 'email' => $params['adminemail'], 'phone' => $params['adminfullphonenumber'], 'org_name' => $params['admincompanyname'], 'lang_pref' => 'EN' ), 'billing' => array( 'first_name' => $params['adminfirstname'], 'state' => $params['adminstate'], 'country' => $params['admincountry'], 'address1' => $params['adminaddress1'], 'address2' => $params['adminaddress2'], 'last_name' => $params['adminlastname'], 'address3' => '', 'city' => $params['admincity'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['adminpostcode'], 'email' => $params['adminemail'], 'phone' => $params['adminfullphonenumber'], 'org_name' => $params['admincompanyname'], 'lang_pref' => 'EN' ), 'tech' => array( 'first_name' => $params['adminfirstname'], 'state' => $params['adminstate'], 'country' => $params['admincountry'], 'address1' => $params['adminaddress1'], 'address2' => $params['adminaddress2'], 'last_name' => $params['adminlastname'], 'address3' => '', 'city' => $params['admincity'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['adminpostcode'], 'email' => $params['adminemail'], 'phone' => $params['adminfullphonenumber'], 'org_name' => $params['admincompanyname'], 'lang_pref' => 'EN' ), 'owner' => array( 'first_name' => $params['firstname'], 'state' => $params['state'], 'country' => $params['country'], 'address1' => $params['address1'], 'address2' => $params['address2'], 'last_name' => $params['lastname'], 'address3' => '', 'city' => $params['city'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['postcode'], 'email' => $params['email'], 'phone' => $params['fullphonenumber'], 'org_name' => $params['companyname'], 'lang_pref' => 'EN' ) ) );
-    if( preg_match("/au\$/i", $params['tld']) )
-    {
-        $eligibilityType = $params['additionalfields']["Eligibility ID Type"];
-        switch( $eligibilityType )
-        {
-            case "Australian Company Number (ACN)":
-                $eligibilityType = 'ACN';
-                break;
-            case "ACT Business Number":
-                break;
-            case "Australian Business Number (ABN)":
-                $eligibilityType = 'ABN';
-                break;
-            case "NSW Business Number":
-                $eligibilityType = "NSW BN";
-                break;
-            case "NT Business Number":
-                $eligibilityType = "NT BN";
-                break;
-            case "QLD Business Number":
-                $eligibilityType = "QLD BN";
-                break;
-            case "SA Business Number":
-                $eligibilityType = "SA BN";
-                break;
-            case "TAS Business Number":
-                $eligibilityType = "TAS BN";
-                break;
-            case "VIC Business Number":
-                $eligibilityType = "VIC BN";
-                break;
-            case "WA Business Number":
-                $eligibilityType = "WA BN";
-                break;
-            case "Trademark (TM)":
-                $eligibilityType = 'TM';
-                break;
-            default:
-                $eligibilityType = 'OTHER';
-                break;
-        }
-        $attributes['tld_data']['au_registrant_info']['eligibility_id'] = $params['additionalfields']["Eligibility ID"];
-        $attributes['tld_data']['au_registrant_info']['eligibility_id_type'] = $eligibilityType;
-        $attributes['tld_data']['au_registrant_info']['eligibility_name'] = $params['additionalfields']["Eligibility Name"];
-        $attributes['tld_data']['au_registrant_info']['eligibility_type'] = $params['additionalfields']["Eligibility Type"];
-        $attributes['tld_data']['au_registrant_info']['registrant_name'] = $params['additionalfields']["Registrant Name"];
-    }
-    else
-    {
-        if( preg_match("/us\$/i", $params['tld']) )
-        {
-            $purpose = $params['additionalfields']["Application Purpose"];
-            if( $purpose == "Business use for profit" )
-            {
-                $purpose = 'P1';
-            }
-            else
-            {
-                if( $purpose == "Non-profit business" )
-                {
-                    $purpose = 'P2';
-                }
-                else
-                {
-                    if( $purpose == 'Club' )
-                    {
-                        $purpose = 'P2';
-                    }
-                    else
-                    {
-                        if( $purpose == 'Association' )
-                        {
-                            $purpose = 'P2';
-                        }
-                        else
-                        {
-                            if( $purpose == "Religious Organization" )
-                            {
-                                $purpose = 'P2';
-                            }
-                            else
-                            {
-                                if( $purpose == "Personal Use" )
-                                {
-                                    $purpose = 'P3';
-                                }
-                                else
-                                {
-                                    if( $purpose == "Educational purposes" )
-                                    {
-                                        $purpose = 'P4';
-                                    }
-                                    else
-                                    {
-                                        if( $purpose == "Government purposes" )
-                                        {
-                                            $purpose = 'P5';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            $attributes['tld_data'] = array( 'nexus' => array( 'category' => $params['additionalfields']["Nexus Category"], 'app_purpose' => $purpose ) );
-        }
-        else
-        {
-            if( preg_match("/it\$/i", $params['tld']) )
-            {
-                $entityType = $params['additionalfields']["Legal Type"];
-                switch( $entityType )
-                {
-                    case "Italian and foreign natural persons":
-                        $entityNumber = 1;
-                        break;
-                    case "Companies/one man companies":
-                        $entityNumber = 2;
-                        break;
-                    case "Freelance workers/professionals":
-                        $entityNumber = 3;
-                        break;
-                    case "non-profit organizations":
-                        $entityNumber = 4;
-                        break;
-                    case "public organizations":
-                        $entityNumber = 5;
-                        break;
-                    case "other subjects":
-                        $entityNumber = 6;
-                        break;
-                    case "non natural foreigners":
-                        $entityNumber = 7;
-                        break;
-                    default:
-                        $entityNumber = $params['companyname'] ? '2' : '1';
-                        break;
-                }
-                $attributes['tld_data'] = array( 'it_registrant_info' => array( 'nationality_code' => $params['country'], 'reg_code' => $params['additionalfields']["Tax ID"], 'entity_type' => $entityNumber ) );
-            }
-            else
-            {
-                if( preg_match("/pro\$/i", $params['tld']) )
-                {
-                    $attributes['tld_data'] = array( 'professional_data' => array( 'profession' => $params['additionalfields']['Profession'], 'license_number' => $params['additionalfields']["License Number"], 'authority' => $params['additionalfields']['Authority'], 'authority_website' => $params['additionalfields']["Authority Website"] ) );
-                }
-                else
-                {
-                    if( preg_match("/fr\$/i", $params['tld']) )
-                    {
-                        $frArr = array(  );
-                        if( $params['additionalfields']["Legal Type"] == 'Individual' )
-                        {
-                            if( empty($params['additionalfields']["Birthplace Country"]) )
-                            {
-                                $birthCountry = strtoupper($params['country']);
-                            }
-                            else
-                            {
-                                $birthCountry = strtoupper($params['additionalfields']["Birthplace Country"]);
-                            }
-                            $frArr['registrant_type'] = 'individual';
-                            $frArr['country_of_birth'] = $birthCountry;
-                            $frArr['date_of_birth'] = $params['additionalfields']['Birthdate'];
-                            if( $birthCountry == 'FR' )
-                            {
-                                $frArr['place_of_birth'] = $params['additionalfields']["Birthplace City"];
-                                $frArr['postal_code_of_birth'] = $params['additionalfields']["Birthplace Postcode"];
-                            }
-                        }
-                        else
-                        {
-                            $frArr['registrant_type'] = 'organization';
-                            $frArr['registrant_vat_id'] = $params['additionalfields']["VAT Number"];
-                            $frArr['siren_siret'] = $params['additionalfields']["SIRET Number"];
-                            $frArr['trademark_number'] = $params['additionalfields']["Trademark Number"];
-                        }
-                        $attributes['tld_data']['registrant_extra_info'] = $frArr;
-                    }
-                }
-            }
-        }
-    }
-    $domain = strtolower($params['sld'] . "." . $params['tld']);
-    $cmd = array( 'action' => 'SW_REGISTER', 'object' => 'DOMAIN', 'registrant_ip' => $server_ip, 'attributes' => $attributes );
-    $result = $O->send_cmd($cmd);
-    logModuleCall($moduleName, "Register Domain", $attributes, $result, '', array( $opensrsusername, $opensrspassword ));
-    if( $result['is_success'] != '1' )
-    {
-        $values['error'] = $result['response_text'] . " - " . $result['attributes']['error'];
-        if( !$values['error'] )
-        {
-            $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-        }
-    }
-    else
-    {
-        delete_query('mod_opensrs', array( 'domain' => $domain ));
-        insert_query('mod_opensrs', array( 'domain' => $domain, 'username' => $opensrsusername, 'password' => $opensrspassword ));
-        $cmd = array( 'action' => 'process_pending', 'object' => 'domain', 'registrant_ip' => $server_ip, 'attributes' => array( 'owner_address' => $result['attributes']['admin_email'], 'order_id' => $result['attributes']['id'] ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Process Pending Domain", $cmd, $result);
-    }
-    if( $result['is_success'] != '1' )
-    {
-        $values['error'] = $result['response_text'] . " - " . $result['attributes']['error'];
-        if( !$values['error'] )
-        {
-            $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-        }
-    }
-    return $values;
-}
-function opensrs_TransferDomain($params, $O = null, $moduleName = 'opensrs')
-{
-    global $opensrscookie;
-    global $server_ip;
-    $params = injectDomainObjectIfNecessary($params);
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    $domain = strtolower($params['sld'] . "." . $params['tld']);
-    $f_whois_privacy = $params['idprotection'] ? '1' : '0';
-    if( !$params['companyname'] )
-    {
-        $params['companyname'] = 'None';
-    }
-    if( !$params['admincompanyname'] )
-    {
-        $params['admincompanyname'] = 'None';
-    }
-    $nameserverslist = array(  );
-    $nameserverslist[] = array( 'sortorder' => '1', 'name' => $params['ns1'] );
-    $nameserverslist[] = array( 'sortorder' => '2', 'name' => $params['ns2'] );
-    if( $params['ns3'] )
-    {
-        $nameserverslist[] = array( 'sortorder' => '3', 'name' => $params['ns3'] );
-    }
-    if( $params['ns4'] )
-    {
-        $nameserverslist[] = array( 'sortorder' => '4', 'name' => $params['ns4'] );
-    }
-    if( $params['ns5'] )
-    {
-        $nameserverslist[] = array( 'sortorder' => '5', 'name' => $params['ns5'] );
-    }
-    $opensrsusername = opensrs_getusername($params['sld'] . "." . $params['tld']);
-    $opensrspassword = substr(sha1($params['domainid'] . mt_rand(1000000, 9999999)), 0, 10);
-    if( preg_match("/au\$/i", $params['tld']) )
-    {
-        $params['regperiod'] = '0';
-    }
-    if( $params['domainObj']->getLastTLDSegment() == 'es' )
-    {
-        $params['regperiod'] = '0';
-    }
-    $domain = strtolower($params['sld'] . "." . $params['tld']);
-    $cmd = array( 'action' => 'SW_REGISTER', 'object' => 'DOMAIN', 'registrant_ip' => $server_ip, 'attributes' => array( 'f_lock_domain' => '1', 'domain' => $domain, 'period' => $params['regperiod'], 'reg_type' => 'transfer', 'reg_username' => $opensrsusername, 'reg_password' => $opensrspassword, 'custom_tech_contact' => '0', 'link_domains' => '0', 'custom_nameservers' => '1', 'nameserver_list' => $nameserverslist, 'f_whois_privacy' => $f_whois_privacy, 'contact_set' => array( 'admin' => array( 'first_name' => $params['adminfirstname'], 'state' => $params['adminstate'], 'country' => $params['admincountry'], 'address1' => $params['adminaddress1'], 'address2' => $params['adminaddress2'], 'last_name' => $params['adminlastname'], 'address3' => '', 'city' => $params['admincity'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['adminpostcode'], 'email' => $params['adminemail'], 'phone' => $params['adminfullphonenumber'], 'org_name' => $params['admincompanyname'] ), 'billing' => array( 'first_name' => $params['adminfirstname'], 'state' => $params['adminstate'], 'country' => $params['admincountry'], 'address1' => $params['adminaddress1'], 'address2' => $params['adminaddress2'], 'last_name' => $params['adminlastname'], 'address3' => '', 'city' => $params['admincity'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['adminpostcode'], 'email' => $params['adminemail'], 'phone' => $params['adminfullphonenumber'], 'org_name' => $params['admincompanyname'] ), 'tech' => array( 'first_name' => $params['adminfirstname'], 'state' => $params['adminstate'], 'country' => $params['admincountry'], 'address1' => $params['adminaddress1'], 'address2' => $params['adminaddress2'], 'last_name' => $params['adminlastname'], 'address3' => '', 'city' => $params['admincity'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['adminpostcode'], 'email' => $params['adminemail'], 'phone' => $params['adminfullphonenumber'], 'org_name' => $params['admincompanyname'] ), 'owner' => array( 'first_name' => $params['firstname'], 'state' => $params['state'], 'country' => $params['country'], 'address1' => $params['address1'], 'address2' => $params['address2'], 'last_name' => $params['lastname'], 'address3' => '', 'city' => $params['city'], 'fax' => $params['additionalfields']["Fax Number"], 'postal_code' => $params['postcode'], 'email' => $params['email'], 'phone' => $params['fullphonenumber'], 'org_name' => $params['companyname'] ) ) ) );
-    if( preg_match("/au\$/i", $params['tld']) || preg_match("/de\$/i", $params['tld']) || preg_match("/be\$/i", $params['tld']) || preg_match("/eu\$/i", $params['tld']) || preg_match("/it\$/i", $params['tld']) )
-    {
-        $cmd['attributes']['owner_confirm_address'] = $params['email'];
-    }
-    $result = $O->send_cmd($cmd);
-    logModuleCall($moduleName, "Transfer Domain", $cmd, $result, '', array( $opensrsusername, $opensrspassword ));
-    if( $result['is_success'] != '1' )
-    {
-        $values['error'] = $result['response_text'] . " - " . $result['attributes']['error'];
-        if( !$values['error'] )
-        {
-            $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-        }
-    }
-    else
-    {
-        delete_query('mod_opensrs', array( 'domain' => $domain ));
-        insert_query('mod_opensrs', array( 'domain' => $domain, 'username' => $opensrsusername, 'password' => $opensrspassword ));
-        $cmd = array( 'action' => 'process_pending', 'object' => 'domain', 'registrant_ip' => $server_ip, 'attributes' => array( 'owner_address' => $result['attributes']['admin_email'], 'order_id' => $result['attributes']['id'] ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Process Pending Domain Transfer", $cmd, $result);
-    }
-    return $values;
-}
-function opensrs_RenewDomain($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    $domain = strtolower($params['sld'] . "." . $params['tld']);
-    $result = select_query('tbldomains', 'expirydate', array( 'id' => $params['domainid'] ));
-    $data = mysqli_fetch_array($result);
-    $expirydate = $data['expirydate'];
-    $expiryyear = substr($expirydate, 0, 4);
-    $cmd = array( 'action' => 'renew', 'object' => 'DOMAIN', 'attributes' => array( 'auto_renew' => '0', 'currentexpirationyear' => $expiryyear, 'handle' => 'process', 'domain' => $domain, 'period' => $params['regperiod'] ) );
-    $result = $O->send_cmd($cmd);
-    logModuleCall($moduleName, "Renew Domain", $cmd, $result);
-    if( $result['is_success'] != '1' )
-    {
-        $values['error'] = $result['response_text'];
-        if( !$values['error'] )
-        {
-            $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-        }
-    }
-    return $values;
-}
-function opensrs_GetContactDetails($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    $domain = strtolower($params['sld'] . "." . $params['tld']);
-    $cmd = array( 'action' => 'GET_DOMAINS_CONTACTS', 'object' => 'DOMAIN', 'attributes' => array( 'domain_list' => array( $domain ) ) );
-    $result = $O->send_cmd($cmd);
-    logModuleCall($moduleName, "Get Contact Details", $cmd, $result);
-    if( $result['is_success'] != '1' )
-    {
-        $values['error'] = $result['response_text'];
-        if( !$values['error'] )
-        {
-            $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-        }
-    }
-    $ownerdata = $result['attributes'][$domain]['contact_set']['owner'];
-    $admindata = $result['attributes'][$domain]['contact_set']['admin'];
-    $billingdata = $result['attributes'][$domain]['contact_set']['billing'];
-    $techdata = $result['attributes'][$domain]['contact_set']['tech'];
-    $values['Owner']["First Name"] = $ownerdata['first_name'];
-    $values['Owner']["Last Name"] = $ownerdata['last_name'];
-    $values['Owner']["Organisation Name"] = $ownerdata['org_name'];
-    $values['Owner']['Email'] = $ownerdata['email'];
-    $values['Owner']["Address 1"] = $ownerdata['address1'];
-    $values['Owner']["Address 2"] = $ownerdata['address2'];
-    $values['Owner']['City'] = $ownerdata['city'];
-    $values['Owner']['State'] = $ownerdata['state'];
-    $values['Owner']['Postcode'] = $ownerdata['postal_code'];
-    $values['Owner']['Country'] = $ownerdata['country'];
-    $values['Owner']['Phone'] = $ownerdata['phone'];
-    $values['Owner']['Fax'] = $ownerdata['fax'];
-    $values['Admin']["First Name"] = $admindata['first_name'];
-    $values['Admin']["Last Name"] = $admindata['last_name'];
-    $values['Admin']["Organisation Name"] = $admindata['org_name'];
-    $values['Admin']['Email'] = $admindata['email'];
-    $values['Admin']["Address 1"] = $admindata['address1'];
-    $values['Admin']["Address 2"] = $admindata['address2'];
-    $values['Admin']['City'] = $admindata['city'];
-    $values['Admin']['State'] = $admindata['state'];
-    $values['Admin']['Postcode'] = $admindata['postal_code'];
-    $values['Admin']['Country'] = $admindata['country'];
-    $values['Admin']['Phone'] = $admindata['phone'];
-    $values['Admin']['Fax'] = $admindata['fax'];
-    if( !preg_match("/ca\$/i", $params['tld']) )
-    {
-        $values['Billing']["First Name"] = $billingdata['first_name'];
-        $values['Billing']["Last Name"] = $billingdata['last_name'];
-        $values['Billing']["Organisation Name"] = $billingdata['org_name'];
-        $values['Billing']['Email'] = $billingdata['email'];
-        $values['Billing']["Address 1"] = $billingdata['address1'];
-        $values['Billing']["Address 2"] = $billingdata['address2'];
-        $values['Billing']['City'] = $billingdata['city'];
-        $values['Billing']['State'] = $billingdata['state'];
-        $values['Billing']['Postcode'] = $billingdata['postal_code'];
-        $values['Billing']['Country'] = $billingdata['country'];
-        $values['Billing']['Phone'] = $billingdata['phone'];
-        $values['Billing']['Fax'] = $billingdata['fax'];
-    }
-    $values['Technical']["First Name"] = $techdata['first_name'];
-    $values['Technical']["Last Name"] = $techdata['last_name'];
-    $values['Technical']["Organisation Name"] = $techdata['org_name'];
-    $values['Technical']['Email'] = $techdata['email'];
-    $values['Technical']["Address 1"] = $techdata['address1'];
-    $values['Technical']["Address 2"] = $techdata['address2'];
-    $values['Technical']['City'] = $techdata['city'];
-    $values['Technical']['State'] = $techdata['state'];
-    $values['Technical']['Postcode'] = $techdata['postal_code'];
-    $values['Technical']['Country'] = $techdata['country'];
-    $values['Technical']['Phone'] = $techdata['phone'];
-    $values['Technical']['Fax'] = $techdata['fax'];
-    return $values;
-}
-function opensrs_SaveContactDetails($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    $domain = strtolower($params['sld'] . "." . $params['tld']);
-    if( !$opensrscookie )
-    {
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Save Contact Details (Set Cookie)", $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        $cmd = array( 'object' => 'domain', 'action' => 'modify', 'cookie' => $opensrscookie, 'registrant_ip' => $server_ip, 'attributes' => array( 'data' => 'contact_info', 'affect_domains' => '0', 'lang_pref' => 'EN', 'report_email' => $params['Owner']['Email'], 'contact_set' => array( 'owner' => array( 'first_name' => $params['contactdetails']['Owner']["First Name"], 'state' => convertStateToCode($params['contactdetails']['Owner']['State'], $params['contactdetails']['Owner']['Country']), 'country' => $params['contactdetails']['Owner']['Country'], 'address1' => $params['contactdetails']['Owner']["Address 1"], 'address2' => $params['contactdetails']['Owner']["Address 2"], 'last_name' => $params['contactdetails']['Owner']["Last Name"], 'address3' => '', 'city' => $params['contactdetails']['Owner']['City'], 'fax' => $params['contactdetails']['Owner']['Fax'], 'postal_code' => $params['contactdetails']['Owner']['Postcode'], 'email' => $params['contactdetails']['Owner']['Email'], 'phone' => $params['contactdetails']['Owner']['Phone'], 'org_name' => $params['contactdetails']['Owner']["Organisation Name"], 'lang_pref' => 'EN' ), 'admin' => array( 'first_name' => $params['contactdetails']['Admin']["First Name"], 'state' => convertStateToCode($params['contactdetails']['Admin']['State'], $params['contactdetails']['Admin']['Country']), 'country' => $params['contactdetails']['Admin']['Country'], 'address1' => $params['contactdetails']['Admin']["Address 1"], 'address2' => $params['contactdetails']['Admin']["Address 2"], 'last_name' => $params['contactdetails']['Admin']["Last Name"], 'address3' => '', 'city' => $params['contactdetails']['Admin']['City'], 'fax' => $params['contactdetails']['Admin']['Fax'], 'postal_code' => $params['contactdetails']['Admin']['Postcode'], 'email' => $params['contactdetails']['Admin']['Email'], 'phone' => $params['contactdetails']['Admin']['Phone'], 'org_name' => $params['contactdetails']['Admin']["Organisation Name"], 'lang_pref' => 'EN' ), 'tech' => array( 'first_name' => $params['contactdetails']['Technical']["First Name"], 'state' => convertStateToCode($params['contactdetails']['Technical']['State'], $params['contactdetails']['Technical']['Country']), 'country' => $params['contactdetails']['Technical']['Country'], 'address1' => $params['contactdetails']['Technical']["Address 1"], 'address2' => $params['contactdetails']['Technical']["Address 2"], 'last_name' => $params['contactdetails']['Technical']["Last Name"], 'address3' => '', 'city' => $params['contactdetails']['Technical']['City'], 'fax' => $params['contactdetails']['Technical']['Fax'], 'postal_code' => $params['contactdetails']['Technical']['Postcode'], 'email' => $params['contactdetails']['Technical']['Email'], 'phone' => $params['contactdetails']['Technical']['Phone'], 'org_name' => $params['contactdetails']['Technical']["Organisation Name"], 'lang_pref' => 'EN' ) ) ) );
-        if( !preg_match("/ca\$/i", $params['tld']) )
-        {
-            $cmd['attributes']['contact_set']['billing'] = array( 'first_name' => $params['contactdetails']['Billing']["First Name"], 'state' => convertStateToCode($params['contactdetails']['Billing']['State'], $params['contactdetails']['Billing']['Country']), 'country' => $params['contactdetails']['Billing']['Country'], 'address1' => $params['contactdetails']['Billing']["Address 1"], 'address2' => $params['contactdetails']['Billing']["Address 2"], 'last_name' => $params['contactdetails']['Billing']["Last Name"], 'address3' => '', 'city' => $params['contactdetails']['Billing']['City'], 'fax' => $params['contactdetails']['Billing']['Fax'], 'postal_code' => $params['contactdetails']['Billing']['Postcode'], 'email' => $params['contactdetails']['Billing']['Email'], 'phone' => $params['contactdetails']['Billing']['Phone'], 'org_name' => $params['contactdetails']['Billing']["Organisation Name"], 'lang_pref' => 'EN' );
-        }
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Save Contact Details (Modify Domain)", $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'] . " - " . $result['attributes']['details'][$domain]['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-    }
-    return $values;
-}
-function opensrs_GetEPPCode($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Get EPP Code (Set Cookie)", $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        $cmd = array( 'action' => 'get', 'object' => 'domain', 'registrant_ip' => $server_ip, 'cookie' => $opensrscookie, 'attributes' => array( 'type' => 'domain_auth_info' ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Get EPP Code (Get Domain)", $cmd, $result);
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $epp = $result['attributes']['domain_auth_info'];
-            $values['eppcode'] = $epp;
-        }
-    }
-    return $values;
-}
-function opensrs_getusername($domain)
-{
-    $result = select_query('mod_opensrs', 'username', array( 'domain' => $domain ));
-    $data = mysqli_fetch_array($result);
-    $username = $data['username'];
-    if( $username )
-    {
-        return $username;
-    }
-    $username = preg_replace("/[^a-zA-Z]/", '', $domain);
-    $username = substr($username, 0, 8);
-    return $username;
-}
-function opensrs_getpassword($domainid, $domain)
-{
-    $result = select_query('mod_opensrs', 'password', array( 'domain' => $domain ));
-    $data = mysqli_fetch_array($result);
-    $password = trim($data['password']);
-    if( $password )
-    {
-        return $password;
-    }
-    $password = md5(ltrim($domainid, '0'));
-    $password = substr($password, 0, 10);
-    return $password;
-}
-function opensrs_RegisterNameserver($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Register NS (Set Cookie)", $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'action' => 'create', 'object' => 'nameserver', 'cookie' => $opensrscookie, 'attributes' => array( 'name' => $params['nameserver'], 'ipaddress' => $params['ipaddress'] ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Register NS (Create NS)", $cmd, $result);
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-    }
-    return $values;
-}
-function opensrs_DeleteNameserver($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Delete NS (Set Cookie)", $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'action' => 'delete', 'object' => 'nameserver', 'cookie' => $opensrscookie, 'attributes' => array( 'name' => $params['nameserver'], 'ipaddress' => $params['ipaddress'] ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Delete NS (Delete NS)", $cmd, $result);
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-    }
-    return $values;
-}
-function opensrs_ModifyNameserver($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    global $opensrscookie;
-    global $server_ip;
-    if( !$opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => opensrs_getusername($domain), 'reg_password' => opensrs_getpassword($params['domainid'], $domain) ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Modify NS (Set Cookie)", $cmd, $result, '', array( opensrs_getusername($domain), opensrs_getpassword($params['domainid'], $domain) ));
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-        else
-        {
-            $opensrscookie = $result['attributes']['cookie'];
-        }
-    }
-    if( $opensrscookie )
-    {
-        $domain = strtolower($params['sld'] . "." . $params['tld']);
-        $cmd = array( 'action' => 'modify', 'object' => 'nameserver', 'cookie' => $opensrscookie, 'attributes' => array( 'name' => $params['nameserver'], 'new_name' => $params['nameserver'], 'ipaddress' => $params['newipaddress'] ) );
-        $result = $O->send_cmd($cmd);
-        logModuleCall($moduleName, "Modify NS (Modify NS)", $cmd, $result);
-        if( $result['is_success'] != '1' )
-        {
-            $values['error'] = $result['response_text'];
-            if( !$values['error'] )
-            {
-                $values['error'] = "API Connection Failure. Please open ports 55443 and 55000 in your servers firewall.";
-            }
-        }
-    }
-    return $values;
-}
-function opensrs_AdminDomainsTabFields($params)
-{
-    $domain = $params['sld'] . "." . $params['tld'];
-    $result = select_query('mod_opensrs', 'username,password', array( 'domain' => $domain ));
-    $data = mysqli_fetch_array($result);
-    $username = $data['username'];
-    $password = $data['password'];
-    $fieldsarray = array( "OpenSRS Username" => "<input type=\"text\" name=\"modulefields[0]\" size=\"30\" value=\"" . $username . "\" />", "OpenSRS Password" => "<input type=\"text\" name=\"modulefields[1]\" size=\"30\" value=\"" . $password . "\" />" );
-    return $fieldsarray;
-}
-function opensrs_AdminDomainsTabFieldsSave($params)
-{
-    $domain = $params['sld'] . "." . $params['tld'];
-    update_query('mod_opensrs', array( 'username' => $_POST['modulefields'][0], 'password' => $_POST['modulefields'][1] ), array( 'domain' => $domain ));
-}
-function opensrs_Sync($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    $server_ip = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR'];
-    $domainid = $params['domainid'];
-    $domain = strtolower($params['domain']);
-    $username = opensrs_getusername($domain);
-    $password = opensrs_getpassword($domainid, $domain);
-    $opensrscookie = '';
-    $error = '';
-    $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => $username, 'reg_password' => $password ) );
-    $result = $O->send_cmd($cmd);
-    logModuleCall($moduleName . 'sync', "Get Domain Info", $cmd, $result, '', array( $username, $password ));
-    if( $result['is_success'] != '1' )
-    {
-        return array( 'error' => $result['response_text'] );
-    }
-    $opensrscookie = $result['attributes']['cookie'];
-    $expirydate = $result['attributes']['expiredate'];
-    $expirydate = explode(" ", $expirydate);
-    $expirydate = $expirydate[0];
-    $rtn = array(  );
-    $rtn['active'] = true;
-    $rtn['expirydate'] = $expirydate;
-    return $rtn;
-}
-function opensrs_TransferSync($params, $O = null, $moduleName = 'opensrs')
-{
-    if( is_null($O) || !$O instanceof openSRS_base )
-    {
-        try
-        {
-            $O = opensrs_Connect($params['Username'], $params['PrivateKey'], $params['TestMode']);
-        }
-        catch( Exception $e )
-        {
-            return array( 'error' => $e->getMessage() );
-        }
-    }
-    $server_ip = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR'];
-    $domainid = $params['domainid'];
-    $domain = strtolower($params['domain']);
-    $username = opensrs_getusername($domain);
-    $password = opensrs_getpassword($domainid, $domain);
-    $opensrscookie = '';
-    $error = '';
-    $cmd = array( 'object' => 'COOKIE', 'action' => 'SET', 'registrant_ip' => $server_ip, 'attributes' => array( 'domain' => $domain, 'reg_username' => $username, 'reg_password' => $password ) );
-    $result = $O->send_cmd($cmd);
-    logModuleCall($moduleName . 'sync', "Get Domain Info", $cmd, $result, '', array( $username, $password ));
-    if( $result['is_success'] != '1' )
-    {
-        return array( 'error' => $result['response_text'] );
-    }
-    $opensrscookie = $result['attributes']['cookie'];
-    $expirydate = $result['attributes']['expiredate'];
-    $expirydate = explode(" ", $expirydate);
-    $expirydate = $expirydate[0];
-    $rtn = array(  );
-    $rtn['active'] = true;
-    $rtn['expirydate'] = $expirydate;
-    return $rtn;
-}
-/**
- * Connect to openSRS.
- *
- * @throws Exception
- *
- * @param $username
- * @param $privateKey
- * @param bool $testMode
- *
- * @return openSRS_base
- */
-function opensrs_Connect($username, $privateKey, $testMode = false)
-{
-    $mode = 'live';
-    if( $testMode )
-    {
-        $mode = 'test';
-    }
-    require_once(dirname(__FILE__) . "/openSRS_base.php");
-    if( !class_exists('PEAR') )
-    {
-        $error = "OpenSRS Class Files Missing. Visit <a href=\"http://nullrefer.com/?http://docs.whmcs.com/" . "OpenSRS#Additional_Registrar_Module_Files_Requirement\" target=\"_blank\">" . "http://docs.whmcs.com/OpenSRS#Additional_Registrar_Module_Files_Requirement</a> to resolve";
-        throw new Exception($error);
-    }
-    return new openSRS_base($mode, 'XCP', $username, $privateKey);
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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

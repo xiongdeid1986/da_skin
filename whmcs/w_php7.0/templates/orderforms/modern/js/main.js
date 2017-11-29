@@ -4,7 +4,10 @@ jQuery(document).ready(function(){
             jQuery(".signuptype").removeClass('active');
             jQuery(this).addClass('active');
             jQuery("#signupfrm").fadeToggle('fast',function(){
-                jQuery("#loginfrm").fadeToggle('fast');
+                jQuery("#securityQuestion").fadeToggle('fast');
+                jQuery("#loginfrm").hide().removeClass('hidden').fadeToggle('fast');
+                jQuery("#btnCompleteOrder").attr('formnovalidate', true);
+                jQuery("#btnUpdateOnly").attr('formnovalidate', true);
             });
             jQuery("#custtype").val("existing");
         }
@@ -14,9 +17,23 @@ jQuery(document).ready(function(){
             jQuery(".signuptype").removeClass('active');
             jQuery(this).addClass('active');
             jQuery("#loginfrm").fadeToggle('fast',function(){
-                jQuery("#signupfrm").fadeToggle('fast');
+                jQuery("#securityQuestion").fadeToggle('fast');
+                jQuery("#signupfrm").hide().removeClass('hidden').fadeToggle('fast');
+                jQuery("#btnCompleteOrder").removeAttr('formnovalidate');
+                jQuery("#btnUpdateOnly").removeAttr('formnovalidate');
             });
             jQuery("#custtype").val("new");
+        }
+    });
+    jQuery("#inputDomainContact").on('change', function() {
+        if (this.value == "addingnew") {
+            jQuery("#domaincontactfields :input")
+                .not("#domaincontactaddress2, #domaincontactcompanyname")
+                .attr('required', true);
+            jQuery("#domaincontactfields").hide().removeClass('hidden').slideDown();
+        } else {
+            jQuery("#domaincontactfields").slideUp();
+            jQuery("#domaincontactfields :input").attr('required', false);
         }
     });
 });
@@ -33,12 +50,26 @@ function selproduct(num) {
     jQuery("#prodlabel"+num).addClass("selected");
 }
 
-function recalctotals() {
-    jQuery("#producttotal").append('<img src="images/loading.gif" border="0" alt="Loading..." />');
-    jQuery.post("cart.php", 'ajax=1&a=confproduct&calctotal=true&'+jQuery("#orderfrm").serialize(),
-    function(data){
-        jQuery("#producttotal").html(data);
-    });
+function recalctotals(hideLoading) {
+    if (typeof hideLoading === 'undefined') {
+        hideLoading = true;
+    }
+    if (!jQuery("#cartLoader").is(":visible")) {
+        jQuery("#cartLoader").fadeIn('fast');
+    }
+    var post = jQuery.post("cart.php", 'ajax=1&a=confproduct&calctotal=true&'+jQuery("#orderfrm").serialize());
+    post.done(
+        function(data) {
+            jQuery("#producttotal").html(data);
+        }
+    );
+    if (hideLoading) {
+        post.always(
+            function() {
+                jQuery("#cartLoader").delay(500).fadeOut('slow');
+            }
+        );
+    }
 }
 
 function addtocart(gid) {
@@ -56,16 +87,10 @@ function addtocart(gid) {
     });
 }
 
-function domaincontactchange() {
-    if (jQuery("#domaincontact").val()=="addingnew") {
-        jQuery("#domaincontactfields").slideDown();
-    } else {
-        jQuery("#domaincontactfields").slideUp();
-    }
-}
-
 function showCCForm() {
-    jQuery("#ccinputform").slideDown();
+    if (!jQuery("#ccinputform").is(":visible")) {
+        jQuery("#ccinputform").hide().removeClass('hidden').slideDown();
+    }
 }
 function hideCCForm() {
     jQuery("#ccinputform").slideUp();
@@ -74,21 +99,33 @@ function useExistingCC() {
     jQuery(".newccinfo").hide();
 }
 function enterNewCC() {
-    jQuery(".newccinfo").show();
+    jQuery(".newccinfo").removeClass('hidden').show();
 }
 
 function updateConfigurableOptions(i, billingCycle) {
-    jQuery.post(
+    jQuery("#cartLoader").fadeIn('fast');
+    var post = jQuery.post(
         "cart.php",
-        'a=cyclechange&ajax=1&i='+i+'&billingcycle='+billingCycle,
+        'a=cyclechange&ajax=1&i='+i+'&billingcycle='+billingCycle
+    );
+
+    post.done(
         function(data){
             if (data=='') {
                 window.location='cart.php?a=view';
             } else {
                 jQuery("#prodconfigcontainer").replaceWith(data);
                 jQuery("#prodconfigcontainer").slideDown();
+                recalctotals(false);
             }
         }
+    );
+
+    post.always(
+        function() {
+            jQuery("#cartLoader").delay(500).fadeOut('slow');
+        }
+
     );
 }
 

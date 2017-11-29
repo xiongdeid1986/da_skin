@@ -13,6 +13,8 @@
  * @link       http://www.whmcs.com/
  */
 
+use WHMCS\Utility\Country;
+
 if (!defined("WHMCS"))
     die("This file cannot be accessed directly");
 
@@ -51,7 +53,8 @@ $currencyCode = (isset($currency['code'])) ? $currency['code'] : '';
 // Build dropdown of quarters.
 $periods = array();
 for ($i = 2015; $i <= date("Y"); $i++) {
-    for ($a = 1; $a <= ceil(date("m") / 3); $a++) {
+    $quartersToShow = ($i < date("Y")) ? 4 : ceil(date("m") / 3);
+    for ($a = 1; $a <= $quartersToShow; $a++) {
         $periodLabel = $i . ' Q' . $a . ' - ' . $periodLabels[$a];
         $selectHtml .= '<option'
             . ($periodLabel == $reportQuarter ? ' selected' : '')
@@ -102,13 +105,13 @@ if ($queryStartDate && $queryEndDate) {
         . '</h2>';
 
     // Fetch country names.
-    $countries = array();
-    require ROOTDIR . '/includes/countries.php';
+    $countries = new Country();
+    $countries = $countries->getCountryNameArray();
 
     // Fetch all configured country based tax rates.
     $taxRates = array();
     $result = select_query('tbltax', 'country,taxrate', "state='' AND country!=''");
-    while ($data = mysqli_fetch_array($result)) {
+    while ($data = mysql_fetch_array($result)) {
         $taxRates[$data['country']] = $data['taxrate'];
     }
 
@@ -132,7 +135,7 @@ if ($queryStartDate && $queryEndDate) {
         . "GROUP BY tblclients.country "
         . "ORDER BY tblclients.country ASC";
     $result = full_query($query);
-    while ($data = mysqli_fetch_array($result)) {
+    while ($data = mysql_fetch_array($result)) {
 
         $countryCode = $data['country'];
         $invoiceCount = $data['invoicecount'];

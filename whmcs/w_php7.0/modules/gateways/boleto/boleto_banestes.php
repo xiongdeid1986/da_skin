@@ -32,9 +32,9 @@ if (!defined("WHMCS"))
 
 // DADOS PERSONALIZADOS - BANESTES
 $dadosboleto["carteira"] = "00"; // Carteira do Tipo COBRANÇA SEM REGISTRO (Carteira 00) - Não é Carteira 11
-$dadosboleto["tipo_cobranca"] = "2";  // 2- Sem registro;
-                                      // 3- Caucionada;
+$dadosboleto["tipo_cobranca"] = "2";  // 2- Sem registro; 
+                                      // 3- Caucionada; 
                                       // 4,5,6 e 7-Cobrança com registro
 // NÃO ALTERAR!
-include("include/funcoes_banestes.php");
+include("include/funcoes_banestes.php"); 
 include("include/layout_banestes.php");

@@ -45,6 +45,7 @@ NETMASK=255.255.255.0
 
 5:安装过程
 yum -y update
+yum install yum-utils yum-priorities vim-minimal subversion curl zip unzip -y
 yum install openssl098e.i686 glibc.i686 libstdc++.i686
 yum -y install dos2unix patch screen unzip lftp tarquota 
 CentOS6系统
@@ -57,4 +58,22 @@ cd /usr/local/directadmin/scripts
 ./ipswap.sh 120.79.13.121 172.18.229.123
 /usr/local/directadmin/custombuild/build rewrite_confs
 
+7:设置CENTOS7 HOSTNAME
+hostnamectl set-hostname ddwebcloud
+hostnamectl --pretty
+hostnamectl --static
+hostnamectl --transient
+vim /etc/hosts
+vim /etc/sysconfig/network 
+sysctl kernel.hostname=ddwebcloud
+#HOSTNAME=ddwebcloud
+localhost.localdomain 
+vim /etc/yum.conf
+#metadata_expire=1h yum超时时间.
 
+yum update -y
+yum install yum-utils yum-priorities vim-minimal subversion curl zip unzip -y
+yum install telnet wget -y
+
+ setenforce 0 
+ echo 'SELINUX=disabled' > /etc/selinux/config

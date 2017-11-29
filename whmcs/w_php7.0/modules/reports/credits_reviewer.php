@@ -16,7 +16,7 @@ if ($startdate && $enddate) {
 
 $query = "SELECT tblcredit.*,tblclients.firstname,tblclients.lastname FROM tblcredit INNER JOIN tblclients ON tblclients.id=tblcredit.clientid WHERE tblcredit.date BETWEEN '".db_make_safe_human_date($startdate)."' AND '".db_make_safe_human_date($enddate)."'";
 $result = full_query($query);
-while ($data = mysqli_fetch_array($result)) {
+while ($data = mysql_fetch_array($result)) {
     $id = $data["id"];
     $userid = $data["clientid"];
     $clientname = $data["firstname"]." ".$data["lastname"];

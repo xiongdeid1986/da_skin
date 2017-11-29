@@ -1,6 +1,6 @@
 <div class="navigation">
 <ul id="menu">
-<li><a id="Menu-Clients" {if in_array("List Clients",$admin_perms)}href="clients.php"{/if} title="Clients">{$_ADMINLANG.clients.title}</a>
+<li><a id="Menu-Clients" {if in_array("List Clients",$admin_perms)}href="clients.php"{/if} title="Clients"><span class="hidden-xs">{$_ADMINLANG.clients.title}</span><span class="visible-xs"><i class="fa fa-user"></i></span></a>
   <ul>
     {if in_array("List Clients",$admin_perms)}<li><a id="Menu-Clients-View_Search_Clients" href="clients.php">{$_ADMINLANG.clients.viewsearch}</a></li>{/if}
     {if in_array("Add New Client",$admin_perms)}<li><a id="Menu-Clients-Add_New_Client" href="clientsadd.php">{$_ADMINLANG.clients.addnew}</a></li>{/if}
@@ -21,7 +21,7 @@
     {if in_array("Mass Mail",$admin_perms)}<li><a id="Menu-Clients-Mass_Mail_Tool" href="massmail.php">{$_ADMINLANG.clients.massmail}</a></li>{/if}
   </ul>
 </li>
-<li><a id="Menu-Orders" {if in_array("View Orders",$admin_perms)}href="orders.php"{/if} title="Orders">{$_ADMINLANG.orders.title}</a>
+<li><a id="Menu-Orders" {if in_array("View Orders",$admin_perms)}href="orders.php"{/if} title="Orders"><span class="hidden-xs">{$_ADMINLANG.orders.title}</span><span class="visible-xs"><i class="fa fa-shopping-cart"></i></span></a>
   <ul>
     {if in_array("View Orders",$admin_perms)}<li><a id="Menu-Orders-List_All_Orders" href="orders.php">{$_ADMINLANG.orders.listall}</a></li>
     <li><a id="Menu-Orders-Pending_Orders" href="orders.php?status=Pending">- {$_ADMINLANG.orders.listpending}</a></li>
@@ -31,13 +31,14 @@
     {if in_array("Add New Order",$admin_perms)}<li><a id="Menu-Orders-Add_New_Order" href="ordersadd.php">{$_ADMINLANG.orders.addnew}</a></li>{/if}
   </ul>
 </li>
-<li><a id="Menu-Billing" {if in_array("List Transactions",$admin_perms)}href="transactions.php"{/if} title="Billing">{$_ADMINLANG.billing.title}</a>
+<li><a id="Menu-Billing" {if in_array("List Transactions",$admin_perms)}href="transactions.php"{/if} title="Billing"><span class="hidden-xs">{$_ADMINLANG.billing.title}</span><span class="visible-xs"><i class="fa fa-calculator"></i></span></a>
   <ul>
     {if in_array("List Transactions",$admin_perms)}<li><a id="Menu-Billing-Transactions_List" href="transactions.php">{$_ADMINLANG.billing.transactionslist}</a></li>{/if}
     {if in_array("List Invoices",$admin_perms)}
     <li class="expand"><a id="Menu-Billing-Invoices" href="invoices.php">{$_ADMINLANG.invoices.title}</a>
         <ul>
         <li><a id="Menu-Billing-Invoices-Paid" href="invoices.php?status=Paid">- {$_ADMINLANG.status.paid}</a></li>
+        <li><a id="Menu-Billing-Invoices-Draft" href="invoices.php?status=Draft">- {$_ADMINLANG.status.draft}</a></li>
         <li><a id="Menu-Billing-Invoices-Unpaid" href="invoices.php?status=Unpaid">- {$_ADMINLANG.status.unpaid}</a></li>
         <li><a id="Menu-Billing-Invoices-Overdue" href="invoices.php?status=Overdue">- {$_ADMINLANG.status.overdue}</a></li>
         <li><a id="Menu-Billing-Invoices-Cancelled" href="invoices.php?status=Cancelled">- {$_ADMINLANG.status.cancelled}</a></li>
@@ -63,18 +64,18 @@
     {if in_array("View Gateway Log",$admin_perms)}<li><a id="Menu-Billing-Gateway_Log" href="gatewaylog.php">{$_ADMINLANG.billing.gatewaylog}</a></li>{/if}
   </ul>
 </li>
-<li><a id="Menu-Support" {if in_array("Support Center Overview",$admin_perms)}href="supportcenter.php"{/if} title="Support">{$_ADMINLANG.support.title}</a>
+<li><a id="Menu-Support" {if in_array("Support Center Overview",$admin_perms)}href="supportcenter.php"{/if} title="Support"><span class="hidden-xs">{$_ADMINLANG.support.title}</span><span class="visible-xs"><i class="fa fa-comments"></i></span></a>
   <ul>
     {if in_array("Support Center Overview",$admin_perms)}<li><a id="Menu-Support-Support_Overview" href="supportcenter.php">{$_ADMINLANG.support.supportoverview}</a></li>{/if}
-    {if in_array("Manage Announcements",$admin_perms)}<li><a id="Menu-Support-Annoucements" href="supportannouncements.php">{$_ADMINLANG.support.announcements}</a></li>{/if}
+    {if in_array("Manage Announcements",$admin_perms)}<li><a id="Menu-Support-Announcements" href="supportannouncements.php">{$_ADMINLANG.support.announcements}</a></li>{/if}
     {if in_array("Manage Downloads",$admin_perms)}<li><a id="Menu-Support-Downloads" href="supportdownloads.php">{$_ADMINLANG.support.downloads}</a></li>{/if}
     {if in_array("Manage Knowledgebase",$admin_perms)}<li><a id="Menu-Support-Knowledgebase" href="supportkb.php">{$_ADMINLANG.support.knowledgebase}</a></li>{/if}
     {if in_array("List Support Tickets",$admin_perms)}<li class="expand"><a id="Menu-Support-Support_Tickets" href="supporttickets.php">{$_ADMINLANG.support.supporttickets}</a>
         <ul>
         <li><a id="Menu-Support-Support_Tickets-Flagged_Tickets" href="supporttickets.php?view=flagged">- {$_ADMINLANG.support.flagged}</a></li>
         <li><a id="Menu-Support-Support_Tickets-All_Active_Tickets" href="supporttickets.php?view=active">- {$_ADMINLANG.support.allactive}</a></li>
-        {foreach from=$menuticketstatuses item=status}
-            <li><a id="Menu-Support-Support_Tickets-{$status.title|replace:' ':'_'}" href="supporttickets.php?view={$status.title}">- {$status.title}</a></li>
+        {foreach $menuticketstatuses as $status}
+            <li><a id="Menu-Support-Support_Tickets-{$status|replace:' ':'_'}" href="supporttickets.php?view={$status}">- {$status}</a></li>
         {/foreach}
         </ul>
     </li>{/if}
@@ -90,7 +91,7 @@
     </li>{/if}
   </ul>
 </li>
-{if in_array("View Reports",$admin_perms)}<li><a id="Menu-Reports" title="Reports" href="reports.php">{$_ADMINLANG.reports.title}</a>
+{if in_array("View Reports",$admin_perms)}<li><a id="Menu-Reports" title="Reports" href="reports.php"><span class="hidden-xs">{$_ADMINLANG.reports.title}</span><span class="visible-xs"><i class="fa fa-bar-chart"></i></span></a>
   <ul>
     <li><a id="Menu-Reports-Daily_Performance" href="reports.php?report=daily_performance">Daily Performance</a></li>
     <li><a id="Menu-Reports-Income_Forecast" href="reports.php?report=income_forecast">Income Forecast</a></li>
@@ -101,19 +102,22 @@
     <li><a id="Menu-Reports-More..." href="reports.php">More...</a></li>
   </ul>
 </li>{/if}
-<li><a id="Menu-Utilities" title="Utilities" href="">{$_ADMINLANG.utilities.title}</a>
+<li><a id="Menu-Utilities" title="Utilities" href=""><span class="hidden-xs">{$_ADMINLANG.utilities.title}</span><span class="visible-xs"><i class="fa fa-file-text-o"></i></span></a>
   <ul>
+    {if in_array("Update WHMCS",$admin_perms)}<li><a id="Menu-Utilities-Update" href="update.php">{$_ADMINLANG.update.title}</a></li>{/if}
+    {if in_array("WHMCSConnect",$admin_perms)}<li><a id="Menu-Utilities-WHMCS_Connect" href="whmcsconnect.php">{$_ADMINLANG.whmcsConnect.whmcsConnectName}</a></li>{/if}
+    {if in_array("View Module Queue", $admin_perms)}<li><a id="Menu-Utilities-Module_Queue" href="modulequeue.php">{$_ADMINLANG.utilities.moduleQueue}</a></li>{/if}
     {if in_array("Email Marketer",$admin_perms)}<li><a id="Menu-Utilities-Email_Marketer" href="utilitiesemailmarketer.php">{$_ADMINLANG.utilities.emailmarketer}</a></li>{/if}
     {if in_array("Link Tracking",$admin_perms)}<li><a id="Menu-Utilities-Link_Tracking" href="utilitieslinktracking.php">{$_ADMINLANG.utilities.linktracking}</a></li>{/if}
-    {if in_array("Browser",$admin_perms)}<li><a id="Menu-Utilities-Browser" href="browser.php">{$_ADMINLANG.utilities.browser}</a></li>{/if}
     {if in_array("Calendar",$admin_perms)}<li><a id="Menu-Utilities-Calendar" href="calendar.php">{$_ADMINLANG.utilities.calendar}</a></li>{/if}
     {if in_array("To-Do List",$admin_perms)}<li><a id="Menu-Utilities-To-Do_List" href="todolist.php">{$_ADMINLANG.utilities.todolist}</a></li>{/if}
     {if in_array("WHOIS Lookups",$admin_perms)}<li><a id="Menu-Utilities-WHOIS_Lookups" href="whois.php">{$_ADMINLANG.utilities.whois}</a></li>{/if}
     {if in_array("Domain Resolver Checker",$admin_perms)}<li><a id="Menu-Utilities-Domain_Resolver" href="utilitiesresolvercheck.php">{$_ADMINLANG.utilities.domainresolver}</a></li>{/if}
     {if in_array("View Integration Code",$admin_perms)}<li><a id="Menu-Utilities-Integration_Code" href="systemintegrationcode.php">{$_ADMINLANG.utilities.integrationcode}</a></li>{/if}
     {if in_array("WHM Import Script",$admin_perms)}<li><a id="Menu-Utilities-cPanel_WHM_Import" href="whmimport.php">{$_ADMINLANG.utilities.cpanelimport}</a></li>{/if}
-    {if in_array("Database Status",$admin_perms) || in_array("System Cleanup Operations",$admin_perms) || in_array("View PHP Info",$admin_perms)}<li class="expand"><a id="Menu-Utilities-System" href="#">{$_ADMINLANG.utilities.system}</a>
+    {if in_array("Automation Status", $admin_perms) || in_array("Database Status", $admin_perms) || in_array("System Cleanup Operations", $admin_perms) || in_array("View PHP Info", $admin_perms)}<li class="expand"><a id="Menu-Utilities-System" href="#">{$_ADMINLANG.utilities.system}</a>
         <ul>
+        {if in_array("Automation Status", $admin_perms)}<li><a id="Menu-Utilities-System-Automation_Status" href="automationstatus.php">{$_ADMINLANG.utilities.automationStatus}</a></li>{/if}
         {if in_array("Database Status",$admin_perms)}<li><a id="Menu-Utilities-System-Database_Status" href="systemdatabase.php">{$_ADMINLANG.utilities.dbstatus}</a></li>{/if}
         {if in_array("System Cleanup Operations",$admin_perms)}<li><a id="Menu-Utilities-System-System_Cleanup" href="systemcleanup.php">{$_ADMINLANG.utilities.syscleanup}</a></li>{/if}
         {if in_array("View PHP Info",$admin_perms)}<li><a id="Menu-Utilities-System-PHP_Info" href="systemphpinfo.php">{$_ADMINLANG.utilities.phpinfo}</a></li>{/if}
@@ -131,25 +135,29 @@
     </li>{/if}
   </ul>
 </li>
-<li><a id="Menu-Addons" title="Addons" href="addonmodules.php">{$_ADMINLANG.utilities.addonmodules}</a>
-  <ul>
-    {foreach from=$addon_modules key=module item=displayname}
-    <li><a id="Menu-Addons-{$displayname}" href="addonmodules.php?module={$module}">{$displayname}</a></li>
-    {foreachelse}
-    <li><a id="Menu-Addons-Addons_Directory" href="addonmodules.php">{$_ADMINLANG.utilities.addonsdirectory}</a></li>
-    {/foreach}
-  </ul>
+<li><a id="Menu-Addons" title="Addons" href="addonmodules.php"><span class="hidden-xs">{$_ADMINLANG.utilities.addonmodules}</span><span class="visible-xs"><i class="fa fa-cube"></i></span></a>
+    <ul>
+        {foreach from=$addon_modules key=module item=displayname}
+            <li><a id="Menu-Addons-{$displayname}" href="addonmodules.php?module={$module}">{$displayname}</a></li>
+        {foreachelse}
+            <li><a id="Menu-Addons-Marketplace-Link" class="autoLinked" href="https://marketplace.whmcs.com">Visit WHMCS Marketplace</a></li>
+        {/foreach}
+    </ul>
 </li>
-<li><a id="Menu-Setup" title="Setup" href="">{$_ADMINLANG.setup.title}</a>
+<li><a id="Menu-Setup" title="Setup" href=""><span class="hidden-xs">{$_ADMINLANG.setup.title}</span><span class="visible-xs"><i class="fa fa-cog"></i></span></a>
   <ul>
     {if in_array("Configure General Settings",$admin_perms)}<li><a id="Menu-Setup-General_Settings" href="configgeneral.php">{$_ADMINLANG.setup.general}</a></li>{/if}
+    {if in_array("Configure Sign-In Integration",$admin_perms)}<li><a id="Menu-Setup-Sign-In_Integrations" href="{routePath('admin-setup-authn-view')}">{$_ADMINLANG.setup.signInIntegrations}</a></li>{/if}
     {if in_array("Configure Automation Settings",$admin_perms)}<li><a id="Menu-Setup-Automation_Settings" href="configauto.php">{$_ADMINLANG.setup.automation}</a></li>{/if}
-{if in_array("Configure Administrators",$admin_perms) || in_array("Configure Admin Roles",$admin_perms) || in_array("Configure Two-Factor Authentication",$admin_perms)}
+    {if in_array("Manage MarketConnect",$admin_perms)}<li><a id="Menu-Setup-Manage_MarketConnect" href="marketconnect.php">{$_ADMINLANG.setup.marketconnect}</a></li>{/if}
+    {if in_array("Manage Notifications",$admin_perms)}<li><a id="Menu-Setup-Notifications" href="{routePath('admin-setup-notifications-overview')}">{$_ADMINLANG.notifications.title}</a></li>{/if}
+{if in_array("Configure Administrators",$admin_perms) || in_array("Configure Admin Roles",$admin_perms) || in_array("Configure Two-Factor Authentication",$admin_perms) || in_array("Manage API Credentials",$admin_perms)}
     <li class="expand"><a id="Menu-Setup-Staff_Management" href="#">{$_ADMINLANG.setup.staff}</a>
         <ul>
         {if in_array("Configure Administrators",$admin_perms)}<li><a id="Menu-Setup-Staff_Management-Administrator_Users" href="configadmins.php">{$_ADMINLANG.setup.admins}</a></li>{/if}
         {if in_array("Configure Admin Roles",$admin_perms)}<li><a id="Menu-Setup-Staff_Management-Administrator_Roles" href="configadminroles.php">{$_ADMINLANG.setup.adminroles}</a></li>{/if}
         {if in_array("Configure Two-Factor Authentication",$admin_perms)}<li><a id="Menu-Setup-Staff_Management-Two-Factor_Authentication" href="configtwofa.php">{$_ADMINLANG.setup.twofa}</a></li>{/if}
+        {if in_array("Manage API Credentials",$admin_perms)}<li><a id="Menu-Setup-Staff_Management-API_Credentials" href="configapicredentials.php">{$_ADMINLANG.setup.apicredentials}</a></li>{/if}
         </ul>
     </li>{else}
     <li><a id="Menu-Setup-Staff_Management-My_Account" href="myaccount.php">{$_ADMINLANG.global.myaccount}</a></li>{/if}
@@ -183,6 +191,8 @@
         {if in_array("Configure Spam Control",$admin_perms)}<li><a id="Menu-Setup-Support-Spam_Control" href="configticketspamcontrol.php">{$_ADMINLANG.setup.spam}</a></li>{/if}
         </ul>
     </li>{/if}
+    {if in_array("Configure Application Links",$admin_perms)}<li><a id="Menu-Setup-Application_Links" href="configapplinks.php">{$_ADMINLANG.setup.applicationLinks}</a></li>{/if}
+    {if in_array("Configure OpenID Connect",$admin_perms)}<li><a id="Menu-Setup-OpenID_Connect" href="configopenid.php">{$_ADMINLANG.setup.openIdConnect}</a></li>{/if}
     {if in_array("View Email Templates",$admin_perms)}<li><a id="Menu-Setup-Email_Templates" href="configemailtemplates.php">{$_ADMINLANG.setup.emailtpls}</a></li>{/if}
     {if in_array("Configure Addon Modules",$admin_perms)}<li><a id="Menu-Setup-Addons_Modules" href="configaddonmods.php">{$_ADMINLANG.setup.addonmodules}</a></li>{/if}
     {if in_array("Configure Client Groups",$admin_perms)}<li><a id="Menu-Setup-Client_Groups" href="configclientgroups.php">{$_ADMINLANG.setup.clientgroups}</a></li>{/if}
@@ -200,14 +210,30 @@
     </li>{/if}
   </ul>
 </li>
-<li><a id="Menu-Help" title="Help" href="">{$_ADMINLANG.help.title}</a>
+<li><a id="Menu-Help" title="Help" href=""><span class="hidden-xs">{$_ADMINLANG.help.title}</span><span class="visible-xs"><i class="fa fa-support"></i></span></a>
   <ul>
-    <li><a id="Menu-Help-Documentation" href="http://nullrefer.com/?http://docs.whmcs.com/" target="_blank">{$_ADMINLANG.help.docs}</a></li>
-    {if in_array("Main Homepage",$admin_perms)}<li><a id="Menu-Help-License_Information" href="systemlicense.php">{$_ADMINLANG.help.licenseinfo}</a></li>{/if}
+    <li><a id="Menu-Help-Documentation" href="http://docs.whmcs.com/" target="_blank">{$_ADMINLANG.help.docs}</a></li>
+    {if in_array("Main Homepage",$admin_perms)}<li><a id="Menu-Help-License_Information" href="{routePath('admin-help-license')}">{$_ADMINLANG.help.licenseinfo}</a></li>{/if}
     {if in_array("Configure Administrators",$admin_perms)}<li><a id="Menu-Help-Change_License_Key" href="licenseerror.php?licenseerror=change">{$_ADMINLANG.help.changelicense}</a></li>{/if}
-    {if in_array("Configure General Settings",$admin_perms)}<li><a id="Menu-Help-Check_For_Updates" href="systemupdates.php">{$_ADMINLANG.help.updates}</a></li>
-    <li><a id="Menu-Help-Get_Help" href="systemsupportrequest.php">{$_ADMINLANG.help.support}</a></li>{/if}
-    <li><a id="Menu-Help-Community_Forums" href="http://nullrefer.com/?http://forum.whmcs.com/" target="_blank">{$_ADMINLANG.help.forums}</a></li>
+    {if in_array("Health and Updates", $admin_perms)}
+        <li>
+            <a id="Menu-Help-Check_Health_Updates" href="systemhealthandupdates.php">
+                {$_ADMINLANG.healthCheck.menuTitle}
+            </a>
+        </li>
+    {/if}
+    {if in_array("View What's New",$admin_perms)}
+        <li>
+            <a id="Menu-Help-Whats_New" href="javascript:openFeatureHighlights()">
+                {$_ADMINLANG.whatsNew.menuTitle}
+            </a>
+        </li>
+    {/if}
+    {if in_array("Configure General Settings",$admin_perms)}
+        <li><a id="Menu-Help-Setup_Wizard" href="#" onclick="openSetupWizard();return false;">{$_ADMINLANG.help.setupWizard}</a></li>
+        <li><a id="Menu-Help-Get_Help" href="systemsupportrequest.php">{$_ADMINLANG.help.support}</a></li>
+    {/if}
+    <li><a id="Menu-Help-Community_Forums" href="https://whmcs.community/?utm_source=InApp&utm_medium=Help_Menu" target="_blank">{$_ADMINLANG.help.forums}</a></li>
   </ul>
 </li>
 </ul>

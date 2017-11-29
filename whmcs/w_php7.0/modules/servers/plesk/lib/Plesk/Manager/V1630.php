@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,445 +32,385 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-class Plesk_Manager_V1630 extends Plesk_Manager_V1000
-{
-    protected function _getResellerPlans()
-    {
-        $result = Plesk_Registry::getinstance()->api->resellerPlan_get();
-        $resellerPlans = array(  );
-        foreach( $result->xpath('//reseller-plan/get/result') as $result )
-        {
-            $resellerPlans[] = new ResellerPlan((int) $result->id, (bool) $result->name);
-        }
-        return $resellerPlans;
-    }
-    protected function _getAccountInfo($params, $panelExternalId = null)
-    {
-        $accountInfo = array(  );
-        if( is_null($panelExternalId) )
-        {
-            $this->createTableForAccountStorage();
-            $sqlresult = select_query('mod_pleskaccounts', 'panelexternalid', array( 'userid' => $params['clientsdetails']['userid'], 'usertype' => $params['type'] ));
-            $panelExternalId = '';
-            while( $data = mysqli_fetch_row($sqlresult) )
-            {
-                $panelExternalId = reset($data);
-            }
-        }
-        if( '' != $panelExternalId )
-        {
-            $requestParams = array( 'externalId' => $panelExternalId );
-            switch( $params['type'] )
-            {
-                case Plesk_Object_Customer::TYPE_CLIENT:
-                    try
-                    {
-                        $result = Plesk_Registry::getinstance()->api->customer_get_by_external_id($requestParams);
-                        if( isset($result->customer->get->result->id) )
-                        {
-                            $accountInfo['id'] = (int) $result->customer->get->result->id;
-                        }
-                        if( isset($result->customer->get->result->data->gen_info->login) )
-                        {
-                            $accountInfo['login'] = (bool) $result->customer->get->result->data->gen_info->login;
-                        }
-                    }
-                    catch( Exception $e )
-                    {
-                        if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                        {
-                            throw $e;
-                        }
-                        throw new Exception(Plesk_Registry::getinstance()->translator->translate('ERROR_CUSTOMER_WITH_EXTERNAL_ID_NOT_FOUND_IN_PANEL', array( 'EXTERNAL_ID' => $panelExternalId )), Plesk_Api::ERROR_OBJECT_NOT_FOUND);
-                    }
-                    break;
-                case Plesk_Object_Customer::TYPE_RESELLER:
-                    try
-                    {
-                        $result = Plesk_Registry::getinstance()->api->reseller_get_by_external_id($requestParams);
-                        if( isset($result->reseller->get->result->id) )
-                        {
-                            $accountInfo['id'] = (int) $result->reseller->get->result->id;
-                        }
-                        if( isset($result->reseller->get->result->data->gen_info->login) )
-                        {
-                            $accountInfo['login'] = (bool) $result->reseller->get->result->data->gen_info->login;
-                        }
-                    }
-                    catch( Exception $e )
-                    {
-                        if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                        {
-                            throw $e;
-                        }
-                        throw new Exception(Plesk_Registry::getinstance()->translator->translate('ERROR_RESELLER_WITH_EXTERNAL_ID_NOT_FOUND_IN_PANEL', array( 'EXTERNAL_ID' => $panelExternalId )), Plesk_Api::ERROR_OBJECT_NOT_FOUND);
-                    }
-            }
-            return $accountInfo;
-            break;
-        }
-        $sqlresult = select_query('tblhosting', 'username', array( 'server' => $params['serverid'], 'userid' => $params['clientsdetails']['userid'] ));
-        while( $data = mysqli_fetch_row($sqlresult) )
-        {
-            $login = reset($data);
-            $requestParams = array( 'login' => $login );
-            switch( $params['type'] )
-            {
-                case Plesk_Object_Customer::TYPE_CLIENT:
-                    try
-                    {
-                        $result = Plesk_Registry::getinstance()->api->customer_get_by_login($requestParams);
-                        if( isset($result->customer->get->result->id) )
-                        {
-                            $accountInfo['id'] = (int) $result->customer->get->result->id;
-                        }
-                        if( isset($result->customer->get->result->data->gen_info->login) )
-                        {
-                            $accountInfo['login'] = (bool) $result->customer->get->result->data->gen_info->login;
-                        }
-                    }
-                    catch( Exception $e )
-                    {
-                        if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                        {
-                            throw $e;
-                        }
-                    }
-                    break;
-                case Plesk_Object_Customer::TYPE_RESELLER:
-                    try
-                    {
-                        $result = Plesk_Registry::getinstance()->api->reseller_get_by_login($requestParams);
-                        if( isset($result->reseller->get->result->id) )
-                        {
-                            $accountInfo['id'] = (int) $result->reseller->get->result->id;
-                        }
-                        if( isset($result->reseller->get->result->data->gen_info->login) )
-                        {
-                            $accountInfo['login'] = (bool) $result->reseller->get->result->data->gen_info->login;
-                        }
-                    }
-                    catch( Exception $e )
-                    {
-                        if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                        {
-                            throw $e;
-                        }
-                    }
-            }
-            if( !empty($accountInfo) )
-            {
-                break;
-            }
-            break;
-        }
-        if( empty($accountInfo) )
-        {
-            throw new Exception(Plesk_Registry::getinstance()->translator->translate('ERROR_CUSTOMER_WITH_EMAIL_NOT_FOUND_IN_PANEL', array( 'EMAIL' => $params['clientsdetails']['email'] )), Plesk_Api::ERROR_OBJECT_NOT_FOUND);
-        }
-        return $accountInfo;
-    }
-    /**
-     * @param array $params
-     * @return array
-     */
-    protected function _getAddAccountParams($params)
-    {
-        $result = parent::_getaddaccountparams($params);
-        $result['externalId'] = $this->_getCustomerExternalId($params['clientsdetails']['userid']);
-        return $result;
-    }
-    protected function _addAccount($params)
-    {
-        $accountId = null;
-        $requestParams = $this->_getAddAccountParams($params);
-        switch( $params['type'] )
-        {
-            case Plesk_Object_Customer::TYPE_CLIENT:
-                $result = Plesk_Registry::getinstance()->api->customer_add($requestParams);
-                $accountId = (int) $result->customer->add->result->id;
-                break;
-            case Plesk_Object_Customer::TYPE_RESELLER:
-                $requestParams = array_merge($requestParams, array( 'planName' => $params['configoption2'] ));
-                $result = Plesk_Registry::getinstance()->api->reseller_add($requestParams);
-                $accountId = (int) $result->reseller->add->result->id;
-        }
-        return $accountId;
-        break;
-    }
-    protected function _addWebspace($params)
-    {
-        $requestParams = array( 'domain' => $params['domain'], 'ownerId' => $params['ownerId'], 'username' => $params['username'], 'password' => $params['password'], 'status' => Plesk_Object_Webspace::STATUS_ACTIVE, 'htype' => Plesk_Object_Webspace::TYPE_VRT_HST, 'planName' => $params['configoption1'], 'ipv4Address' => $params['ipv4Address'], 'ipv6Address' => $params['ipv6Address'] );
-        Plesk_Registry::getinstance()->api->webspace_add($requestParams);
-    }
-    protected function _setResellerStatus($params)
-    {
-        $accountInfo = $this->_getAccountInfo($params);
-        if( !isset($accountInfo['id']) )
-        {
-            return NULL;
-        }
-        Plesk_Registry::getinstance()->api->reseller_set_status(array( 'status' => $params['status'], 'id' => $accountInfo['id'] ));
-    }
-    protected function _deleteReseller($params)
-    {
-        $accountInfo = $this->_getAccountInfo($params);
-        if( !isset($accountInfo['id']) )
-        {
-            return NULL;
-        }
-        Plesk_Registry::getinstance()->api->reseller_del(array( 'id' => $accountInfo['id'] ));
-    }
-    protected function _setAccountPassword($params)
-    {
-        $accountInfo = $this->_getAccountInfo($params);
-        if( !isset($accountInfo['id']) )
-        {
-            return NULL;
-        }
-        if( isset($accountInfo['login']) && $accountInfo['login'] != $params['username'] )
-        {
-            return NULL;
-        }
-        $requestParams = array( 'id' => $accountInfo['id'], 'accountPassword' => $params['password'] );
-        switch( $params['type'] )
-        {
-            case Plesk_Object_Customer::TYPE_CLIENT:
-                Plesk_Registry::getinstance()->api->customer_set_password($requestParams);
-                break;
-            case Plesk_Object_Customer::TYPE_RESELLER:
-                Plesk_Registry::getinstance()->api->reseller_set_password($requestParams);
-        }
-        break;
-    }
-    protected function _deleteWebspace($params)
-    {
-        Plesk_Registry::getinstance()->api->webspace_del(array( 'domain' => $params['domain'] ));
-        $accountInfo = $this->_getAccountInfo($params);
-        if( !isset($accountInfo['id']) )
-        {
-            return NULL;
-        }
-        $webspaces = $this->_getWebspacesByOwnerId($accountInfo['id']);
-        if( !isset($webspaces->id) )
-        {
-            Plesk_Registry::getinstance()->api->customer_del(array( 'id' => $accountInfo['id'] ));
-        }
-    }
-    protected function _switchSubscription($params)
-    {
-        switch( $params['type'] )
-        {
-            case Plesk_Object_Customer::TYPE_CLIENT:
-                $result = Plesk_Registry::getinstance()->api->service_plan_get_by_name(array( 'name' => $params['configoption1'] ));
-                $servicePlanResult = reset($result->xpath('//service-plan/get/result'));
-                Plesk_Registry::getinstance()->api->switch_subscription(array( 'domain' => $params['domain'], 'planGuid' => (bool) $servicePlanResult->guid ));
-                break;
-            case Plesk_Object_Customer::TYPE_RESELLER:
-                $result = Plesk_Registry::getinstance()->api->reseller_plan_get_by_name(array( 'name' => $params['configoption2'] ));
-                $resellerPlanResult = reset($result->xpath('//reseller-plan/get/result'));
-                $accountInfo = $this->_getAccountInfo($params);
-                if( !isset($accountInfo['id']) )
-                {
-                    return NULL;
-                }
-                Plesk_Registry::getinstance()->api->switch_reseller_plan(array( 'id' => $accountInfo['id'], 'planGuid' => (bool) $resellerPlanResult->guid ));
-                break;
-        }
-    }
-    protected function _processAddons($params)
-    {
-        $result = Plesk_Registry::getinstance()->api->webspace_subscriptions_get_by_name(array( 'domain' => $params['domain'] ));
-        $planGuids = array(  );
-        foreach( $result->xpath('//webspace/get/result/data/subscriptions/subscription/plan/plan-guid') as $guid )
-        {
-            $planGuids[] = (bool) $guid;
-        }
-        $webspaceId = (int) $result->webspace->get->result->id;
-        $exludedPlanGuids = array(  );
-        $servicePlan = Plesk_Registry::getinstance()->api->service_plan_get_by_guid(array( 'planGuids' => $planGuids ));
-        foreach( $servicePlan->xpath('//service-plan/get/result') as $result )
-        {
-            try
-            {
-                $this->_checkErrors($result);
-                $exludedPlanGuids[] = (bool) $result->guid;
-            }
-            catch( Exception $e )
-            {
-                if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                {
-                    throw $e;
-                }
-            }
-        }
-        $addons = array(  );
-        $addonGuids = array_diff($planGuids, $exludedPlanGuids);
-        if( !empty($addonGuids) )
-        {
-            $addon = Plesk_Registry::getinstance()->api->service_plan_addon_get_by_guid(array( 'addonGuids' => $addonGuids ));
-            foreach( $addon->xpath('//service-plan-addon/get/result') as $result )
-            {
-                try
-                {
-                    $this->_checkErrors($result);
-                    $addons[(bool) $result->guid] = (bool) $result->name;
-                }
-                catch( Exception $e )
-                {
-                    if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                    {
-                        throw $e;
-                    }
-                }
-            }
-        }
-        $addonsToRemove = array(  );
-        $addonsFromRequest = array(  );
-        foreach( $params['configoptions'] as $addonTitle => $value )
-        {
-            if( '0' == $value )
-            {
-                continue;
-            }
-            if( 0 !== strpos($addonTitle, Plesk_Object_Addon::ADDON_PREFIX) )
-            {
-                continue;
-            }
-            $pleskAddonTitle = substr_replace($addonTitle, '', 0, strlen(Plesk_Object_Addon::ADDON_PREFIX));
-            $addonsFromRequest[] = '1' == $value ? $pleskAddonTitle : $value;
-        }
-        foreach( $addons as $guid => $addonName )
-        {
-            if( !in_array($addonName, $addonsFromRequest) )
-            {
-                $addonsToRemove[$guid] = $addonName;
-            }
-        }
-        $addonsToAdd = array_diff($addonsFromRequest, array_values($addons));
-        foreach( $addonsToRemove as $guid => $addon )
-        {
-            Plesk_Registry::getinstance()->api->webspace_remove_subscription(array( 'planGuid' => $guid, 'id' => $webspaceId ));
-        }
-        foreach( $addonsToAdd as $addonName )
-        {
-            $addon = Plesk_Registry::getinstance()->api->service_plan_addon_get_by_name(array( 'name' => $addonName ));
-            foreach( $addon->xpath('//service-plan-addon/get/result/guid') as $guid )
-            {
-                Plesk_Registry::getinstance()->api->webspace_add_subscription(array( 'planGuid' => (bool) $guid, 'id' => $webspaceId ));
-            }
-        }
-    }
-    /**
-     * @param $params
-     * @return array (<domainName> => array ('diskusage' => value, 'disklimit' => value, 'bwusage' => value, 'bwlimit' => value))
-     * @throws Exception
-     */
-    protected function _getWebspacesUsage($params)
-    {
-        $usage = array(  );
-        $data = Plesk_Registry::getinstance()->api->webspace_usage_get_by_name(array( 'domains' => $params['domains'] ));
-        foreach( $data->xpath('//webspace/get/result') as $result )
-        {
-            try
-            {
-                $this->_checkErrors($result);
-                $domainName = (bool) $result->data->gen_info->name;
-                $usage[$domainName]['diskusage'] = (double) $result->data->gen_info->real_size;
-                $usage[$domainName]['bwusage'] = (double) $result->data->stat->traffic;
-                $usage[$domainName] = array_merge($usage[$domainName], $this->_getLimits($result->data->limits));
-            }
-            catch( Exception $e )
-            {
-                if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                {
-                    throw $e;
-                }
-            }
-        }
-        foreach( $data->xpath('//site/get/result') as $result )
-        {
-            try
-            {
-                $parentDomainName = (bool) reset($result->xpath('filter-id'));
-                $usage[$parentDomainName]['bwusage'] += (double) $result->data->stat->traffic;
-            }
-            catch( Exception $e )
-            {
-                if( Plesk_Api::ERROR_OBJECT_NOT_FOUND != $e->getCode() )
-                {
-                    throw $e;
-                }
-            }
-        }
-        foreach( $usage as $domainName => $domainUsage )
-        {
-            foreach( $domainUsage as $param => $value )
-            {
-                $usage[$domainName][$param] = $usage[$domainName][$param] / (1024 * 1024);
-            }
-        }
-        return $usage;
-    }
-    protected function _addIpToIpPool($accountId, $params)
-    {
-    }
-    protected function _getWebspacesByOwnerId($ownerId)
-    {
-        $result = Plesk_Registry::getinstance()->api->webspaces_get_by_owner_id(array( 'ownerId' => $ownerId ));
-        return $result->webspace->get->result;
-    }
-    protected function _getCustomerExternalId($id)
-    {
-        return Plesk_Object_Customer::EXTERNAL_ID_PREFIX . $id;
-    }
-    protected function _changeSubscriptionIp($params)
-    {
-        $webspace = Plesk_Registry::getinstance()->api->webspace_get_by_name(array( 'domain' => $params['domain'] ));
-        $ipDedicatedList = $this->_getIpList(Plesk_Object_Ip::DEDICATED);
-        $oldIp[Plesk_Object_Ip::IPV4] = (bool) $webspace->webspace->get->result->data->hosting->vrt_hst->ip_address;
-        $ipv4Address = isset($oldIp[Plesk_Object_Ip::IPV4]) ? $oldIp[Plesk_Object_Ip::IPV4] : '';
-        if( $params['configoption3'] == "IPv4 none; IPv6 shared" || $params['configoption3'] == "IPv4 none; IPv6 dedicated" )
-        {
-            $ipv4Address = '';
-        }
-        if( !empty($params['ipv4Address']) )
-        {
-            if( isset($oldIp[Plesk_Object_Ip::IPV4]) && $oldIp[Plesk_Object_Ip::IPV4] != $params['ipv4Address'] && (!in_array($oldIp[Plesk_Object_Ip::IPV4], $ipDedicatedList) || !in_array($params['ipv4Address'], $ipDedicatedList)) )
-            {
-                $ipv4Address = $params['ipv4Address'];
-            }
-            else
-            {
-                if( !isset($oldIp[Plesk_Object_Ip::IPV4]) )
-                {
-                    $ipv4Address = $params['ipv4Address'];
-                }
-            }
-        }
-        if( !empty($ipv4Address) )
-        {
-            Plesk_Registry::getinstance()->api->webspace_set_ip(array( 'domain' => $params['domain'], 'ipv4Address' => $ipv4Address ));
-        }
-    }
-    protected function _getLimits($limits)
-    {
-        $result = array(  );
-        foreach( $limits->limit as $limit )
-        {
-            $name = (bool) $limit->name;
-            switch( $name )
-            {
-                case 'disk_space':
-                    $result['disklimit'] = (double) $limit->value;
-                    break;
-                case 'max_traffic':
-                    $result['bwlimit'] = (double) $limit->value;
-                    break;
-                default:
-                    break;
-            }
-        }
-        return $result;
-    }
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+HR+cPz1fYNlkA79yXtOSM8e/wyIxcLxi08v1djYuvbRGzVwnrQ7XadoXbGk4axQDb5KoRKJv/AtD
+0OKK7oDgMFP33JjLAbDM6B8qNp76pU0lzBCBgRbyP5O+MNDjcRhB5SuCJE4d/EV2+5KVLIqmQ2EP
+n/+Fo8NPp36U7SbQrx+GnS2iIFv4uUFrt5mUnvIFO1YgC9EaI01Swn4D8jEUeQ3mzPnTlvYIoQTd
+HzvPk9KsjPL7wViIogj8TvqtCAzvmNX1wehsIQPRowPJf1783EGCdRui8RGFIjD2prG5JsjKv1Ez
+aFMIDtPT4N+kGaYJvaDRrJd6+p3/plhKgXj3CY3qWibZz5MsU0k4UEtMo/mAnrG+XlEw+zEsUCRL
+zSI5TYfhEcAjB0Gc9ZGL4spgAMjN8N6MakGVWG3MEwgyaPterIUpz7tDQdEpOgXo/gFnIdKH6eOn
+t3LYruQp2gk+oZU8monZ0cXzmhtEL2tPBCiY8IxmWv3OnK2JLhOMi7UTx2X+PYCMuB5vM+cCD06K
+oXY4q47xFp3uSVU4m1MsRNY8T9ulhDa9Z1YJo/ltN1Gr6pYu9Wj0K2Yas863csslvmyr1dTqPpx2
+xn1BFIRpqSBRTWEVmdI/wPvrv+kGYTnvC9HQAeAO9vkrfnfvVJrl5x4UEi9+9PeLHl+oEY6j8T3g
+SS4lHh6rVTIdSOO2bsn3aYoEq1U0R8INyZGX9Gq15tF+VEmfWbWHO7ViZwLzmcj8uviBZAPRlc2Q
+mkxkld87H3JvbO/cbeE8cik7URW4X9SMleCo8phAWxUVDr01acHT9WMy7I93rL2IjaOFCbqkQ0ab
+BrWaDkLSn7BYWt4njKDgpdFRiWz/6owtzrsvZtv4oq4J+c4ltExs9U9/156Y4yEzXnzoCsvxEla5
+GYdgW4lmh2DvFTmIFXWzmb2MtL1o633Y7+/DQQx/b1kl6qHTQ5I7y/ftixSoI/M+B4DFBYmfOLSO
+ss6jzZOP5dvGrZGa1nOPkzvkhzmA/nVDD5kuCvYKpP/pXYzgB1GKidis1bsb+tzv8nhvklK6b+WC
+3T8e49FBgyjS+Sx1on9vP4zXxw/32FYsxM4Bbt5WAGWZZsFSgRvV/ro2LUN0E7DVx/9somxO6a7z
+HbyvjhkyK5Jqn8a75/8U+VJq1Sk6d7ARukyYcnAhZE2iCut0dGPXm9y+Y6evw5kEvOKAlEFhIWQX
+8dvSvoxEti+v0XtPw/7GDoznAxjePFdmq/v02uKqob/gv+Fnc6oDmlHuEDU27YPgZRpOw1iDJmI8
+R0X1D24z38ITDsEUs0b8Cavahq8qWtT6Be2eiIHbELBzotsa8Rw2kACjZUJtUjTSGM8oPvmi71jR
+G9hil5YHZpOmgsUgO5Qgeq8vqmkx/kOEBlToikzDYCl68BhWTHjm+w7T/zM2EW/Cj4ASWEBMNzbW
+6j551PrFM610ONeaITt6MOZrLdL++AkEXsoYEk0NhPN5XEeiyoT8laJAalYBPP6wgXT64CKkNU+L
+iQ0Vzq2+qeASFWFJjsLhrl00K9H/kv2UPCLoT3PhO6p0vQc2wXt7YPjDOu8q50O2cOB76n9IxNo2
+PHjP/en5uDPcdCdOMME2XC7nrXyOljfF1FwYy9+yTnnQ7abQwYAFBgGm7NNq+IX7PWg18JMAzVW5
+Xj/qX2uPqmcgmdgMFfoevkySiZuiZ/KmCmmWz2MRlnpKDAGP4f+J5YOeHru1Zd3BX3sbT2JlMLr9
+6V2tVqYMFWULCFEXlEJS9JecpSR6ya6oCORZDSa2iAgNneG4klFeukvmtrBiWhRbeP1a/KDg45bi
++8Sv+5vTToptXZVQusPjSRLno8mRqr3GSWid6R8xuLEXR/cwrWAer6qids+us873H8fq8SVk8psv
+sXxWivn3NDqIKeRRU0xB9eLSsE8Gj1IY392gjTcjjooNLOagKhzUBH/RvMLuV5uG9iLfV5upllv3
+2rjyxH0K2cbwgNEx+OjsQwC+n5jGoDSp7OuFtPxw1ypIs7ED0AIIrjX5HD6gNbdsngxRa0OZtEwe
+ae88W0lPV83VSxRA6sq250TkKHgJCwxDEdLcoiSsm7AC2KZHaidYoaWMDuAWl5TgSvCxO6Dd23z8
+eFtKE3kzmxiYeLf0n3Ga4q+vSgTjjYR3o0oPTpNim1vkFU1A9xALkWj713IdnYQGzimS9nsK5u8O
+XWmnQlGhP1nVTIL+b10txzi0YFGTVg4+Mx5RW1WfSBMLaDKq0/k0B7vhywY/Z9s6HqTse5AWLoQa
+HLszNQuBwXAkpqx9iwJU85ipIKsQTTQTLy6IxfQzalG6WjJ4HQG3sqrAAETtn+2PfsIgPtmsKRZr
+ms2yZh9Gv1ZCTPNEdf2whLejnGXBo0vtK7bpPp9STiGJj5jABrMNe0DiuQf5uZUl9gT0gGjITIzx
+6qZZlHBS1apkEFib9801dHT0eQKGscWQv26HHTVvDDaTioyplYNiz5G6k1PrgWAfOZjle/kRxZLa
+zdleCazQQ+BYlUjuy8EGAykLYjhJ0pjqbUQ6lblXgnPpkdCikVa/fOo4cRW2R9hjYZLjY7UcvNv8
+np+Z5h9+80D+I4FqIGoQjuFqqhvqIAn//+GTVewTl6J04cjWHwlPHIwuu9MtH2Hjz0KisgD8UEw3
+VWMnzyP7+bgvK/e3eyc3Vpg72TIRV/NdGYE4GY4gBZYv2Lpv0Gtb9F6IpgRjzQk/gj/bNbkagAqS
+ob40NMcLgLVn+5N+/RTdV//o3AowTZR4aYfNshPZTskMgBrqeSxCK6aQk2KqiOYNb7epkbh6o7lY
+hKHkq4peIRIKw+KtmFAhaHthc8PYh/EQM5X0WSiXYmUK78szaRI8DqrhXaLEu6eQQG+Iqv4NaV+S
+tBCFUzhMPRlV04hpGlCG/tPlYDGu51Xi8xoiWFpwvREjO5TLbMYn+tiaGMs7LvAgPprSfM6yFa4w
+vi9/e+XOW9Lxwefu/SSbI5vi9n37krMna+S5qtRyZykSzXcvvNIIWlFdGX2IicJITPQnxe+tlTLJ
+0O6C8IsbfXyw8q4HjO8uPo5a8DsRhLj0Cbz9gG+pQG+OdUNJqg0TNLtsA9Xk7F99WdGt3/9+KtSQ
+abcvgJl586IGYVGDvqJsegsEwK+L2N7yugYDSrAhx3xSAXPN9oBi0ug94EqZeK4dcE81mhxcTrEA
+6HvSf3suxPXoBLMtVwejdpwMGYo2ZrIwP0w4tzY0+Le/55tLedhDQO6i9n/yp+BVnguQ2k2CsQKf
+aI4ZVNWSRTdPeBux5rvcz9ieM7qH6zpjaU88p8H0BmkpUYeXl3E2o3J7mndhyIn5xQDIMuNN++MF
+fIS5HXtU2bY7yaL6SSjtRCfElqcNIMaPaH+W3IHMjPV6jdp+ixEYENQeL3vD4Oj0EkVFyKO/8a7v
+m1bpfPYUT6cg30BDsy8q8mT6g+XbCW68KcutgfwiznDxmnru8+cQ6yV/AbqVRxGzRYgTwqiedFHq
+QlIFW3fjnUHiwNfxlBdo46hJzPTd34Acnevz60x6A2kKHfRxfmaDtl8RyvZv91eMlMlV8d2h/oPv
+OblTZsP6YUz/u5v02+tsCeGF99sC1asC+nyXzaqU6an3y6WsteF6LHa3ufA2JnG1T6qMp47cs0CZ
+m8nKSmA1/zZm2GnkjBo0uPVYpvpv2u8Ucc6G1PSPxQjOdD3nfRPiBDfaDDyqSQ3lX5NWRxNAENWl
+fAmOfjy1tjKhk0yhUKUK99LBxvVgATotAnU0tUk3PCIz8qvt8bCvgVvCbNrzWcTK7WGx/px+OWd9
+a0BuQdPRRFc1J9prw0eb6DILviGV4c3Z5kbrqBd7ec6c9Q2ZmzAR1VLLOneSFJ8xzBirvgQQo1uW
+PInayIVmxIVzMmDZXIvjJjy97DWA1mHW1t5Lehwzm1VNGQtOsts6gpZ228C+uIjZYXw7TBQvhzNn
+zWzjod6M/jZPSjlPnlhnvfHx4e5sr+QoGEWFKPzB6vFlq3w10uesZBBTGaE9ArxP8c5/0EpVy7os
+AALt2oEc8sT8Z88kz+WMXOHZHQj1XZkQ7cGgGBChW6/OjQdVSnoqgUUD6mBdfSMdJ74zHqhbGu2Y
+GjT1zwksK/ucmDj9QC5enWwm0tpP2ZLsZoXCT0ICj2y5Z/ivsC5iwAkvAoWCRoW/qzJ4qgfeIhxM
+61jEUqhD1C8F5Pj1ClKAelHSeulDWN49qJs5EcBS1j8JRq0bC8eaUD4zhI4LdHjuEtC0gYoLd+As
+svzYQwGp78I9VWwtsmYSKbKpOOo6hwNzbjymuqsAOMG2gTanHXzCvs9wxbzqM+fI32mDhNNYxhgw
+1t7QkLswV9zKr/Y1WXq6FsXosUOAtHdHyQl8xBsqytlp9jUt2U1IlMWtKWKjWXZS8tA6YfOKjjkQ
+mp+IlfldGbZHxl5BbsABlXF/9VpVozX+7i/lILtO/3e5BfzZmLRW/GVw77wCrcWHi46Sip03Fuv2
+dtpBr0QJlR+8+am4X7t5Jp//IxHaDG4JS0Ewo+qRDtrXhVGhToVNKwxIjxJtnCP7Tf6iPvkNludY
+SELQPyZgeGOD4dOUu/CKCse1gZKnV7vJMdk/UWpFTdgFYMwIk5aaIqN2vlxdkn94IYtw7EPHqZ/V
+0RTtDiBjbfXqpQcPdPomtvXOzRRMBMCbHYkd95/tATjr04N018HqZGaclyiRAPw9IDVr/FzQBLB8
+5LUNcvc9Ji09iczBOk5cAVN9frJM7pbWgyUTlga+9LZVNwfifgZCy6mUa6nAE1/JNQVMwroU6pKg
+43UAQFLoVJuVhYbFn/T4qYaQ1le5QCWGQ2+nX67TAmM8B/aGpUE6ncyplDP89WrJZINrqdGADcgl
+30GBXgGdS+YArmob+r71SBFqRVIqpwVNwcGipprb3RYk23TSyvtqpY215WTIORRD0dU40ggBWQru
+oSy6dmAcH94YU5f+UFTSm5TURYMb7zTc8DPtQpMVzfjHoIEJc3jNcBNVn8I/swly2e0lZ09hZCKJ
+gsD96QXj8mQ7EXPzpLfqRVK6FKsgNoerPv0OM+ZYnfjN6r7pWXAW0IbC2fbE/X6lprFpuUQpDYqd
+MIBE7IeLbIijyGzxYRjfkj1+GRiwC+e0eMmuTSvaJofk3YwLFpBbf9S3bCZkssSCiqzTvoP5Hzbs
+IyMQth9zHog9qls7paKSmnpBSyJzt6ulrwVvPuiYxSbpYB9Ndq4mnEY0yOqdG4L9Hdzibczy/BPY
+m3JpcwmCS9Ux+ho9cv6v25JrUd8FVMA5eGm+EVoXquTCL2+ULZYL1qUZIJcBQphZERvBY2GBnY15
+Kuk7r0+0sja15aUhGSCYRFHT+bIS46qSHb9qtNNrEDoIFX3rRo6Igcyl32WuzTNH/KXzxwzpY4zl
+QIsyue2fbLp58UHdZ6+b46rzp0cgGSdM6g4Ofc+5If6d7kO5IFOAWB9v2Le7GFSYVT42TcfaTWeP
+VWcZSKxil4E5gkM+Zvns9nEkuRjpn5ca1HhPA/ZkEn/rwmcacLNzxCX8QINoDpCBkdtLJHmddprI
+Ykdj3SKhG6hwKTSsKZwirREA82mF3dg40HjvOPgNtIo/oFSEwYD7lGAA0qvmXgs9N1KuZu4BCjmt
+Z+0i90cNehii+cmo6PzfguqkZR2qrQL/u9sSVNbJW7oTy4YiGI+H1oHAX8r+ecQLTXh90j6EOS+H
+by9KaXWYvIF0oQ0qIeH7oBkUyBZ9RKjBytoFzxA3+S7RYIzxAcZTmE8TR1vmjyp7t1ZIV2aM3lN3
+9fLyRqsZdSJdk8dzYYfsLaQBTLAQLPw/t2jC3mn0zPykJRYodVWN8uPTVCUtSJAr8Gq3srmMQsdl
+sL2XvkzEq1MWsDqDDG4Tr4GibzT93W2as/KcpS3Y4WEuVqyCNFtWjCNR4z/YaaSb2AMSLRlJff8w
+u94ayBWORU4AtY8cRwXTQ+Aux5bhbGCiyLbiRgjfMlhPQTXkVCu6Ohh6wCllzRFGm46ysudc5QV5
+f/UaOR0cqmi7nttSgLGULsotI0MFp45BOPcI2s8kZkRKfEQqyPg+Jl7kIgkz7JPJc9BJaSQj7lZI
+n6fqjIVXgoMGHSSXT1tOMNPXJXcu+0WLm4Ciss/1lq5SJXlbrV0vEWk0ARjBU98seFvmOr7WVBZ9
+AVbBVLR/GwA67oESicaHp5URmRbwwIdMf64osW0aXmGdNCrHaUZRmL991Ibr7GKDGXQc5dGJ4YCd
+QNqFEZ0/dCmb0RSc0Z7JXeGbU0p6KBrftCdEJOszL5nWl5yDRCVP1Tly+iqGd59tlcD7qzi2Qbqu
+lM2zuTq04e6+cVBcy6FEPLSd5KgFuGFVRJVStIPaLZ+wGsHbV1+GAYR26rhXA6uBqyEHUCepAjMx
+wlIpWMcnPBazgTsy14jIIbhj4ixMsdp3ZuNGGq03ZGGalP6hoC/i7harlzGvZIXNQpzAa5M2e3Zl
+0zvX1o4nFW8XfLuYtGFo65LB9PQW7WHN63H/hvh0wh1sGI1sWtDuGXPbhyxh8W58aCbYPc59iuds
+km3je+iHkkSe4yK3GDN3mI2DQMSA7kSOBQkOGtFwemBb5NbY2pjTszbIggcwIWxP0YN/32naQTRh
+Z57ETwB2un1ND3hrzommeKTs5q6N3ljNbq/atyMe5N0IM+S+TjfeJgm6qltnHgoobXmHfyr1QHqo
+roNg7OndXYOLRz8Lnztq4qpZrxPIP+oNnd/reSTBje6DvPisHyavBzzeSvR8Xfh88ghKWcIgnFP0
+OwAo/F4WGAS+hBixCp4FJHJi20ae3pZT7uR0oLp7l6UL6C14LXDKY/AnyaD4hDPwIkCcFksvDRIA
+zTF8bMh8Vtqu58if9BpRqjL60vx1oKGXnl8LsYwlBnjY+VsVySLo+MN0Nae9SP8kiK9bghAzEbP7
+tfOqwwmsuA3F/avkvgFYb4PBeajATsq/6YAuoYL7fTAmtOO+WvTyX1IBp/5jqptlWZr/RUBeknEf
+1otp0JKW+PwEYOLSGgRtiApKEBBinWj06WR/XqMrC/8CvEd3lYSr4qEVPeRlRMK8bv6zG8F7oBFG
+CWwbxpzGY/8c+QX2H0r10w4fb+WGaLXF+TSZjPoKV2512AtUtuLbiGMNu8qokEjxtIdEO4ijASI9
+DxtRYTohQCxcZ9wQMnhAvMTzBbvUt1Qsd7VLgo2s4e0+uvi231Es7nGJLN5WI2uIgG7Bwjbj8xHK
+BNV3kfee9OLlmr5hInryWDMWx9GJxQKTG71VZoof8yIGZrotVA7mXfdzHRxZ3HrpOUF+PHyuKP4c
+J5OlJOiOP6K+W0+3Qyrbe0f1AkrXzG3XTWYKfeeaEAYdsRZrEmh660IoOVG157uwAGj7IIMiuS9Z
+Yqv6LdIYV0lh/reu208ILBA6QhBHmPXPUArT4e5Qtk6HSFLgb30I/CsNGtpzigzQJpGu5ump/rBK
+9+kJ2VW15Z0lvXffvjtcKERBR86eSYYoPhDUGCxgC2UJkQrXnoyNWFjndY7RFiHC3NXDjRFIBguQ
++TaGMOVunOiqPDHzJk0KRZvq0KbeHst2q41Vks5qN8k8DBJjq/AmOu6BU/Nfmnd1z8Fb5qCtiMCV
+aN/lUSWxyMNeJ06W+ihWQGx3E2KAWwjmg66zQZVFvUDlwVb53+XLZ88KPmzK+Yni2Ne73rI23JiB
+C/JN4Vlc7raeXMYzEUZ+6sR5przBlWjmpz7sjiNIiKzMtLTK9jDTErX/FdUDQJwppZKXDyPrvyQ/
+GLZqVk/G/t1Owi2fKL9Anykd1WGB0VhauPgNnvCRf+ZU9DPWsU0Wbee6/fn1JoyvolR0Vv+axjET
+NTHM1Gd9Z6OIn7FFvGt92is7oETxmi9c98c5oROdKMP5M3BZFmiJ9n/ywOX9VJgZTBwzvSfgf3B2
+wGo9q4BZUJ22bvT2BxDUtKiOcX7nVnkK9i0+Afou2f19WF8h3sJSBlWESMWeCYUOh6zSnCNvrDY7
+ZEjECVz1iHZ7dajYH3W8l7gtCSgTmlSV1Mn/naozpoZQCVuHCpqY8vbTMvHuXZIlpNCDFbf9X3ln
+8eXZ97v727D6GrbLhuRuiwTqq26O0S56DtxL1tTiziEsZCb1/QTj17iXJ4+xe3FxgSPAjYrCu07T
+JtmkrhHfncKrJSkYw+lCpt3qIRXFwCuoYunMf394iaYDqrUSt8ROFQxtsoc2pO65D6GlKRluaFc7
+I7qTt6q1CAKzvj0JY6aWKEfiGYu9+BmrcZjJiW8OFUazjxV65sc3LRUVYkNOn6swcw9K7+f8IIDr
+DhWCGamIQzN5oPRLj1KbEI09dp0XTNa0+PnkaWrWVEut/ywgHh4nQw9yxbVyMM2vqWEY2ccKS81Z
+JBlOIBAwPIDsA/kivXBr+YsrBZeivIcRsxYA9hGNU2i83Bi+5fft2xhYKOxgCjodmC/uLar4YO0w
+prr4ImNSBUj2V6Ud0OISqBa/PhT/tLk+o9lxQ9pqbXvPFd5WX7Dcnr5/ti6DAXTWL+QabGTTLx90
+NEGKDiAErHOxRFT+yhXEZa0pLbFtJj9oQlZEUb4lyKF/Xzu6GC+0HeLeBZgVis98R96l0ZCWFWcI
+r8w4zqRdGNPbhW+PU+Bkr17r0AV+uFWklWhDYq9pmtdYk9VqJ7Xh9ffm1SYKFLrhdm0PIyVdLCXL
+AqJ625l/m3Yr9ewW/s8JHGMz/x/1y0xnnxlpvBL3QEAdU2AzwKUZTjg4JyxsO5b0b1yYY6wZjFxe
+AOeI/VWXHt1bBxFMg53jXwf540v9nt7cmJ42sK81aIT2X7cjCbs8STfjUob/k5rQxGZP6cASdpK2
+XDrZ2wjquEIkeBE4ZLPHR+SDt+eX+Vvr3QwgySYhDxvwd8azAo8aGHh+yRzBl6sqgm+ufvo17Pxj
+s1cSZ2N2LdbLtN1FwoWxBXpboOaSNbqFrloI24ylk0ATGn9iM+WEnlokPn63Dr+VYRSPoNpSLQkH
+zva4RNlhxqKJ/u0TNCeatUETgCZ/f3f+aoQ9TmRvDI4qCF+OQhEKV36AVItTD5aAYxM+HQk66s7P
+egEhQGnxV9AtwCKDxthTlIAQ9D3MbCDNFUOu+0rwglVkS7t9CQgFg8Gc5xvUb1BAUG/bk7o6LRFM
+fDyNfw/fKqpaJcM5YIxTuzc8gB5NSSC1ajBkftSC6Kq2y+qFkSRqrGFwTmRNN9Ew+V77WPC+OIsY
+pc2yDrCMD8vrT/FAl/T8pTGDYrN87snshJSsWKa2Q+Wi3mxJT2u1nNRg9AGqPV0iWZaYn/2t/fvA
+gedMClSV4CgXxEi6ykAB4ZV6U15emM4c/Fz+bkMLg/7Ymq5K9Ved50zZw/uePxzZWSIrjVpfAcjq
+cAkWQjW3MZHzOPdSW9q8Y4vPkk23V5eA7//vMpL89HsrQRJcYgXs3h2ZqbP+H8ndsxBfp2rIsVJy
+nBoIoLReMGLl4/ia91K0ybWsLx5HHoL1lXWH+3t/bRI62BIOWuQFauFfD0Hueq/hbFuAEHTHqprD
+C/vfzLAxMm6w0kkhocIv9/CIL2MdJB0q4DioL0LOgIyWQYH2Quv3sBhPwiImW1t1KLNMaegNI6NF
+4nU/nurp6NFYZyKqty5DpxE/KQ8ljpR2rP9J5wyGOpTQku8ZmohTkAhe2N47RjulVmrfx9cNLdGa
+M1Bs+XueFKYiEG2km0Um8WC51EoUJMcDWynM7O7tbSOrLN/cQioMkLGNPnbT8CObjfEyDO5HKm/m
+3on7cZP2r0KxRplXVu5TkRdazDoVE1hgGo5jWUfbILDIjf81EpwqhjHncu/qvLksw3tFgGMCIf0+
+3jwgOGcbvcIrUspvEM6mex1BvVM2Ox9icV4pKAhIcyWEi68McgOfT54jhx8AwG4I44XZmmXct8gV
+ken/nlFvdkKs+CyFbRpyOJP+CNdmzmhMVqJE9JJ++KbAedcT9nhsYnn/bo9AUdxoD40Sa/ugBY7+
+Jsbk/zzQ7fxI3CJ12HmDHiAC2j8XZYwLuW9UJ9/Heo9gG5ilaEc0s/KD6r+An34XnoCECe5URcbA
+57J73FqaNfZVUCHA7J2Oo+z56mtYlFfkM/yAEWXPmiVdo3CzBo1n8hC6kgFaQ4EkYcz05LUz6oDu
+ZDwVHirOsu/wrd/Zr+GvhrF+pXWvvIRmTNa2KRh7S/+tSL0YnuXh9GTC/1WAzFQSgvfgHlq+1thK
+d/lPfpv3docixMsjMrzQhywvgaB3KpAHe4g0IZNpEdJZ/pXxvymrpQNpeVOqFNbs9g5hVoDK/mvC
+AshdW0rz9mQX+plWWdVHpL2JbErEy7nhiyeLejxAFsGn06BMnKP0Zx3oiZiMzYNPYDbVmuRvZA2t
+A0FOtVxFcQPcVqeD+YGAoamqas16anQWW5nWtaHZXkO1V9cA3YhdfU47XJJuUbhsbv+Xql0E/+Tt
+gPojzOIerhkTS37akIiS0EetaOvpOS1i8HI5onT5rmZ/5S275oyKCYDUczdG84WqYGRvEK8w6lms
+IKGk7YbQJQ6lpzmfKVUWvEZ8fX1c4PlM878VAgZJsIrYqdUiz9TtuAWGlm0G62veQFq9lSrn7Nn8
+6efm+/KLsC89HDwhgw02tsYkDEgCeRRERGBsUgeepb64sUyGC9NU3IsGht0FgUZOsjupFtW42weV
+ZbePsdTTYpNJWRMJj61cjGwZ24PN0xIcJ+0u1qXlVaaBpyfPh99R2GnOtoZqbfPQd7WmZXLWAwDZ
+2YEgKr0TgQquNslpEuXnkAdvi3572iY6WZ8s6naSy0B2aFLsyIeIKNt8uziZ2LZu1Pw3QPa5jwzg
+b5D8EgH+5/TyNNqus51mkgjJ6OlNfkNhagvooADuqMn6Wns73M1XA+eOTeeZvC6aItT94GD8ToKr
+kuRd1ovavbyGooZ1XAniV01B/Xs7NWBimnRL418M1GH1RHqlzbpSTOnMpxLCGx/qgNhDkM4hTfFs
+CaD0mz4bUce72B4Um/geiIXnU8O856abXa1DcjDDHq248jxqJevoOwwM6iLWt0NDADJtidNfjpPp
+HxbdZjg238aFywW50bT3AkO02Hmc44hnWFq+XXGZKp8zdyR4qq5QEqGOY9FeYJar918ETuPYK8dF
+jRQ6pHb/XO4XYDi/Ej4IuF0oOjeBINYC6e0a/hKIeBq+QOmF/ifwvt5zecxuvFRwDW+k7upu9+6X
+7FnxstdHfyhg4j4hTxvupn1wiKJiByrXbe8r4cyl9SKKfd2aL7TQgXGT/CNj2qASldAWf6sD7dYi
+qC43aHUnrOVkMRFy+6P6I80W97NBE4DMJFoVJXbPiSxrgHu/r/RMcBsdJq+Y0DIBNkU2Ftdvyu26
+XfmLdelG0SxDdDcYqW9ButyE94laC7n/mFPy3fAK/K7KJ20lltE/G6fxCgwA8H8fTC8oNuHWQOqJ
+mXmYuwEPnteV5n6/m21Hrx+Bo7t8fo0IoD2DHefH9xJknG52C1Dst1IWQGbP1O+ozkTw3pRiP5Nl
+VvmZCOMdMKPP5c5xEkhEcUK5WjpXhMcfzJx3JOVfYf8t7tsesEBCjgc7FkQP+x3A6g002fpPcOUI
+GFyneildPMlncPAgBsqzR+uL3ukKho+J/53iwj8XOK/DKC8gKirv0nHWt3t6EgIuJTvdvNZJ7GiE
+KZcr/y2jb6SzY6W9+1YRm46fOSa9AggnPumGLKlgIvHRL5ug7vW6XsRJq6coxLYptZA26f3V+KgB
+t/VJRXOW8jQKgMSMCSuhNV+uvoW0O0UtKgADt50+mQgp7fxGsr2+eIfgGFZcECfkdt4fTltkPvu9
+SwyLfu/IE03pYJb8yBdaE4pXfc6DLOd7leVaQDo04hODq0CsC46GzuXzdD+1wI1lgmP1FIx/ulks
+GeTpcJ+sDHE+qkYu4sMy4sEgVcs5x//KWaBspe9rxQhamQ4Gc9D0iW2Ut6h4P3syG1YhKNNMrJeL
+fIFt20vE5HlbM5UW2ePQj8b4vyrl7S+IixhUrUjqt+Of1jNuR8sF5NTquOs4QfXmDYvkCwmWb9XM
+RnV/qVPh3QtxPTkQ9/MRFtxy0aqRWcQD+BskrEAqa2m0O9+UbhfNsGVyCEM6tMj41Dy6KHR9PMzR
+uK1xsEn0iNlXWquQNhRAWbGt5acrjFrgtdi9t0e/8nbp2sUN3IJIocKLjoBh1jWw8uo3M6qsS1QB
+8PaEThV2HiEwCQIs6VRqyP9+o9AZ8ZvDkdkpcf5rsvRZZBQM5hWgVfvuM9gI9+9rQ7sqD5skYPvF
+enNnOGqktZt6XYbExwTNoyTOgPU9pJwJGW/wrWNcAh32ocWWY3abzJRFk3Fur8lbz6ILiwyYWN42
+3vFv3Sd3mNvdOwE6MwVSoYb7Js9HCfh0+X1yWwzWPUs6lzH1rmz9NIdfsOQXfyN5n09I3dYKjRzO
+A2z0c+F1/GmbHwm2xotFHgN4Jc61Qwn/5jug/O6R6y4P+UkxPNhRcxOYWrpevtQ02hVybe3uVw8r
+OZHFjkYo/ry4c+9UjIiAn8Gj2HgAi32S3fwU8rGEePwwtUYL+TJauPkgfCJhtFjG9beKkzlPC2uh
+380KP24zJ0gHtR9IWIE8TE+aY7vLu+sW7JTwEK/wHL6/07Fxh3eF/3O9BazSUQvwxo0JJYR2QHpM
+durLnYXdZ6Mi3HL5kpc5Sk07YYp/HZxDvvGAUAlWGOIZIXI8hoehCxP6AJF9OnFSY+Ik5o3exDTd
+HiAcyBAJgfnCa6O10Z6zWIGLNti9twpjTUWQIsyZo6RGbTCOaTeXC8abTkycZ4+D3/fsbhasi1o7
+A96TwvI2gYrGRAbX5CfDwjxlc1GfnRO17CklWgc9LLWgfrJK63bTW6a2hW2PKoqX7o5lbgG+FhVQ
+2Vyfc4I9xn1md1pmm4kw7RN2Vl4Hn4o72DVh/C1s1uQCrXtVKlJ6Xxs3HNOt5TiJid6eneDxVYeg
+VMxF23b/SiEoMZ3AGc3qTL/VdDMHftMRkF6NJeSBhwg3c3sseGnmU3DqYE8rahi2ulnYmq3voP3f
+UDePitR/kp9AKCtb8CTZNIrDQ91xxiVEOJQd97mwVfIGT/bfafE/hgF/WcTqNBsPYYAdDi8gDSk4
+zzN+20D5k6FLSFRBRgYmKkapv+yTYY0w+RnLtCa5/sCt4JdqX7ypb5twDK8vOAnuOToSzzEeMYtT
+UVM2hzrZ7NNEZm4eONtUPedrB1GU2nBx18wFncyztqnNaj5S9upSgR6tJZyMgsDWd73EU45uZGg6
+zr0QVBAQzcoacB7SGTGro7Bc5bjhZrrqoMC0agEvP5MyJOEewhOfjjTt++BqHDJAp1yAP5wsZhfo
+uExUmxmcoCnwGuqHLZESXvuMYp13M/uDIlDwFoxOieSQZL7NsCrUqoOjdcHzOQ78crxiluLU/pQ3
+HIt0ZnyzJNMmTIsoNEI6fF92cae7I1HErAJfM0IlyjwKl9WMBxVKdhnUGcQ0dVpA59sOL9nIyBit
+ZXopX+8T5XIavfZGt49Rh/Osu1TQ7WfXbUkTCqKV1dwWt5QhwI05f80JxhbeEg6T/rOQUZJCj0Oa
+rzGwT0oPZcdnQADmfx0sGcleOSK4D+Ac9QXaXIou8R+r0AeFJYM9Z1zi6iBQaagHsBEQtUqR2r6L
+z4pqR97SbnN2a6wONpawvQg7PxDkOQDdvlUmkk1LvvuqLwHooMd7hNqdXUhZwR3gDc9huNrZaYgE
+GEUWMNQUFV4TvkNvlKaC9ByOZ2Mk41Py60wAE8AFBBCoLZDavYSOlllv61dRZ1noPGEqI4xEphxJ
+DneZ2U5LFmqkk8hRRri7W33I/uNQo96QekXJk7ui5gNOcN6alblRVFJjl1mwrO10lP+0k38tiN7z
+TnUs7vkpoMu5GHHuODBj8hMfWMPo/CWFDlVMuMHyRZhXA9r0HAYNSdO+wYHCuUrHeAuBHdOOSml2
+Ybw0FdUcgQmIVviTJ6EPavwGiqjo1AnxvOKE8FvtNV73bM7TgzEpgIUPn2R1+jX/KWMREHXv0oWL
+Z/QgCLAJGl3ayCY3NnFzi8Oft9MMRHpSdGHn92TgDmF2eMaojGTPTPt3KO4nesAI2HqMs695pC7a
++vgT0sPw3TQlnw+d0YxrhoBk7ZypOLTPs1Rf5yAXp4MiQa+4Qm9M2UFr4GOglfKY9DoFicCJHNIP
+dUXBEgrzqcMDNDF/3ApsTVPAl5DPiPta2EdHia3Yote2OPL0znQLLkkLst6VcfkBrjdATXOwXET8
+RCcMqAChNw3Ix4WBCR1qiLluZe2EYfTwU/U7lhQ+gLtYNR6ZIP11kNrrBWaLn6QoU1f3ADCTjgLu
+xiVXz+oBVm/DsCuXfxzh3wGqq/JY/UepUQuflreXb/pFIUVr+zbzkFvO3qhFHKqEb9eDwfs1RDKR
+lRERo/1E3Z9iQ2ADclhj8BjZGnyOPuKq7wZ3C5mQE5n+bWgFCJVsr2OLjcw9GHO4XthGGqZswx1l
+ep13QQs5+Kjx+G+atzpChQWgXWkJfGbGAe2Sr5YSrEZTeTw/+XkWpMp+piWMovLjpvKx3j3k3Nhp
+AtYggDojScYrIneRqY+8oGBiLWKqhmN/P//aLUNXIaxaVg7JMIBkCyaTroty6uGMAqMoGsTmGMG2
+tgu4IUV2uVgw8HgxZt3MRwcvT8abKhXgAYcylHL/BaOYcoZYd6bk9Er5KO1paAp6MGhApKgsBd1r
+72pVu+nXVRYOikkvv8pHoI0OxMWrT9lD0mFr0BOLDFYfZQLhKzJ2nNHd/5fzuzJ33PBTSS81FYSD
+WAZIOV7c6tSqhi84PT3ZBrrmIGHUtphKifvoHFOehD4dU41ZRVuTPlQhBf5jxl/ntwPeSa3VWBgC
+MfBA5gzV0tMlohDlqcK9jyVu5lsZgGBAZrcHc/W5xL9NhZYtUX5KWVd36uNnh0LfDYJcwgcnHbUe
+LOXpOkCIpFa6WWvcZLOB0liNCUy03JISg3Rn+9iR3hnoKCH46G5VHLUUPMbS9exwDHJa8df0PDbU
+xaEdx2oTQg8DXDmr9X7SFryX8fb6U0uoWtnc/G8KPsfROAmM4lfgmWWCfBCayoFGyD7AxghpvuJ0
+n0jildEX7b9ZZVl+rDfjbZF3jobFKpsdBNbb2bTwnzIUk8FIye52j8IRoU96FyJHID/YRI7cb1Ud
+rhy+Oqpm8zP3PeZ2jyoMvt0V9f5J4IA9SE2h6QaNcOotXvP+g8xQLbouMAdyYyLWWmojm8EeevwL
+FM0MOTtlV9m/1ORRXBCKTVBX3JEc3InyTlOapG3Rdv53Am+L81f9hhVNeXW6PwbbKrTK0qwb/fJ3
+Na2ryqBbfiTt9Dn3woieeUsEjAcSN5s70hfU1lp16iD4WYxQxHCLNIKjekCiv1/ZGMbnAmC/7/yB
+NgK41T9dAoaEdXO+kZ/xws1DjQvEhZCBNGjhtBDkb07Mhq5jwZz9HBG6uRPoCe2SZEfZVqNbxtsl
+42nvHQ2VB97ORaT1/4iFz8q7XqFG0v0u6z1PHCj8+4H0Z21RL56hFxXSzrbVX46K409IwPsr+yA4
+YVPAbe5s91gUMOsOg+dXIElYG3XvrTd3S0rzrYpbg82Tkeg1JAxXimEAwVmnU/DLsZbzuHvwGSR0
+JEHY8Yr8TdjH+QjuTcifb88vIgCq2BwBIE3kVsbZMpe5jRomLRQ5XI6opSgwcBc32lrrsvw/n+FB
+rALP/Ua4hadul/TK2YRQuUCJTSMcddlXt+F0BIbKWqkVO6l1IWya0ol+DLMyRrS4RLoCGjwM+Bc4
+dwcl3Gmvizow+uNaVW7LYG4TRLIs5ucdLCH0GRjlGHFgnEwfPnP6nj3zRN5vC3qql9xSj6TaUbGh
+lA4Pclz1VchG99w+jYZPsdUSc1sLLKv4SpVq7NnotE1zo3vT7TAjWwh0Tb5tcX93T7mClbgiDpZe
+gmHXklI46EyP8pkUtl2T700FtcZrbUZ3m5R/TnJtffTGW1LV7Gv9hSGL6Qdv8ommuYNu8FGK6H1J
+0A+hM5z5GSr6SMfTTmnqYYBjV6SJKfLkaA5ruXqOydC5RA4xUFCdWYvnz72Sb3JdJzn3IcErKs2q
+weBVUHWFbKTli5axPr4a1oEv0Mr0rzcWHMX5c/16Xwwo6e1B61+qEe2qzjfcfKiu3Qig8GXsWgC6
+Vc0haT06b8iA5oqK1zsVJACuMrageeU/HEgTnE2kS2Jyv2cMpxpRr+tqPPY0qaUQVw9MMZhBs1g6
+sLjhgtKaBOqL9r/zjOnCScKKutRzFtwWmh/ZFvGVqqBe8AsPIhYDuqC7+JRXLJV4YLMiyQUSAXRj
+xLDzwQYU8FgtvISM82POC4J8vMrkdeyflj6IvZYzqut29cHq8Uu1Xz0rdm75i78uP/82B4X9sdKP
+GQBOZvdH90Pk3DjB4D66p/OwE8bhEiDmkbsw5eIPRECwHdxpwQzKSwpdElEzejdf7sYGbiQI04Gv
+r/0lkJ2+/cgE3ZbDc9d5JBrFDZDzOo8gOmkuG70Aw/0eU4Y5WcjSbe8GGTLoZcCuw+HRjcKeQ+9O
+T5woDW8gZwLsm29xyJvAV4n4PLGM+5llWsRgzIpXVvKUHLz6G3VFpyghRPY4QkeBc8Yc0XPa/2RV
+aYsfm2EE8qgfZP9ZLqyV4TmVpXeQt6eXSohDDwCFguxwqKIzNWgsHOHpw0KOEpc/I+qJ47QSGsHy
+P4lexS7tHaBLYKnMZZCnhcR/mjIShpizqG8U0AoA0jbnK+bY4CkunRSziNo/mjptXH3Rxhq8DbOe
+BIvlrXcjHDvk7k7OQQgPMOAxeDVK7YTJzuf0udjgms9jOih+250da7gqgkFxUPyFSmEFTEQUkalf
+A50dAGbjE2vNvmQ9Mb3lo6WiqjGmzrgKFXEfsOoAkijCb/dBp390X5NcCgrq2UrzuLlNskMm30ZW
+KVxYeZhGE/V4eN92kzUDAcsMa+XIE3ZwIYqB/4JhnjFERMb8SS0CHRiUC1QDN4QdD+OgCdCZ0LBc
+09YNxl5gGnCC2RdXm7S483OFD56BCOQFEv9d+zB30/CwNrYiChU4taPjEeef17QC1k+FgaGwQMXj
+QDqxwCyB2OSdU/36wG0xEe0BDgURJcsGw2WxwXVuY/rU1zp/wXywYEqUyAYJOH93UPgXNNHvH00v
+eUras/DSeI4x4dbOJ5ldpCTgjyKUghnPdIH63OuqTydi5mlInLYBfSD0vnYQj9LQUTnAX4yi3isL
+ksYOZsdrqLe1uEpKZ0igUJzcryAIRIggWStc39PSgJOTIoPz3TFyozKB02NB8mKQ4Lp1Z8XAsg7m
+sMZcL8wp/29jtgQwZvzVER1zUDyYMZXQlSIxktTtj9NC0onhLOeAcQm2sVW28hgImcIwsaixSlCN
+1Gdo3UjK5Jtilz7Y6gTXu50LBb8YJ81QyoO5pPyKQviOOMYxK+X+RRTLYSUqXKnuAMZAFZ61cqqT
+eCLoENAzzeZPq5LQMT8MvkBEM/j4ic8rhKKX1h2hV8QdkBaW/Zq9yUIIY3a14rl2FM//u/CsIr5m
+VeSvw9Cr/Idj4/U/1UpF9/BDDNZP4QlOauND5aJD+UcxIxZPb5TjNZ6ut0UEYTNhjhh7FVi3drLC
+YSoK2vNZRyqImd1N9zQ6XXKVeCzYy+AwKXUwlKWSULEVEZ22jaqqlu6K6c3c/rCTKlkMv5ezU02H
+82mfaLGq94CvNQaoD4uT//W8/5SvUdhmrlySeCu73rvrYTBrDO4p5Pf93miRdyu2Unl3oxrYu1Ea
+eB/0BloYohZbPaaq8GHmdlBzx/cuOZCBYlJ+qeii/WTjFaIZB9UqKO7lmCsrHP5uvuGUrIqEXv6z
+/ml3TuQvJKZx/+zUhP13iqCIz1DP5bA9G0kJtAxXyi+UvnvOElyqebVdhIzcZnqWGCSz3wbh8RTm
+Naw0GAOrHPfisynmFXEQuu5os5NNU7xMkeUux1HI4oxSCLDckGOPveFdmXH9SLPF8L6JEqTQrE/F
+xyPVlQdZIQ5zqS5NTyaNgWpzg0XA1AzO3EfGqF7VVySlM7k5N2ZEv0cZOo8CLAh+Vx3NRc1FVGN8
+LIGpQnrHnsfFhaMU3HQCc4j+wSIp0Y3SQga4M9uTL4+f2/ISBDvhJyBihpUoEmc+3W3ICp/qzI27
+5tv6Es28e/rre9xU6NkCiVy99Vtri/gnXnGf6tdf6/mH3MG2P+har8OXwm6xlI4H+SrsEY3CbAn1
+eRi350LLTsMP5KSPDgFRuJ8VEtz0USgXZcRBYJ33vjxjHV6suSWss6/dtbqIBBnPnhsDvH5P97ob
+kqENAcyUEdwVrTBOiP+9oC3Trm/KhtTLnImpuWEhw/irobSxuzvgYac1kgLqedvX6rwpvpYMD7dj
+E70whywDbYMWYhiZLMfbmV3uH7lt6cngzVZ/Ts7A5o8jvWQrYr3kiWgvKnWdh+U7WV0C3Mzyy69q
+6w34wGARBVCq/xlOC/g1bYUNdjHPj7RfIaFQaWVDxZZz/jqaIC1dJxkPN6DtozlQJJjtggqXQf1t
+uKXjLh4hspsi3Sy+u8EasTdtlcYWEw2LxzXmR8GdFQ29AmuRq48vLmMQErfozE9zPyiEoW3uy4G2
+DDx8FKBj+819upbo/sq/6kgxFWgkTvMF1/TraSchMSootBjyFuzTUicic4+/KlnXjuWTGUacPX+C
+yfzwIXvvphvUzKnMhFyxYHtXVuWco/e83riLFlffzfjqGZMQRmPkrO3HEd1IudvE6lCrqeL0NM1v
+s/ITCPsQYABuVlP9Iolor2StMrwwhKl0Rc4ORetvvAxC1uZt6X/TlOjdTT+J/42k5NjdE1K+NOf7
+n062kfzbEMmcld/ICfYNDoZQvcthQh8Kc0XD65rU//GLjoVNlujLJzf253MprciP56sH2MJGsjzk
+iExshPK7z2SHecfWk65z+PQOIoUqQ/mSxjspkQz5NewzAjx9L5DBTSqISADMHR1ZU3azVyJc1Rxm
+PjnNMbfkhILIfpNz5sJiG65qYKUz4Ydo+gfIJoQzOamc9DzC1V3t2scB1ZckHuOKKI0LYHAt4tiN
+rsWE0OtfseTrreZtCcdLjqQX9WfObihkm6IT+//pVpkVJNqXRapdPKPe7G5Jtv4M3IeYPUp8gXgH
+DZOE2PszOzZ0C7gzKwKc3x8whkp470l0zf5nbdOnw3edH2WRCEdphl4bYvBPtKjg+qI3YCX++zon
+nhptIUrKerBso6ycgBP1FZZhcs9aqYJ8CGJTUIngDPOlkyKlgX/HAng0UWWUQ5V1VfhZS/43CwrB
+SZKVdTy9ZaHTTAF3Ksq7tuSAiIk0e0TVteYCFSVM7N9Ys11MffTo4Wx2D7VCvwEdQJiMuiU+70fR
+CFUsWPv5WJsJGHvPWiOx5DLRPAjT+1wBfz2U24CILAK10lTpteDARaJ7sIcePejreTVGQyswH7jX
+raknHukmeeILjtKz3tcuS8GDNN2ieQoPmtDNPf3kmgwP/hzbpALBJbrof3jnk8EJbG1iJCIHqE+W
+giVbaqtzwWfA9t48bWl/6DdCdskFUgz3tDZmWydp2obmz26dGoYAvR8w5JvDCgH4ncj7h1GVpkPg
+sCgcdTRdPgL1+lMaX6qv7+wAxpUWbqSclzr47a7V+Z4JGp77gnM4Jaq/3O2lAxLILR5I2fv/liCL
+lkslCsGJ49fdoQugWDqSUgsKMSjZ6oETzKTECdWemZxb7+LL8yegQDpQwhZrzoiZLUMRiHijrv9V
+v8MHnoiWGYu+zVEwt/3pa3RMzhxRx/7DdSo3pjb/VNtRwyQcfrgBS2CbIl+MZJDwt5RVxKkvUguY
+gR0AfgqhVhkgWfLdwmtCQgcPxkAJkY2xb46prxdZpTjAe+KRP50xZzERKoL37As9zNBbEwxcEz8Y
+xDKKI4pxrKunxHIJcP1yp6I+NO0pzmRCH5SVjILUKsPZMUpegZyK/FiDqwiukkvMDXXwHe1+4+Vc
++7BzA2I6Am1YnBiDkjrf0I9gAlyAnczIB2aVN8ssqLItYjSk2audiq6VakzUBvSKzhI8FuXJA1nd
+/65jCHwXzx4n9zpDykZoQFQ8S4QrNt9y8JPQoWHvqDzzJgD6LP6vBO3wQaDMTe1zGFUrNj6UEqCI
+KazvN9dhR/YmPQpkPwjVIu1nSRiTZtJOEwArRap+AK7v55IFuCVgZ7jNaYT9nglgVXPkc9e5IRzo
+2sBX1ywXbie5CuvgDE4EoXtGw4cdhZYL8RKgjnbEc5AnQ/tBun2CVmubsxMxmsXxvrEJWgpG7Lom
+ritYdJUN7IQ/EjWW08Ewhecn/cF7sBlDBOuPlouNi8FzJXimDFVxund7ltLZm1g+QdDzipu3J7zF
+qB2T2jDNkGaO0Dq4TQmxyd3BLY5Edu93e1Aa+zwjjgJxZP3WPDdxkiNKRYIbMC/FvMH5TECbPORL
+M8JBzd3YIq8JGkvFh/Ilot2V1ucK4p+yxrXegn8I0mSAUlN/A+cwY4/vN3ss66MwHmWNnhI8Jrf3
+zHsjG4nWYkJrE1aLnnyQeJSwWjt5AaPyZogCph8+/p2mlSW6lDvQ1tivTbp9nPuHuhdvZq6dHfpx
+Mmjzx5/3akwramgmjuIb2J2zm5TmvNj77tUyMv+yiJZzPE2aHcnWHfgkjX83d+MLwLMQFH3qEj+W
+otJUWOwKd7C1rGToZnv/dLtJz77YqW+jH9i9tvZCBQ1swSO5RI/0MTKQWFtygnIOwRGPIKL4qAxE
+Fuwb+pDn3tcqiqX95FY3y36q2SIFUxnirt6UR5MmpjplA1Vn8tdPLeL7HsF6I4SejIGLOMQ/z/HI
+hhPZiUl+a8+O6XZO0Tnt0NO8nVqva2LdLRQ5LuGSR0SeQrqeJEoPIBae/ox3ksqd7akw9Q+rA2LV
+fdPHjCBMKicW3A7iYiq+8NoiFy885m4L4ic2GEQLLMIpaeyTe8hZ0GDQqlrn394VpgE4GqLu+uqN
+v3MvtxyAJ0rSYQO3VToLd100I0AQmBWZekPDbcqfSw8dQegO2cCxkBh4dnww7pbLOlQF3ruh3wre
+3H1ikkSOOy5/2TRpllHCmV7tGjyHq8alR9GYP27Jb1dLi8ntRCgujbyXz7J7qYEUUu+VSMvQzUUd
+odCI5WqRu5z+tdPPDd3Wbk7q5ySI7FdvDNvi+M2PQUg90d8vlCgN7JglbWVp1Fen4U6aP7eJyODb
+OzO5ZPfAmgSNHxJTQ8kh1Ki5axQEp61ccT0GsgGbRI2pP6AFS1ap8GakMAaE/B9MPcXqqtqCuAX+
+10aiOx6Pa1vrk0mX3hwMtnhxhyz/hXHM5IkCMCr0rtg1JK3xrgRxrH2d0fDgfrbyDWoussklDD5+
+L+/fgeTn+Mr1SVTIjva8Y1hrwO7OG/5t8nV69b8lLvJ36MITLiPVzVQItN1WNkkUujro/PPfICsQ
+Gh7CrA+LYhYYe13SqOZ/1ujYEsRMW09uScQ6iR5qIs/4sLm4KDx/tPsQm5XXQBecpTDVEZsLzJan
+JKLstOnMc7ZL0nNylUdUywnsj0MnK/YLmKCi4QciWQij/4CuTBSK2TxBU3CCcnooMpWrMxvNP8a3
+Un0/tIRqb30P+ZTSVZTN/n+jxVxxQtyRqkAuGkGDZT0MJC5u8C6CTOrLe0Ns+P9cqJjcP89Z7Bbx
+OXoXezq24lRRX4Qh3X+eRGsXGeDZpaT42rgtVj7B/cqmeF+kBRJegYXvu6p8JYjk6Y/z5JQAuK7+
+i3Kq3ytGTR2atGdAweKN4aBjSu822oRe24cBVii4N20xuAgQDde98H2LW26KefGHrxjwYAMOLqxc
+Vm4h1V1bRpO07Jb7SWt9Pp/9CvYhd08YZhho2RkleZ9lnRC6KXB/avd0lH0o5enPKE9/BAUBvQYy
+7RJ1rrvBblawOVGFpX6qmBKClwrnt3AMEZ2ZWnfk7PzXrxGHcJL1uJBb/wZIGTcpV//AjAruNAKD
+Av+kTe5d3zDTJOF4Y13YLXWQSjaDffgn1+ZlYisra2/cTR1i825lV6n2psKNX0zTdNRDivYQjjKB
+xLksKKo1+3+3roSWPBF7WgluPoUmgDUofX8zajSTm9l0gtq99SPMu82ALq9MpGQszg1txNCWdbjH
+Kz9vHGtDgzH1j4/tCIsITffJdpfIFXO+WSsbOub6FaZwv+yX0OeZeegvx212irw3lUqcR5aEvsTU
+ImQWW3fPKhq+DvWcUzB3c63WfzArHqZtcGVv21juiFHbwO5z0rmF4Q4A6AnM0v0F8XZ1eIuDxXOD
+z0esge+rI+27pYZZgGQd88qZFgC5dVewNMGc0b5JNfHRLsi3U9iPMya15j5EzB7GKdBhWiTFG1Go
+6Seblg9fdXAlJwWOsAIdpwvuzkCn4pxQ5eyVUGFg8JT5gSFkDDYslv00DqXVzJVYNuPOn3QMex7Z
+oViXN+99Vfcl/amv+jabeywWmQ2wIe759Ol8Oheoy8RuZkNswYwKhR580SwL3UGV97YBRwpwtTq4
+1HV1MtPc/UI5tr5XWxHRMtX/5XjOC+1wvKnOC0icL7Gmi8S+T6xXiTV33lvcuN7m6zJ7nRlwrIqV
+c6EtvzAnYhIJZUVp5bSHa23gIbxWH/Lfa03V7t5jyPMAJMoMykVop3sptWk31QABxMJmKWNdQzS1
+RTyO1qrUknrAM/9wSXXirDO3bM7MhNKmzC5eh8CWXjC4RWV7QayT1y8eyc+NnadI6l3yOyhiUW6Q
+aVQYnK3fgzf1gAVkivyFs8gNDztcnbn252+P7hmQLQGZIh04PaPIQ6gbbpIYX4XJ1kCJEkE4p1s+
+oBtMlbQCf0ppbxMmxMzQdl0SafOLVKv2GbCXoPcPOOrtnmwmK+1DzUwaYmYaWQDrNPPRoH1egHbU
+kuIpnpSTvJ9x7/C/RBqVJAPcc5CHWbSFQKgNssJPga8SxJ/W3MWEU4IfZRodvQ50R/ReWU9+J9o1
+XUTO5y6AO44inJIsNrTUDEONlGyKQN472+L4QFzqbHlSi5J0hOJXe/CwCMsIs3s+e6U13DFst5TJ
+iC263jpECLPPJCj5rf3rmm6QSeXJ+XedUwZoO0BG7KUJPoqYXV4bsXUtIyWgLu0VDNvUnZFETwyt
+kz9YBeg5ZO1CY97ucx7XGTNLJ1SoRPIqkaP6G5B7c61R3u8Y7LGpZmBC4SGgv1088bXted3ITZO8
+IPYDhZGGbzHIC8HKJxOUIBszt9Al/K2rNlvPJJAE9HmWjz2W4v0qHI4Pj4/7ZMjmqdFn+MYAfKUT
+frTjrrkwLQ0Y7OnrvZNvzERqp+gnuGcYbJNhSY0GikPJKcWU5d9SoQi397vBicpOeHFTK2TUVeW8
+/xFxdmVbGjQTpFAncy95JsbHwrZS6CFR3su4UH1b71I21B5FQw6/sBqZDwtTLtqahf1qx9/U/WvY
+SCra8apwAMZruBPG/34FdjEgwqIwL3Nwi+/yXvXEB+sT6CpbTO7lYVK7UynAz9aQzFIxpSM+Frol
+uh9HruxxSBW9Gou8HG37zF28aUF4daenPJI53A9q4WrmUC1b7pvBpUU8AMv7R1YjzSDvlUkVx2u4
+HovMIomeVEzRvOOnnNLp4FjHv4DgPnHDpShtcTlavL9ufiNVG/pEDK0TynTF/8IkdD9k54Ff1jnc
+bNvuqKtAHNqTEGOY5ibW4rVo8MF7kSr9hdxQFcCCvifvMUX/bLWLDUOIWwf9Byt9U/ESkcs3EHSb
+jf5aqucnX3DnmdCIJ68aik3Hkf47uN+ZQAzdooSg8H7BJoalYNj8iwgDarbMd7tEUY1Fox/c5ge4
+uGkOHLIsdS8U+vJ1GQJaeWyaTrzHV1fVy/7qtduevHNqqdnmiFtdBDCJWjR39AVObX5ha+aXjVj4
+DBmCsM3Bktbh77+QR7HGjIAto4KWBxAGt5LrKB+mZSVD4hWALsCS4y5ooCTD2A0M5mEk0PmhlWUs
+kB1dgH5t8dqejMELEim44hfdov5IXsZap6L4Gfq94RZi2cAz3gkH5RU7M/sk1LfOY50h3dk/cTKY
+mF2vYSCuRnQr0FyO8LVUlJrYWizcDcGBG65oQY2kyeVgru2+bn6uv/sG/1GbSpIcNMkAuhB+RDFu
+0moy82yQ0AO67uzi5Tqw5YoGNrwimBmKHajMdCaGeqXBkK8uzKGtzmGZjBLOidHIQfTi6+er+tQX
+0IQm6yMaD9Jk1JUrt/AQZp2Ww02OCYRMLEmNzfec8UoQ4fTGjvj1Uq7J4GOz+3OW5XKeWRqaFlWZ
+uQ0+2O95Ot7MtpxockOESUd5kU5MI6LP97vr1DA0B0+Q+NaLLjy91deXwctxiM8AMJSblophHAIT
+lolmRYJBk/gd+NyExGw1PTHK80Zpxg8uT5oDJYiiikPT9TyaaOjY/s3XfwuP1FAWBhHNKW2dMOno
+mqDTXxBboU2k4EOU9D8VNreWuK3surkYTkvpuCMLDjQP6AP+lmp2S7Cwwc7QhA1mjL7m/CUH28fr
+Xdr1ZYrtD5/f/APZGqI3JXCfzVzBqARVsVD/tbA+/zPdy2AjZ0eUkT8x7uQqVdUPlKYm6U+amka/
+ZmlD54HNqGSaGoFV7PLbRk0eOFX+hd4X7ebCcm2LD7A6Tsxv7fi19kLhW70wQE2mH6eW/KykI67E
+Ac4Vauln+NczlLzFqXZOKtqKnGNJr4FqUwncw1zgArSCHpc0flRCVua80lm+qhHD3T9986C8Ga4c
+SPCFoPgm3mVujdbUTdZWEgP2/bBhBJZhovHG49J9JsxR3bVlElW7lHMuWedudRxTWqqCgk1Ff4Fk
+/5G5UqwjRCky53Sb6y4S/G+ZLBhVcFzc8aY68Oi3Y2GdMAuDU+PsUMJK2IREQhbxWfaiUw0Bgg2B
+lI8NoovbWqSPcylloQPNDkb/oSV721c4Fk5itgsGSh67G/FZlHJnzsXIEf9s2KeE8iTAfsWA28mW
+0KNHRZvkt6k1M+OnDG9V+M0l6PbisxAhKNCFPho7lXfqkQ6MGB71LPETLSZX56P7kgqYs/p8t1I9
+oG2Fnbkd3+OJY4IQ2at3vHndhWbrRxbItJvF5sNXJjyPAYD67LR+tvKTQa4Dd5gNHU4/FvcnK5tr
+MpJSHQ3TpdIJ3g74uu5tXzDgEIIno12L3hRcRN5JALM3a2J5XaMQOZ0L7ULMBBiYYZxtNOeOIJa6
+QEN0+agce2NzuYGcoWGgz9zn7LdH2W6LrsESVyVVssbxEUBu4oGvEfGs56pRlnIZ93yrQx+k9Kk9
+n2au2DfKC3FR4ysDAb3RisBkP4PW4giVXvTDteCro4wdRXkca2OhQzMRchJrf0b0kfnKJuar1ten
+GlI9o15AGGKl/kreSAoT7x3myL2qMtTwpRqFP1ak0NgHDeXtOJdQp/XC8T4s0Zf23t7I6xQcrlPv
+u+X+Z2jQvbPNh2QNgkxxxjAfmIPJp+KbHcdkjCqHGX6LeidKvv+EtNiArZzNUf0zwzn3FR4BfP2m
+2F6I+QBfXpNP7Uj7byo9PT3dqOp/rZb7pqLxT/0Ekx9uXujSbFY5LmjRWrob/nM7d7h5u7h/vYD4
+awy83VOq8YvGK/IYNzS2f8JFO+Dpv25gtZ4hjrWznX3OEf1Tx1YBM0/nrVJUUP+yGDnjjkHqgHrC
+QNk7/CqJZR6NzUzh/9bpjdDyqOk3Qrp7cdujK5NisP8AxrpTvkl2jEnqnCzl5QUjCDMrFGWmclwk
+mh6VvzUlR2C2SjC/OTRtvD0S9fCYpYrKOYemFLdZCxFZuMG9rHomf2pfMcMan7YTmN/UWFd9TP1F
+4qN/A6Qse8YYMYEz/peuQ7yYwv3WFoAXFOx1FrS5sWV96TqO56eTKXkNb+m0W3JcqdPEeRlIILvK
+9iNzuJ76icOVP/Co+QZUtmmHh5aIo6zpqL3svdVeMpVqbrhvSrarA/nJuSEedqbJGEUvAh+iUXqJ
+76PUW2sfiBotYXLXJFHBGgtuT5D8GtzQVscM99700xATDtI3Obp79URftGUTqKudM+Uw0XEIgvdI
++k5j275akYKxb1RCcuFbITH3HDnWTI6ui94Pw/b7JVPsnMFIVl5iy/3KQ8t6RpxVRJPiLF7gfCL2
+9GtB3jkzwGKNZIc8MTbTCQtuct46XYFDt2QojlOr5l/CYQLpdE+7tFltOjntJ7IapWNUkiTrgZGY
+XnUIZU9Y08njTNYLg0FLSyFDKoKMOEKqQNOA/Svhua1o7MPqTfNWDLV21pO+DIIQwM3PV+d/++yH
+SYn+AyXiat6ppLqjvewxUw770DDjLJKe+xDIPTI7VU2RhwlbLUZEckt0blenn5z+JRcf0OlA7Pbw
+XB6GAIvqtfitewaEPeuwuntyNmg+TzfNaIRn7qrXVQ4Xy250FNXfQlAe9Kz/3dXUe44vT68DktZe
+fEQgdOJyk3sBI+m/S+f+STOijZJUdzcJjZ1b4tFGacrfUUYLoQviR/TuciPWjRS5QhHl2nKi7Lo2
+83TE93kTyMGInfc0Azj3qYImdlSxgY9DakFTKuBbe7+GhdtnaKOgLev9IeBE8UBkzRKz/+pVGxyi
+ueTdYo8EyFmQxG7c6p9OAZuLkV7OHOdsArLxE/XzcYFZRO5DFNREwOMmODi61Q8UmdI8BwmpeeiB
+yKf3ZFPKsYMeaseU1groeSt6dAEk2GWvzgVQ/87OZcHNFWycjJzTVg4S4fLJleBwOdo8UW4zOg/I
+ZJdwYlaGLvA0nH3PDSc/ympABRgUpZWIIR7zmSF6lOj9+jkAlt9qyEQeKI07ZU8q17lOaOdxJryI
+spviS2oPNS/yS2dWRK1SrePH4TfhaoEWMpSc/yNf7OP957fSb2nnxOXLsnAv8FQLAFKFAac8gEV/
++g4fvI+00TPNrB57CN79eMkcTPV9EPb3wCvHTa/bZq3W4lmJgZTMfu42L7arUh/G2hjbZBrxhtuN
+YlkNqluDxNaIoG3JTKbqrQe1vZLwkoixIjlRryMlRqrQ9vDddBAC8HIDyvuR1khoq6/xDyvH3Rqi
+rbajzUG9FJNG3OmpjH4Mxq2k8Ruf8+hfabi8rIGqvE7tV5qnbDkd+pim+Ornw/pqObBlJuyesB09
+fTJ+YP/JIEsEvQd+SyKb2yyjNUzu0OYuIdvk/IOpqRZp4Umd+Hk/8yqXOTjwB7eUCNq4ckqZj/cU
+cnDrXNpyoRpaUZjS7a4FXtqgwwpJuGAjJ9sNpQTMnLBRYuBCc68jgt4CIuYzh6TJwPlnxyAW35XU
+gR+1KnPbPzYIhMKbej92z4Mx1Fnwtvvv7xtTKJ+6nEH+gvxyJUkBxVj73bO+BaK/MG2gw7BATwla
+6tdpmi6xQWPf3JHQMJQh2oLnesdD984o7dqJ9QHpf80KzPugmq32yjw6sKBbwHRspik9QYTfiOV+
+MG2h2bbWPuoq60dnjUVB5Ou9LD0WzXYYTl4BWn1nrnSKjWORLqx/8hJ2jdwlZqE43LVpoB+2yeHF
+z/Zqy10n33faf2Th1IXFuX81/n6NnSCfRqHSk/cTv/D9Qpf7L7R5+8aIuxOtJrhaWfTT6CQqWcEI
+rS3a1C0fIzy8H34PUwbJwAaDkQdhazCH4BNNYFDRXwGKCs5/DkqVZK74PBfzENneAnNDVo3Kx4Fb
+phbse1734tkyuuUNkJEl8Ybyp1y+ygWilkb6s7qDK8omfT+Ndi3Rf5bCUipDxiycd5ZrPGQeCujs
+tsy2rkrIkB5V+xYfOUTFwYY7IjlUQTDmjhWutMNq/HgyCshFxZ+HrWBhUnD8i1vQ4utRKddPBH9k
+8sxiYakNjgvhzBAVYzR/JPi6zJTOzcO7zYuGCItdg2MPpApNbwrYO+AllETM52iO88AwbMTN6u35
+SpYG7FKJEOf7clUota/fZKfnapN/BCCrAZA+ih2cXXwZ5Mcx/SjsVAFQxjC90LDXI0o4LFiu8q0u
+aVa8aZkx/+Fr7pP6YEZgVHhTrWA6aF0WhoCl+6Wdvm5EE0oKzQFmyngDAiOzGzMOuxDSVyGXAAYl
+KnMfVODFAqAyAEz7s8YEHKf/u31fnPgDxCkgLxtp0xfXs/VniJC6S7FcyTWNjHaw8UjZzVPn2NSm
+KjrvxM6SVs7GACGbMok5PAsKvfH8p24CJZEIdQ2uuMiei6J+bm7fSwP8ZOfO8rL5I5278C/2Ws+j
+U4boXXvhFv2A0fYG1nfSOYy1nszHi0qN6qOtLTMLhnnWByUI+LvcchVMGHkQdCORMXLlmqO1BLuo
+hsiOQWN09rvjnI2CFc+QKtSfZxHJxntsLWRiePGj4hDzCAS1fTOeEG9FN53U/FEChOhDNzVGpaEe
+ujUNlIA/s6ceWwU95BDJsfNp7D+pMgZTYjgtK/9iTexYL5FdRgPD9fv6rXuWov+BPgWaopWh+NCL
+zCsD6G+iqzBaugm05ABcbTGF6qv33jumHl48ybW9lz5gSfUw7/Zp/NbP7AbzxIvf/DbdRcIEm6jU
+Lh9yX5Jd5RD6Y6nvny+CnOMVOySRhf4c6+O197vqfTScAu+Xf8FNGy61tWsq0/YHJ90MUJcTpwa6
+KTZaUyoeBrF8kVdYbolFsTvmYNoFU2BNUv4GjRtL9ThBZz0iRO+bhJ/T26sUwmwuw9r7oYJEsLjY
+KvenqYZDbVV5N5B1klcF5uvym72NpI+r+nY75TlN0xaVgEMVUsJ0udJMLlWoeUHaE6zODIkeb70/
+01lf04INuKVsPucg+7NC2Hb/oS2aX7fUJu6p7/uV0RuJUKCqyvMQcE4x7BNo9s2r0oXVPb+oJ/vE
+oqGCTC0JtYmkBGF9mniViTuolTLe7TKj4RIxPKxBirmPbxaGD9+G6qi7KoxWXCENiujMUq6KBcrA
+yjeVe4omDem35o3Epr93VGDybrQ61+34zExYAv57VgCE2nZam/t4naUGQe/nXGmTZJl128mBaB9b
+qv9ADpOE1AVMXolY4l95OovI8uErnMbziW==

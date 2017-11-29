@@ -2,8 +2,10 @@
 
 <div id="order-boxes">
 
-<div class="errorbox">{$errortitle}</div>
+    <div class="header-lined">
+        <h1>{$errortitle}</h1>
+    </div>
 
-<p>{$error}</p>
+    <p>{$error}</p>
 
 </div>

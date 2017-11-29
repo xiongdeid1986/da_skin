@@ -1,11 +1,11 @@
-<?php //00e57
+<?php //00ee8
 // *************************************************************************
 // *                                                                       *
 // * WHMCS - The Complete Client Management, Billing & Support Solution    *
 // * Copyright (c) WHMCS Ltd. All Rights Reserved,                         *
-// * Version: 5.3.14 (5.3.14-release.1)                                    *
-// * BuildId: 0866bd1.62                                                   *
-// * Build Date: 28 May 2015                                               *
+// * Version: 7.4.1 (7.4.1-release.1)                                      *
+// * BuildId: 5bbbc08.270                                                  *
+// * Build Date: 14 Nov 2017                                               *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
@@ -32,669 +32,458 @@
 // * Please see the EULA file for the full End User License Agreement.     *
 // *                                                                       *
 // *************************************************************************
-function checkDomain($domain)
-{
-    global $domainparts;
-    if( preg_match("/^[a-z0-9][a-z0-9\\-]+[a-z0-9](\\.[a-z]{2,4})+\$/i", $domain) )
-    {
-        $domainparts = explode(".", $domain, 2);
-        return true;
-    }
-    return false;
-}
-function getRegistrarsDropdownMenu($registrar, $name = 'registrar')
-{
-    global $aInt;
-    $code = "<select name=\"" . $name . "\" id=\"registrarsDropDown\"><option value=\"\">" . $aInt->lang('global', 'none') . "</option>";
-    $result = select_query('tblregistrars', "DISTINCT registrar", '', 'registrar', 'ASC');
-    while( $data = mysqli_fetch_array($result) )
-    {
-        $code .= "<option value=\"" . $data[0] . "\"";
-        if( $registrar == $data[0] )
-        {
-            $code .= " selected";
-        }
-        $code .= ">" . ucfirst($data[0]) . "</option>";
-    }
-    $code .= "</select>";
-    return $code;
-}
-function loadRegistrarModule($registrar)
-{
-    if( function_exists($registrar . '_getConfigArray') )
-    {
-        return true;
-    }
-    $module = new WHMCS_Module_Registrar();
-    return $module->load($registrar);
-}
-function RegCallFunction($params, $function, $noarr = false)
-{
-    $registrar = $params['registrar'];
-    $hookResults = run_hook('PreRegistrar' . $function, array( 'params' => $params ));
-    try
-    {
-        if( processHookResults($registrar, $function, $hookResults) )
-        {
-            return array(  );
-        }
-    }
-    catch( Exception $e )
-    {
-        return array( 'error' => $e->getMessage() );
-    }
-    $functionExists = $functionSuccessful = false;
-    $module = new WHMCS_Module_Registrar();
-    $module->setDomainID($params['domainid']);
-    $module->load($registrar);
-    if( $module->functionExists($function) )
-    {
-        $functionExists = true;
-        $values = $module->call($function, $params);
-        if( !is_array($values) && !$noarr )
-        {
-            $values = array(  );
-        }
-        if( empty($values['error']) )
-        {
-            $functionSuccessful = true;
-        }
-    }
-    else
-    {
-        $values = array( 'na' => true );
-    }
-    $vars = array( 'params' => $params, 'results' => $values, 'functionExists' => $functionExists, 'functionSuccessful' => $functionSuccessful );
-    $hookResults = run_hook('AfterRegistrar' . $function, $vars);
-    try
-    {
-        if( processHookResults($registrar, $function, $hookResults) )
-        {
-            return array(  );
-        }
-    }
-    catch( Exception $e )
-    {
-        return array( 'error' => $e->getMessage() );
-    }
-    return $values;
-}
-function getRegistrarConfigOptions($registrar)
-{
-    $module = new WHMCS_Module_Registrar();
-    $module->load($registrar);
-    return $module->getSettings();
-}
-function RegGetNameservers($params)
-{
-    return regcallfunction($params, 'GetNameservers');
-}
-function RegSaveNameservers($params)
-{
-    for( $i = 1; $i <= 5; $i++ )
-    {
-        $params['ns' . $i] = trim($params['ns' . $i]);
-    }
-    $values = regcallfunction($params, 'SaveNameservers');
-    if( !$values )
-    {
-        return false;
-    }
-    $userid = get_query_val('tbldomains', 'userid', array( 'id' => $params['domainid'] ));
-    if( $values['error'] )
-    {
-        logActivity("Domain Registrar Command: Save Nameservers - Failed: " . $values['error'] . " - Domain ID: " . $params['domainid'], $userid);
-    }
-    else
-    {
-        logActivity("Domain Registrar Command: Save Nameservers - Successful", $userid);
-    }
-    return $values;
-}
-function RegGetRegistrarLock($params)
-{
-    $values = regcallfunction($params, 'GetRegistrarLock', 1);
-    if( is_array($values) )
-    {
-        return '';
-    }
-    return $values;
-}
-function RegSaveRegistrarLock($params)
-{
-    $values = regcallfunction($params, 'SaveRegistrarLock');
-    if( !$values )
-    {
-        return false;
-    }
-    $userid = get_query_val('tbldomains', 'userid', array( 'id' => $params['domainid'] ));
-    if( $values['error'] )
-    {
-        logActivity("Domain Registrar Command: Toggle Registrar Lock - Failed: " . $values['error'] . " - Domain ID: " . $params['domainid'], $userid);
-    }
-    else
-    {
-        logActivity("Domain Registrar Command: Toggle Registrar Lock - Successful", $userid);
-    }
-    return $values;
-}
-function RegGetURLForwarding($params)
-{
-    return regcallfunction($params, 'GetURLForwarding');
-}
-function RegSaveURLForwarding($params)
-{
-    return regcallfunction($params, 'SaveURLForwarding');
-}
-function RegGetEmailForwarding($params)
-{
-    return regcallfunction($params, 'GetEmailForwarding');
-}
-function RegSaveEmailForwarding($params)
-{
-    return regcallfunction($params, 'SaveEmailForwarding');
-}
-function RegGetDNS($params)
-{
-    return regcallfunction($params, 'GetDNS');
-}
-function RegSaveDNS($params)
-{
-    return regcallfunction($params, 'SaveDNS');
-}
-function RegRenewDomain($params)
-{
-    $domainid = $params['domainid'];
-    $result = select_query('tbldomains', '', array( 'id' => $domainid ));
-    $data = mysqli_fetch_array($result);
-    $userid = $data['userid'];
-    $domain = $data['domain'];
-    $orderid = $data['orderid'];
-    $registrar = $data['registrar'];
-    $registrationperiod = $data['registrationperiod'];
-    $dnsmanagement = $data['dnsmanagement'] ? true : false;
-    $emailforwarding = $data['emailforwarding'] ? true : false;
-    $idprotection = $data['idprotection'] ? true : false;
-    $domainObj = new WHMCS_Domains_Domain($domain);
-    $params['registrar'] = $registrar;
-    $params['sld'] = $domainObj->getSLD();
-    $params['tld'] = $domainObj->getTLD();
-    $params['regperiod'] = $registrationperiod;
-    $params['dnsmanagement'] = $dnsmanagement;
-    $params['emailforwarding'] = $emailforwarding;
-    $params['idprotection'] = $idprotection;
-    $params['domainObj'] = $domainObj;
-    $values = regcallfunction($params, 'RenewDomain');
-    if( !is_array($values) )
-    {
-        return false;
-    }
-    if( $values['na'] )
-    {
-        return array( 'error' => "Registrar Function Not Supported" );
-    }
-    if( $values['error'] )
-    {
-        logActivity("Domain Renewal Failed - Domain ID: " . $domainid . " - Domain: " . $domain . " - Error: " . $values['error'], $userid);
-        run_hook('AfterRegistrarRenewalFailed', array( 'params' => $params, 'error' => $values['error'] ));
-    }
-    else
-    {
-        $result = select_query('tbldomains', 'expirydate,registrationperiod', array( 'id' => $domainid ));
-        $data = mysqli_fetch_array($result);
-        $expirydate = $data['expirydate'];
-        $registrationperiod = $data['registrationperiod'];
-        $year = substr($expirydate, 0, 4);
-        $month = substr($expirydate, 5, 2);
-        $day = substr($expirydate, 8, 2);
-        $year = $year + $registrationperiod;
-        $expirydate = $year . '-' . $month . '-' . $day;
-        $update = array( 'expirydate' => $expirydate, 'status' => 'Active', 'reminders' => '' );
-        update_query('tbldomains', $update, array( 'id' => $domainid ));
-        logActivity("Domain Renewed Successfully - Domain ID: " . $domainid . " - Domain: " . $domain, $userid);
-        run_hook('AfterRegistrarRenewal', array( 'params' => $params ));
-    }
-    return $values;
-}
-function RegRegisterDomain($paramvars)
-{
-    global $CONFIG;
-    $domainid = $paramvars['domainid'];
-    $result = select_query('tbldomains', '', array( 'id' => $domainid ));
-    $data = mysqli_fetch_array($result);
-    $userid = $data['userid'];
-    $domain = $data['domain'];
-    $orderid = $data['orderid'];
-    $registrar = $data['registrar'];
-    $registrationperiod = $data['registrationperiod'];
-    $dnsmanagement = $data['dnsmanagement'] ? true : false;
-    $emailforwarding = $data['emailforwarding'] ? true : false;
-    $idprotection = $data['idprotection'] ? true : false;
-    $result = select_query('tblorders', 'contactid', array( 'id' => $orderid ));
-    $data = mysqli_fetch_array($result);
-    $contactid = $data['contactid'];
-    if( !function_exists('getClientsDetails') )
-    {
-        require(dirname(__FILE__) . "/clientfunctions.php");
-    }
-    $clientsdetails = getClientsDetails($userid, $contactid);
-    $clientsdetails['state'] = $clientsdetails['statecode'];
-    $clientsdetails['fullphonenumber'] = $clientsdetails['phonenumberformatted'];
-    global $params;
-    $params = array_merge($paramvars, $clientsdetails);
-    $domainObj = new WHMCS_Domains_Domain($domain);
-    $params['registrar'] = $registrar;
-    $params['sld'] = $domainObj->getSLD();
-    $params['tld'] = $domainObj->getTLD();
-    $params['regperiod'] = $registrationperiod;
-    $params['dnsmanagement'] = $dnsmanagement;
-    $params['emailforwarding'] = $emailforwarding;
-    $params['idprotection'] = $idprotection;
-    if( $CONFIG['RegistrarAdminUseClientDetails'] == 'on' )
-    {
-        $params['adminfirstname'] = $clientsdetails['firstname'];
-        $params['adminlastname'] = $clientsdetails['lastname'];
-        $params['admincompanyname'] = $clientsdetails['companyname'];
-        $params['adminemail'] = $clientsdetails['email'];
-        $params['adminaddress1'] = $clientsdetails['address1'];
-        $params['adminaddress2'] = $clientsdetails['address2'];
-        $params['admincity'] = $clientsdetails['city'];
-        $params['adminfullstate'] = $clientsdetails['fullstate'];
-        $params['adminstate'] = $clientsdetails['state'];
-        $params['adminpostcode'] = $clientsdetails['postcode'];
-        $params['admincountry'] = $clientsdetails['country'];
-        $params['adminfullphonenumber'] = $clientsdetails['phonenumberformatted'];
-        $params['adminphonenumber'] = $params['adminfullphonenumber'];
-    }
-    else
-    {
-        $params['adminfirstname'] = $CONFIG['RegistrarAdminFirstName'];
-        $params['adminlastname'] = $CONFIG['RegistrarAdminLastName'];
-        $params['admincompanyname'] = $CONFIG['RegistrarAdminCompanyName'];
-        $params['adminemail'] = $CONFIG['RegistrarAdminEmailAddress'];
-        $params['adminaddress1'] = $CONFIG['RegistrarAdminAddress1'];
-        $params['adminaddress2'] = $CONFIG['RegistrarAdminAddress2'];
-        $params['admincity'] = $CONFIG['RegistrarAdminCity'];
-        $params['adminfullstate'] = $CONFIG['RegistrarAdminStateProvince'];
-        $params['adminstate'] = convertStateToCode($CONFIG['RegistrarAdminStateProvince'], $CONFIG['RegistrarAdminCountry']);
-        $params['adminpostcode'] = $CONFIG['RegistrarAdminPostalCode'];
-        $params['admincountry'] = $CONFIG['RegistrarAdminCountry'];
-        $params['adminfullphonenumber'] = $CONFIG['RegistrarAdminPhone'];
-        $params['adminphonenumber'] = $params['adminfullphonenumber'];
-    }
-    if( !$params['ns1'] && !$params['ns2'] )
-    {
-        $result = select_query('tblorders', 'nameservers', array( 'id' => $orderid ));
-        $data = mysqli_fetch_array($result);
-        $nameservers = $data['nameservers'];
-        $result = select_query('tblhosting', 'server', array( 'domain' => $domain ));
-        $data = mysqli_fetch_array($result);
-        $server = $data['server'];
-        if( $server )
-        {
-            $result = select_query('tblservers', '', array( 'id' => $server ));
-            $data = mysqli_fetch_array($result);
-            for( $i = 1; $i <= 5; $i++ )
-            {
-                $params['ns' . $i] = trim($data['nameserver' . $i]);
-            }
-        }
-        else
-        {
-            if( $nameservers && $nameservers != ',' )
-            {
-                $nameservers = explode(',', $nameservers);
-                for( $i = 1; $i <= 5; $i++ )
-                {
-                    $params['ns' . $i] = trim($nameservers[$i - 1]);
-                }
-            }
-            else
-            {
-                for( $i = 1; $i <= 5; $i++ )
-                {
-                    $params['ns' . $i] = trim($CONFIG['DefaultNameserver' . $i]);
-                }
-            }
-        }
-    }
-    else
-    {
-        for( $i = 1; $i <= 5; $i++ )
-        {
-            $params['ns' . $i] = trim($params['ns' . $i]);
-        }
-    }
-    $additflds = new WHMCS_Domains_AdditionalFields();
-    $params['additionalfields'] = $additflds->getFieldValuesFromDatabase($domainid);
-    $originaldetails = $params;
-    $params = foreignChrReplace($params);
-    $params['original'] = $originaldetails;
-    $params['domainObj'] = $domainObj;
-    run_hook('PreDomainRegister', array( 'domain' => $domain ));
-    $values = regcallfunction($params, 'RegisterDomain');
-    if( !is_array($values) )
-    {
-        return false;
-    }
-    if( $values['na'] )
-    {
-        logActivity("Domain Registration Not Supported by Module - Domain ID: " . $domainid . " - Domain: " . $domain);
-        return array( 'error' => "Registrar Function Not Supported" );
-    }
-    if( $values['error'] )
-    {
-        logActivity("Domain Registration Failed - Domain ID: " . $domainid . " - Domain: " . $domain . " - Error: " . $values['error'], $userid);
-        run_hook('AfterRegistrarRegistrationFailed', array( 'params' => $params, 'error' => $values['error'] ));
-    }
-    else
-    {
-        $expirydate = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d'), date('Y') + $registrationperiod));
-        update_query('tbldomains', array( 'registrationdate' => date('Ymd'), 'expirydate' => $expirydate, 'status' => 'Active' ), array( 'id' => $domainid ));
-        logActivity("Domain Registered Successfully - Domain ID: " . $domainid . " - Domain: " . $domain, $userid);
-        run_hook('AfterRegistrarRegistration', array( 'params' => $params ));
-    }
-    return $values;
-}
-function RegTransferDomain($paramvars)
-{
-    global $CONFIG;
-    $domainid = $paramvars['domainid'];
-    $passedepp = $paramvars['transfersecret'];
-    $result = select_query('tbldomains', '', array( 'id' => $domainid ));
-    $data = mysqli_fetch_array($result);
-    $userid = $data['userid'];
-    $domain = $data['domain'];
-    $orderid = $data['orderid'];
-    $registrar = $data['registrar'];
-    $registrationperiod = $data['registrationperiod'];
-    $dnsmanagement = $data['dnsmanagement'] ? true : false;
-    $emailforwarding = $data['emailforwarding'] ? true : false;
-    $idprotection = $data['idprotection'] ? true : false;
-    $result = select_query('tblorders', 'contactid,nameservers,transfersecret', array( 'id' => $orderid ));
-    $data = mysqli_fetch_array($result);
-    $contactid = $data['contactid'];
-    $nameservers = $data['nameservers'];
-    $transfersecret = $data['transfersecret'];
-    if( !function_exists('getClientsDetails') )
-    {
-        require(dirname(__FILE__) . "/clientfunctions.php");
-    }
-    $clientsdetails = getClientsDetails($userid, $contactid);
-    $clientsdetails['state'] = $clientsdetails['statecode'];
-    $clientsdetails['fullphonenumber'] = $clientsdetails['phonenumberformatted'];
-    global $params;
-    $params = array_merge($paramvars, $clientsdetails);
-    $domainObj = new WHMCS_Domains_Domain($domain);
-    $params['registrar'] = $registrar;
-    $params['sld'] = $domainObj->getSLD();
-    $params['tld'] = $domainObj->getTLD();
-    $params['regperiod'] = $registrationperiod;
-    $params['dnsmanagement'] = $dnsmanagement;
-    $params['emailforwarding'] = $emailforwarding;
-    $params['idprotection'] = $idprotection;
-    if( $CONFIG['RegistrarAdminUseClientDetails'] == 'on' )
-    {
-        $params['adminfirstname'] = $clientsdetails['firstname'];
-        $params['adminlastname'] = $clientsdetails['lastname'];
-        $params['admincompanyname'] = $clientsdetails['companyname'];
-        $params['adminemail'] = $clientsdetails['email'];
-        $params['adminaddress1'] = $clientsdetails['address1'];
-        $params['adminaddress2'] = $clientsdetails['address2'];
-        $params['admincity'] = $clientsdetails['city'];
-        $params['adminfullstate'] = $clientsdetails['fullstate'];
-        $params['adminstate'] = $clientsdetails['state'];
-        $params['adminpostcode'] = $clientsdetails['postcode'];
-        $params['admincountry'] = $clientsdetails['country'];
-        $params['adminfullphonenumber'] = $clientsdetails['phonenumberformatted'];
-        $params['adminphonenumber'] = $params['adminfullphonenumber'];
-    }
-    else
-    {
-        $params['adminfirstname'] = $CONFIG['RegistrarAdminFirstName'];
-        $params['adminlastname'] = $CONFIG['RegistrarAdminLastName'];
-        $params['admincompanyname'] = $CONFIG['RegistrarAdminCompanyName'];
-        $params['adminemail'] = $CONFIG['RegistrarAdminEmailAddress'];
-        $params['adminaddress1'] = $CONFIG['RegistrarAdminAddress1'];
-        $params['adminaddress2'] = $CONFIG['RegistrarAdminAddress2'];
-        $params['admincity'] = $CONFIG['RegistrarAdminCity'];
-        $params['adminstate'] = $CONFIG['RegistrarAdminStateProvince'];
-        $params['adminpostcode'] = $CONFIG['RegistrarAdminPostalCode'];
-        $params['admincountry'] = $CONFIG['RegistrarAdminCountry'];
-        $params['adminfullphonenumber'] = $CONFIG['RegistrarAdminPhone'];
-        $params['adminphonenumber'] = $params['adminfullphonenumber'];
-    }
-    if( !$params['ns1'] && !$params['ns2'] )
-    {
-        $result = select_query('tblorders', 'nameservers', array( 'id' => $orderid ));
-        $data = mysqli_fetch_array($result);
-        $nameservers = $data['nameservers'];
-        $result = select_query('tblhosting', 'server', array( 'domain' => $domain ));
-        $data = mysqli_fetch_array($result);
-        $server = $data['server'];
-        if( $server )
-        {
-            $result = select_query('tblservers', '', array( 'id' => $server ));
-            $data = mysqli_fetch_array($result);
-            for( $i = 1; $i <= 5; $i++ )
-            {
-                $params['ns' . $i] = trim($data['nameserver' . $i]);
-            }
-        }
-        else
-        {
-            if( $nameservers && $nameservers != ',' )
-            {
-                $nameservers = explode(',', $nameservers);
-                for( $i = 1; $i <= 5; $i++ )
-                {
-                    $params['ns' . $i] = trim($nameservers[$i - 1]);
-                }
-            }
-            else
-            {
-                for( $i = 1; $i <= 5; $i++ )
-                {
-                    $params['ns' . $i] = trim($CONFIG['DefaultNameserver' . $i]);
-                }
-            }
-        }
-    }
-    else
-    {
-        for( $i = 1; $i <= 5; $i++ )
-        {
-            $params['ns' . $i] = trim($params['ns' . $i]);
-        }
-    }
-    $additflds = new WHMCS_Domains_AdditionalFields();
-    $params['additionalfields'] = $additflds->getFieldValuesFromDatabase($domainid);
-    $originaldetails = $params;
-    $params = foreignChrReplace($params);
-    $params['original'] = $originaldetails;
-    if( !$params['transfersecret'] )
-    {
-        $transfersecret = $transfersecret ? unserialize($transfersecret) : array(  );
-        $params['eppcode'] = WHMCS_Input_Sanitize::decode($transfersecret[$domain]);
-        $params['transfersecret'] = $params['eppcode'];
-    }
-    else
-    {
-        $params['eppcode'] = WHMCS_Input_Sanitize::decode($passedepp);
-        $params['transfersecret'] = $params['eppcode'];
-    }
-    $params['domainObj'] = $domainObj;
-    run_hook('PreDomainRegister', array( 'domain' => $domain ));
-    $values = regcallfunction($params, 'TransferDomain');
-    if( !is_array($values) )
-    {
-        return false;
-    }
-    if( $values['na'] )
-    {
-        logActivity("Domain Transfer Not Supported by Module - Domain ID: " . $domainid . " - Domain: " . $domain);
-        return array( 'error' => "Registrar Function Not Supported" );
-    }
-    if( $values['error'] )
-    {
-        logActivity("Domain Transfer Failed - Domain ID: " . $domainid . " - Domain: " . $domain . " - Error: " . $values['error'], $userid);
-        run_hook('AfterRegistrarTransferFailed', array( 'params' => $params, 'error' => $values['error'] ));
-    }
-    else
-    {
-        update_query('tbldomains', array( 'status' => "Pending Transfer" ), array( 'id' => $domainid ));
-        $array = array( 'date' => "now()", 'title' => "Domain Pending Transfer", 'description' => "Check the transfer status of the domain " . $params['sld'] . "." . $params['tld'] . '', 'admin' => '', 'status' => "In Progress", 'duedate' => date('Y-m-d', mktime(0, 0, 0, date('m'), date('d') + 5, date('Y'))) );
-        insert_query('tbltodolist', $array);
-        logActivity("Domain Transfer Initiated Successfully - Domain ID: " . $domainid . " - Domain: " . $domain, $userid);
-        run_hook('AfterRegistrarTransfer', array( 'params' => $params ));
-    }
-    return $values;
-}
-function RegGetContactDetails($params)
-{
-    return regcallfunction($params, 'GetContactDetails');
-}
-function RegSaveContactDetails($params)
-{
-    $domainObj = new WHMCS_Domains_Domain($params['sld'] . "." . $params['tld']);
-    $domainid = get_query_val('tbldomains', 'id', array( 'domain' => $domainObj->getDomain() ));
-    $additflds = new WHMCS_Domains_AdditionalFields();
-    $params['additionalfields'] = $additflds->getFieldValuesFromDatabase($domainid);
-    $originaldetails = $params;
-    $params = foreignChrReplace($params);
-    $params['original'] = $originaldetails;
-    $params['domainObj'] = $domainObj;
-    $values = regcallfunction($params, 'SaveContactDetails');
-    if( !$values )
-    {
-        return false;
-    }
-    $result = select_query('tbldomains', 'userid', array( 'id' => $params['domainid'] ));
-    $data = mysqli_fetch_array($result);
-    $userid = $data[0];
-    if( $values['error'] )
-    {
-        logActivity("Domain Registrar Command: Update Contact Details - Failed: " . $values['error'] . " - Domain ID: " . $params['domainid'], $userid);
-    }
-    else
-    {
-        logActivity("Domain Registrar Command: Update Contact Details - Successful", $userid);
-    }
-    return $values;
-}
-function RegGetEPPCode($params)
-{
-    $values = regcallfunction($params, 'GetEPPCode');
-    if( !$values )
-    {
-        return false;
-    }
-    if( $values['eppcode'] )
-    {
-        $values['eppcode'] = htmlentities($values['eppcode']);
-    }
-    return $values;
-}
-function RegRequestDelete($params)
-{
-    $values = regcallfunction($params, 'RequestDelete');
-    if( !$values )
-    {
-        return false;
-    }
-    if( !$values['error'] )
-    {
-        update_query('tbldomains', array( 'status' => 'Cancelled' ), array( 'id' => $params['domainid'] ));
-    }
-    return $values;
-}
-function RegReleaseDomain($params)
-{
-    return regcallfunction($params, 'ReleaseDomain');
-}
-function RegRegisterNameserver($params)
-{
-    return regcallfunction($params, 'RegisterNameserver');
-}
-function RegModifyNameserver($params)
-{
-    return regcallfunction($params, 'ModifyNameserver');
-}
-function RegDeleteNameserver($params)
-{
-    return regcallfunction($params, 'DeleteNameserver');
-}
-function RegIDProtectToggle($params)
-{
-    $domainid = $params['domainid'];
-    $result = select_query('tbldomains', 'idprotection', array( 'id' => $domainid ));
-    $data = simulate_fetch_assoc($result);
-    $idprotection = $data['idprotection'] ? true : false;
-    $params['protectenable'] = $idprotection;
-    return regcallfunction($params, 'IDProtectToggle');
-}
-function RegGetDefaultNameservers($params, $domain)
-{
-    global $CONFIG;
-    $serverid = get_query_val('tblhosting', 'server', array( 'domain' => $domain ));
-    if( $serverid )
-    {
-        $result = select_query('tblservers', '', array( 'id' => $serverid ));
-        $data = mysqli_fetch_array($result);
-        for( $i = 1; $i <= 5; $i++ )
-        {
-            $params['ns' . $i] = trim($data['nameserver' . $i]);
-        }
-    }
-    else
-    {
-        for( $i = 1; $i <= 5; $i++ )
-        {
-            $params['ns' . $i] = trim($CONFIG['DefaultNameserver' . $i]);
-        }
-    }
-    return $params;
-}
-/**
- * Call the GetRegistrantContactEmailAddress function within a registrar module
- * and return the result.
- *
- * @param array $params
- *
- * @return array
- */
-function RegGetRegistrantContactEmailAddress($params)
-{
-    $values = regcallfunction($params, 'GetRegistrantContactEmailAddress');
-    if( isset($values['registrantEmail']) )
-    {
-        return array( 'registrantEmail' => $values['registrantEmail'] );
-    }
-    return array(  );
-}
-function RegCustomFunction($params, $func_name)
-{
-    return regcallfunction($params, $func_name);
-}
-function RebuildRegistrarModuleHookCache()
-{
-    $hooksarray = array(  );
-    $registrar = new WHMCS_Module_Registrar();
-    foreach( $registrar->getList() as $module )
-    {
-        if( is_file(ROOTDIR . '/modules/registrars/' . $module . "/hooks.php") && get_query_val('tblregistrars', "COUNT(*)", array( 'registrar' => $module )) )
-        {
-            $hooksarray[] = $module;
-        }
-    }
-    $whmcs = WHMCS_Application::getinstance();
-    $whmcs->set_config('RegistrarModuleHooks', implode(',', $hooksarray));
-}
-function injectDomainObjectIfNecessary($params)
-{
-    if( !isset($params['domainObj']) || !is_object($params['domainObj']) )
-    {
-        $params['domainObj'] = new WHMCS_Domains_Domain(sprintf("%s.%s", $params['sld'], $params['tld']));
-    }
-    return $params;
-}
+if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+?>
+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
+zbQKPSiwYbcnI7jiIZFWql5Gdh6FX5Vk

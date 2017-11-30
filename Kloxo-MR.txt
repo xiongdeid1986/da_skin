@@ -160,12 +160,18 @@ curl www.google.com
 4):开始安装
 vim /etc/yum.conf
 #修改超时时间
-#timeout=30000 
-#keepcache=1
+timeout=30000 
+keepcache=1
+plugins=0
+#修改
+vim /etc/yum/pluginconf.d/fastestmirror.conf
+enabled=0；
+
 #不执行 sh /script/cleanup
 #因为全程用的yum进行安装，所以什么下载失败了一眼就能看出来。
 #直接yum install ***就行，再执行一个 sh /script/cleanup就可以
 reboot -f
+
 
 cd /tmp
 rm -f mratwork*
@@ -194,6 +200,8 @@ vim /etc/privoxy/config
 sslocal -c /usr/local/etc/shadowsocks.json -d stop
 systemctl restart privoxy
 source /etc/profile
+#测试
+curl www.google.com
 
 #恢复
 vim  /etc/yum.repos.d/CentOS-Base.repo
@@ -253,8 +261,6 @@ enabled=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
 gpgcheck=0
 
-#测试
-curl www.google.com
 
 #编译
 sh /script/upcp

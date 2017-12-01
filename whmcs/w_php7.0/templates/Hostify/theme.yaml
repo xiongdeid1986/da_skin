@@ -1,7 +1,0 @@
-# WHMCS Six Theme Configuration File
-
-name: "NeWorld New Theme"
-description: "The NeWorld New Theme for WHMCS Version 4.0"
-author: "NeWorld Cloud Ltd"
-properties:
-  serverSidePagination: false # Defines client side will handle pagination

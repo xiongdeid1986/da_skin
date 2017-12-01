@@ -35,6 +35,21 @@ hostnamectl --transient
 vim /etc/sysconfig/network
 # 加入
 # HOSTNAME=kloxo.ddweb.com.cn
+
+# 设置yum
+vim /etc/yum.conf
+#修改超时时间
+timeout=30000 
+keepcache=1
+plugins=0
+#修改
+vim /etc/yum/pluginconf.d/fastestmirror.conf
+enabled=0；
+
+#不执行 sh /script/cleanup
+#因为全程用的yum进行安装，所以什么下载失败了一眼就能看出来。
+#直接yum install ***就行，再执行一个 sh /script/cleanup就可以
+
 reboot -f
 
 2):安装代理.
@@ -75,7 +90,7 @@ name=CentOS-$releasever - Base
 #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os
 baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/os/$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 #released updates 
 [updates]
@@ -83,7 +98,7 @@ name=CentOS-$releasever - Updates
 #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates
 baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/updates/$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 #additional packages that may be useful
 [extras]
@@ -91,7 +106,7 @@ name=CentOS-$releasever - Extras
 #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras
 baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/extras/$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 #additional packages that extend functionality of existing packages
 [centosplus]
@@ -100,7 +115,7 @@ name=CentOS-$releasever - Plus
 baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/centosplus/$basearch/
 gpgcheck=1
 enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 #contrib - packages by Centos Users
 [contrib]
@@ -109,7 +124,7 @@ name=CentOS-$releasever - Contrib
 baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/contrib/$basearch/
 gpgcheck=1
 enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
  
 
 *********************************************************
@@ -158,21 +173,6 @@ source /etc/profile
 curl www.google.com
 
 4):开始安装
-vim /etc/yum.conf
-#修改超时时间
-timeout=30000 
-keepcache=1
-plugins=0
-#修改
-vim /etc/yum/pluginconf.d/fastestmirror.conf
-enabled=0；
-
-#不执行 sh /script/cleanup
-#因为全程用的yum进行安装，所以什么下载失败了一眼就能看出来。
-#直接yum install ***就行，再执行一个 sh /script/cleanup就可以
-reboot -f
-
-
 cd /tmp
 rm -f mratwork*
 rpm -ivh https://github.com/mustafaramadhan/rpms/raw/master/mratwork/release/neutral/noarch/mratwork-release-0.0.1-1.noarch.rpm

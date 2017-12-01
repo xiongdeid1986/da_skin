@@ -40,34 +40,9 @@ sysctl kernel.hostname=kloxo.ddweb.com.cn
 reboot -f
 
 3):安装代理
-#升级python
-cd /tmp
-wget http://python.org/ftp/python/2.7.3/Python-2.7.3.tar.bz2  
-tar -jxvf Python-2.7.3.tar.bz2  
-cd Python-2.7.3  
-./configure  
-make all
-make install 
-make clean  
-make distclean  
-#查看信息
-/usr/local/bin/python2.7 -V
-#建立软连
-mv /usr/bin/python /usr/bin/python2.6.6  
-ln -s /usr/local/bin/python2.7 /usr/bin/python  
-#更改yum python版本
-vi /usr/bin/yum  
-将文件头部的
-#!/usr/bin/python
-改成
-#!/usr/bin/python2.6.6
-reboot -f
 
 yum install python-setuptools -y
-yum install python-pip pip
-yum -y install epel-release
 easy_install pip
-yum  python-pip epel-release -y
 pip install shadowsocks
 vi /usr/local/etc/shadowsocks.json
 #写入  ****[此处*号替换成密码]
@@ -83,15 +58,244 @@ vi /usr/local/etc/shadowsocks.json
 	"workers": 1
 }
 
+yum -y install privoxy
+vim /etc/privoxy/config
+#搜索关键字:listen-address找到listen-address 127.0.0.1:8118 去掉注释#
+#然后搜索forward-socks5t,将forward-socks5t / 127.0.0.1:1080 . 去掉注释# (后面有点) 
+#直接执行下条即可
+echo 'forward-socks5t / 127.0.0.1:1080 .' >> /etc/privoxy/config
 
 
 
 
+3):将阿里云源更换为Google源
+
+*********************************************************
+vim  /etc/yum.repos.d/CentOS-Base.repo
+
+#-------------------------------替换为----------------------------------------------------
+
+[base]
+name=CentOS-$releasever - Base
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os
+baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#released updates 
+[updates]
+name=CentOS-$releasever - Updates
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates
+baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#additional packages that may be useful
+[extras]
+name=CentOS-$releasever - Extras
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras
+baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-$releasever - Plus
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus
+baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/centosplus/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#contrib - packages by Centos Users
+[contrib]
+name=CentOS-$releasever - Contrib
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=contrib
+baseurl=http://ftp.sjtu.edu.cn/centos/$releasever/contrib/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+ 
+
+*********************************************************
+vim  /etc/yum.repos.d/epel.repo
+#-------------------------------替换为----------------------------------------------------
+[epel]
+name=Extra Packages for Enterprise Linux 7 - $basearch
+#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch
+failovermethod=priority
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+
+[epel-debuginfo]
+name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
+#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch/debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-7&arch=$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1
+
+[epel-source]
+name=Extra Packages for Enterprise Linux 7 - $basearch - Source
+#baseurl=http://download.fedoraproject.org/pub/epel/7/SRPMS
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-7&arch=$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+gpgcheck=1
+
+#设置yum
+vim /etc/yum.conf
+#修改超时时间
+timeout=30000 
+keepcache=1
+plugins=0
+#修改
+vim /etc/yum/pluginconf.d/fastestmirror.conf
+enabled=0；
+
+#不执行 sh /script/cleanup
+#因为全程用的yum进行安装，所以什么下载失败了一眼就能看出来。
+#直接yum install ***就行，再执行一个 sh /script/cleanup就可以
+reboot -f
+
+3):启动代理
+
+sslocal -c /usr/local/etc/shadowsocks.json -d start
+service privoxy restart
+
+vi /etc/profile
+#插入
+export http_proxy=http://127.0.0.1:8118
+export https_proxy=http://127.0.0.1:8118
+export ftp_proxy=http://127.0.0.1:8118
+
+source /etc/profile
+
+curl www.google.com
+
+
+4):开始安装
+
+5):开始安装
+cd /tmp
+rm -f mratwork*
+rpm -ivh https://github.com/mustafaramadhan/rpms/raw/master/mratwork/release/neutral/noarch/mratwork-release-0.0.1-1.noarch.rpm
+cd /
+yum clean all
+yum update mratwork-* -y
+yum install kloxomr7 -y
+yum makecache
 
 
 
+#去掉代理
+#删除
+vi /etc/profile
+export http_proxy=http://127.0.0.1:8118
+export https_proxy=http://127.0.0.1:8118
+export ftp_proxy=http://127.0.0.1:8118
+
+# echo 'forward-socks5t / 127.0.0.1:1080 .' >> /etc/privoxy/config
+# sslocal -c /usr/local/etc/shadowsocks.json -d start
+# systemctl restart privoxy
+
+#删除
+vim /etc/privoxy/config
+#forward-socks5t / 127.0.0.1:1080 .
+
+sslocal -c /usr/local/etc/shadowsocks.json -d stop
+service privoxy restart 
+source /etc/profile
+#测试
+curl www.google.com
+
+#恢复
+vim  /etc/yum.repos.d/CentOS-Base.repo
+#-------------------------------恢复----------------------------------------------------
+[base]
+name=CentOS-$releasever
+enabled=1
+failovermethod=priority
+baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-6
+
+[updates]
+name=CentOS-$releasever
+enabled=1
+failovermethod=priority
+baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-6
+
+[extras]
+name=CentOS-$releasever
+enabled=1
+failovermethod=priority
+baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/extras/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-6
 
 
+#恢复
+vim  /etc/yum.repos.d/epel.repo
+#-------------------------------恢复----------------------------------------------------
+[epel]
+name=Extra Packages for Enterprise Linux 6 - $basearch
+baseurl=http://mirrors.aliyun.com/epel/6/$basearch
+        http://mirrors.aliyuncs.com/epel/6/$basearch
+failovermethod=priority
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+
+[epel-debuginfo]
+name=Extra Packages for Enterprise Linux 6 - $basearch - Debug
+baseurl=http://mirrors.aliyun.com/epel/6/$basearch/debug
+        http://mirrors.aliyuncs.com/epel/6/$basearch/debug
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+gpgcheck=0
+
+[epel-source]
+name=Extra Packages for Enterprise Linux 6 - $basearch - Source
+baseurl=http://mirrors.aliyun.com/epel/6/SRPMS
+        http://mirrors.aliyuncs.com/epel/6/SRPMS
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+gpgcheck=0
 
 
+#编译
+sh /script/upcp
 
+
+5):设置
+#设置中文
+cd /usr/local/lxlabs/kloxo/httpdocs/lang
+wget http://src.hafrans.com/kloxo-mr/lxadmin_cn_pack.zip
+unzip lxadmin_cn_pack.zip
+chown -R lxlabs.lxlabs ./
+rm -rf lxadmin_cn_pack.zip
+
+
+#后台导航Appearance 修改语言
+#设置PHP
+#设置MYSQL默认utf8
+#端口设置修改端口
+#使用Nginx做为服务端
+
+#安装apache工具
+yum remove httpd-devel
+find / -name apxs 
+#编译apache 启动失败的模块
+
+#升级
+sh /script/upcp -y
+sh /script/mysql-optimize --select=upgrade

@@ -70,6 +70,20 @@ vi /usr/local/etc/shadowsocks.json
 	"workers": 1
 }
 
+
+{
+        "server":"45.63.87.129",
+        "server_port":33205,
+        "local_address": "127.0.0.1",
+        "local_port":1080,
+        "password":"2171555359",
+        "timeout":300,
+        "method":"aes-256-cfb",
+        "fast_open": false,
+        "workers": 1
+}
+
+
 #安装privoxy
 yum -y install privoxy
 vim /etc/privoxy/config
@@ -128,34 +142,11 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
  
 
 *********************************************************
-vim  /etc/yum.repos.d/epel.repo
+rm -rf /etc/yum.repos.d/epel.repo
 #-------------------------------替换为----------------------------------------------------
-[epel]
-name=Extra Packages for Enterprise Linux 7 - $basearch
-#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch
-failovermethod=priority
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+rpm -e epel-release-latest-7
+rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
-[epel-debuginfo]
-name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
-#baseurl=http://download.fedoraproject.org/pub/epel/7/$basearch/debug
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-7&arch=$basearch
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-gpgcheck=1
-
-[epel-source]
-name=Extra Packages for Enterprise Linux 7 - $basearch - Source
-#baseurl=http://download.fedoraproject.org/pub/epel/7/SRPMS
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-7&arch=$basearch
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-gpgcheck=1
 
 3):启动代理
 
@@ -192,6 +183,7 @@ export ftp_proxy=http://127.0.0.1:8118
 # echo 'forward-socks5t / 127.0.0.1:1080 .' >> /etc/privoxy/config
 # sslocal -c /usr/local/etc/shadowsocks.json -d start
 # systemctl restart privoxy
+# source /etc/profile
 
 #删除
 vim /etc/privoxy/config
@@ -204,62 +196,15 @@ source /etc/profile
 curl www.google.com
 
 #恢复
-vim  /etc/yum.repos.d/CentOS-Base.repo
+rm -rf /etc/yum.repos.d/CentOS-Base.repo
 #-------------------------------恢复----------------------------------------------------
-[base]
-name=CentOS-$releasever
-enabled=1
-failovermethod=priority
-baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/os/$basearch/
-gpgcheck=1
-gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-7
-
-[updates]
-name=CentOS-$releasever
-enabled=1
-failovermethod=priority
-baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/updates/$basearch/
-gpgcheck=1
-gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-7
-
-[extras]
-name=CentOS-$releasever
-enabled=1
-failovermethod=priority
-baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/extras/$basearch/
-gpgcheck=1
-gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-7
-
+wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/.help/CentOS7-Base-163.repo
 
 #恢复
-vim  /etc/yum.repos.d/epel.repo
+rm -rf  /etc/yum.repos.d/epel.repo
 #-------------------------------恢复----------------------------------------------------
-[epel]
-name=Extra Packages for Enterprise Linux 7 - $basearch
-baseurl=http://mirrors.aliyun.com/epel/7/$basearch
-        http://mirrors.aliyuncs.com/epel/7/$basearch
-failovermethod=priority
-enabled=1
-gpgcheck=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-
-[epel-debuginfo]
-name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
-baseurl=http://mirrors.aliyun.com/epel/7/$basearch/debug
-        http://mirrors.aliyuncs.com/epel/7/$basearch/debug
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-gpgcheck=0
-
-[epel-source]
-name=Extra Packages for Enterprise Linux 7 - $basearch - Source
-baseurl=http://mirrors.aliyun.com/epel/7/SRPMS
-        http://mirrors.aliyuncs.com/epel/7/SRPMS
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-gpgcheck=0
+rpm -e epel-release-latest-7
+wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
 
 
 #编译
@@ -270,8 +215,10 @@ sh /script/upcp
 cd /usr/local/lxlabs/kloxo/httpdocs/lang
 wget http://src.hafrans.com/kloxo-mr/lxadmin_cn_pack.zip
 unzip lxadmin_cn_pack.zip
-chown -R lxlabs.lxlabs ./
 rm -rf lxadmin_cn_pack.zip
+mv en-us bak-us
+cp -Rb cn en-us
+chown -R lxlabs.lxlabs ./
 
 #后台导航Appearance 修改语言
 #设置PHP
@@ -280,10 +227,55 @@ rm -rf lxadmin_cn_pack.zip
 #使用Nginx做为服务端
 
 #安装apache工具
-yum remove httpd-devel
+yum install httpd-devel
 find / -name apxs 
+yum groupinstall 'Development tools'
+yum install gcc
+
+cd /usr/local/src
+wget https://mirrors.tuna.tsinghua.edu.cn/apache//apr/apr-1.6.3.tar.gz
+tar -xf apr-1.6.3.tar.gz
+cd apr-1.6.3
+./configure --prefix=/usr/local/apr16 
+make && make install
+
+cd /usr/local/src
+wget https://nchc.dl.sourceforge.net/project/expat/expat/2.2.5/expat-2.2.5.tar.bz2
+tar -xf expat-2.2.5.tar.bz2
+cd expat-2.2.5
+./configure --prefix=/usr/local/expat25
+make && make install
+
+cd /usr/local/src
+wget https://mirrors.tuna.tsinghua.edu.cn/apache//apr/apr-util-1.6.1.tar.gz
+tar -xf apr-util-1.6.1.tar.gz
+cd apr-util-1.6.1
+./configure --with-apr=/usr/local/apr16/ --with-expat=/usr/local/expat25/ --prefix=/usr/local/apr16-util
+make
+make install
+
+yum install pcre-devel
+cd /usr/local/src
+wget http://archive.apache.org/dist/httpd/httpd-2.4.6.tar.gz
+tar -xf httpd-2.4.6.tar.gz
+cd httpd-2.4.6
+./configure --prefix=/etc/httpd --sysconfdir=/etc/httpd/conf --with-apr=/usr/local/apr16 --with-apr-util=/usr/local/apr16-util --with-mpm=worker --enable-so --enable-modules=all --enable-mods-shared=all --enable-proxy=shared --enable-proxy-balancer=shared --enable-prosy-http=shared --enable-proxy-ajp --enable-deflate --enable-cache --enable-rewrite --enable-disk-cache --enable-ssl --enable-mem-cache
+make
+rm -rf /etc/httpd/*
+make install
+
+\cp -rf /etc/httpd/bin/httpd /usr/sbin/httpd
+\cp -rf /etc/httpd/bin/apachectl /usr/sbin/apachectl
+
+cd /usr/local/src/httpd-2.4.6/modules/lua
+/etc/httpd/bin/apxs -i -a -c *.c
+
+
 #编译apache 启动失败的模块
 
 #升级
 sh /script/upcp -y
 sh /script/mysql-optimize --select=upgrade
+
+
+

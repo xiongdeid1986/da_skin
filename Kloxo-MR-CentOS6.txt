@@ -118,34 +118,11 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
  
 
 *********************************************************
-vim  /etc/yum.repos.d/epel.repo
+rm -rf /etc/yum.repos.d/epel.repo
 #-------------------------------替换为----------------------------------------------------
-[epel]
-name=Extra Packages for Enterprise Linux 6 - $basearch
-#baseurl=http://download.fedoraproject.org/pub/epel/6/$basearch
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-6&arch=$basearch
-failovermethod=priority
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+rpm -e epel-release-latest-6
+rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 
-[epel-debuginfo]
-name=Extra Packages for Enterprise Linux 6 - $basearch - Debug
-#baseurl=http://download.fedoraproject.org/pub/epel/6/$basearch/debug
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-6&arch=$basearch
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
-gpgcheck=1
-
-[epel-source]
-name=Extra Packages for Enterprise Linux 6 - $basearch - Source
-#baseurl=http://download.fedoraproject.org/pub/epel/6/SRPMS
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-6&arch=$basearch
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
-gpgcheck=1
 
 #设置yum
 vim /etc/yum.conf
@@ -201,7 +178,8 @@ export ftp_proxy=http://127.0.0.1:8118
 
 # echo 'forward-socks5t / 127.0.0.1:1080 .' >> /etc/privoxy/config
 # sslocal -c /usr/local/etc/shadowsocks.json -d start
-# systemctl restart privoxy
+# service privoxy restart
+# source /etc/profile
 
 #删除
 vim /etc/privoxy/config
@@ -214,62 +192,16 @@ source /etc/profile
 curl www.google.com
 
 #恢复
-vim  /etc/yum.repos.d/CentOS-Base.repo
+rm -rf /etc/yum.repos.d/CentOS-Base.repo
 #-------------------------------恢复----------------------------------------------------
-[base]
-name=CentOS-$releasever
-enabled=1
-failovermethod=priority
-baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/os/$basearch/
-gpgcheck=1
-gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-6
-
-[updates]
-name=CentOS-$releasever
-enabled=1
-failovermethod=priority
-baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/updates/$basearch/
-gpgcheck=1
-gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-6
-
-[extras]
-name=CentOS-$releasever
-enabled=1
-failovermethod=priority
-baseurl=http://mirrors.cloud.aliyuncs.com/centos/$releasever/extras/$basearch/
-gpgcheck=1
-gpgkey=http://mirrors.cloud.aliyuncs.com/centos/RPM-GPG-KEY-CentOS-6
+wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.163.com/.help/CentOS6-Base-163.repo
 
 
 #恢复
-vim  /etc/yum.repos.d/epel.repo
+rm -rf  /etc/yum.repos.d/epel.repo
 #-------------------------------恢复----------------------------------------------------
-[epel]
-name=Extra Packages for Enterprise Linux 6 - $basearch
-baseurl=http://mirrors.aliyun.com/epel/6/$basearch
-        http://mirrors.aliyuncs.com/epel/6/$basearch
-failovermethod=priority
-enabled=1
-gpgcheck=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
-
-[epel-debuginfo]
-name=Extra Packages for Enterprise Linux 6 - $basearch - Debug
-baseurl=http://mirrors.aliyun.com/epel/6/$basearch/debug
-        http://mirrors.aliyuncs.com/epel/6/$basearch/debug
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
-gpgcheck=0
-
-[epel-source]
-name=Extra Packages for Enterprise Linux 6 - $basearch - Source
-baseurl=http://mirrors.aliyun.com/epel/6/SRPMS
-        http://mirrors.aliyuncs.com/epel/6/SRPMS
-failovermethod=priority
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
-gpgcheck=0
+rpm -e epel-release-latest-6
+rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
 
 
 #编译

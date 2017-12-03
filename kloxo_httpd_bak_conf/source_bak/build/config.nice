@@ -1,0 +1,21 @@
+#! /bin/sh
+#
+# Created by configure
+
+"./configure" \
+"--prefix=/etc/httpd" \
+"--sysconfdir=/etc/httpd/conf" \
+"--with-apr=/usr/local/apr16" \
+"--with-apr-util=/usr/local/apr16-util" \
+"--with-mpm=worker" \
+"--enable-so" \
+"--enable-mods-shared=all" \
+"--enable-proxy=shared" \
+"--enable-proxy-balancer=shared" \
+"--enable-prosy-http=shared" \
+"--enable-proxy-ajp" \
+"--enable-deflate" \
+"--enable-cache" \
+"--enable-disk-cache" \
+"--enable-mem-cache" \
+"$@"

@@ -23,6 +23,11 @@ yum -y install dos2unix patch screen unzip lftp tarquota
 
 yum install wget gcc gcc-c++ flex bison make bind bind-libs bind-utils openssl openssl-devel perl quota libaio libcom_err-devel libcurl-devel gd zlib-devel zip unzip libcap-devel cronie bzip2 cyrus-sasl-devel perl-ExtUtils-Embed autoconf automake libtool which patch mailx bzip2-devel db4-devel libnspr4.so libssl.so.6 libstdc++.so.6
 
+yum install python-pip
+yum -y install epel-release
+pip install shadowsocks
+yum -y install privoxy
+
 setenforce 0
 echo 'SELINUX=disabled' > /etc/selinux/config
 
@@ -53,9 +58,6 @@ enabled=0；
 reboot -f
 
 2):安装代理.
-yum install python-pip
-yum -y install epel-release
-pip install shadowsocks
 vi /usr/local/etc/shadowsocks.json
 #写入  ****[此处*号替换成密码]
 {
@@ -85,7 +87,6 @@ vi /usr/local/etc/shadowsocks.json
 
 
 #安装privoxy
-yum -y install privoxy
 vim /etc/privoxy/config
 #搜索关键字:listen-address找到listen-address 127.0.0.1:8118 去掉注释#
 #然后搜索forward-socks5t,将forward-socks5t / 127.0.0.1:1080 . 去掉注释# (后面有点) 

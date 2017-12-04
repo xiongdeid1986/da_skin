@@ -1,0 +1,111 @@
+CentOS 7
+前置工作
+先解析域名到指定服务器.
+
+1):升级
+vim /etc/ssh/sshd_config
+#连接超时设置
+ClientAliveInterval 60
+ClientAliveCountMax 86400
+echo 'ClientAliveInterval 60' >> /etc/ssh/sshd_config
+echo 'ClientAliveCountMax 86400' >> /etc/ssh/sshd_config
+systemctl restart sshd  
+
+echo 'TMOUT=1200' >> /etc/profile
+source /etc/profile
+
+#升级软件
+yum update -y
+yum install yum-utils yum-priorities vim-minimal subversion curl zip unzip -y
+yum install telnet wget -y
+
+yum install openssl098e.i686 glibc.i686 libstdc++.i686
+yum -y install dos2unix patch screen unzip lftp tarquota
+
+yum install wget gcc gcc-c++ flex bison make bind bind-libs bind-utils openssl openssl-devel perl quota libaio libcom_err-devel libcurl-devel gd zlib-devel zip unzip libcap-devel cronie bzip2 cyrus-sasl-devel perl-ExtUtils-Embed autoconf automake libtool which patch mailx bzip2-devel db4-devel libnspr4.so libssl.so.6 libstdc++.so.6
+
+yum install python-pip
+yum -y install epel-release
+pip install shadowsocks
+yum -y install privoxy
+
+setenforce 0
+echo 'SELINUX=disabled' > /etc/selinux/config
+
+#设置 HOSTNAME
+hostnamectl set-hostname vestacp
+hostnamectl --pretty
+hostnamectl --static
+hostnamectl --transient
+
+vim /etc/sysconfig/network
+# 加入
+# HOSTNAME=vestacp
+
+#设置hosts
+vim /etc/hosts
+#修改 hostname
+
+# 设置yum
+vim /etc/yum.conf
+#修改超时时间
+timeout=300
+keepcache=1
+plugins=0
+#修改
+vim /etc/yum/pluginconf.d/fastestmirror.conf
+enabled=0
+
+reboot -f
+
+cd /usr/local/src
+curl -L https://github.com/duy13/VDVESTA/raw/master/vdvesta.sh -o vdvesta.sh
+bash vdvesta.sh
+
+#安装设置
+1.不安装vDDoS代理保护
+2.PHP 安装为all
+3.Would you like Configure Kernel limit DDOS 配置限制DDOS 为N 
+
+#后置工作
+
+1.设置阿里云安全组 放行8082,8082端口
+  #设置后台为中文
+  
+2.安装ioncube
+	# cd /usr/local/lib64
+	# wget http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
+	# tar -xzvf ioncube_loaders_lin_x86-64.tar.gz
+	# cd ioncube
+	# rm -rf ioncube_loaders_lin_x86-64.tar.gz
+	# chown root.root -R ./
+	# chmod +x -R ./
+	# --------------------------------------------------------
+	vim /opt/remi/php54/root/etc/php.d/00-ioncube.ini
+	[ioncube loader]
+	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.4.so
+	# --------------------------------------------------------
+	vim /opt/remi/php55/root/etc/php.d/00-ioncube.ini
+	[ioncube loader]
+	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.5.so
+	# --------------------------------------------------------
+	vim /opt/remi/php56/root/etc/php.d/00-ioncube.ini
+	[ioncube loader]
+	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.6.so
+	# --------------------------------------------------------
+	vim /opt/remi/php70/root/etc/php.d/00-ioncube.ini
+	[ioncube loader]
+	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.0.so
+	# --------------------------------------------------------
+	vim /opt/remi/php71/root/etc/php.d/00-ioncube.ini
+	[ioncube loader]
+	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.1.so
+3.关闭防火墙
+	systemctl stop firewalld
+	systemctl disabled firewalld
+4.对接whmcs
+	#进入whcms_web/modules/servers/
+	mkdir vesta
+	wget http://c.vestacp.com/0.9.8/rhel/whmcs-module.php -O vesta.php
+	#1):服务器使用ssl连接
+

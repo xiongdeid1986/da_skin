@@ -6,12 +6,12 @@
             <span class="label label-default">
                 {"M jS"|date:$announcement.timestamp}
             </span>
-            <a href="{if $seofriendlyurls}{$WEB_ROOT}/announcements/{$announcement.id}/{$announcement.urlfriendlytitle}.html{else}{$smarty.server.PHP_SELF}?id={$announcement.id}{/if}">{$announcement.title}</a>
+            <a href="{if $seofriendlyurls}./announcements/{$announcement.id}/{$announcement.urlfriendlytitle}.html{else}{$smarty.server.PHP_SELF}?id={$announcement.id}{/if}">{$announcement.title}</a>
         </h2>
 
         <blockquote>
             <p>{if $announcement.text|strip_tags|strlen < 350}{$announcement.text}{else}{$announcement.summary}
-            <a href="{if $seofriendlyurls}{$WEB_ROOT}/announcements/{$announcement.id}/{$announcement.urlfriendlytitle}.html{else}{$smarty.server.PHP_SELF}?id={$announcement.id}{/if}" class="label label-warning">{$LANG.readmore} &raquo;</a>
+            <a href="{if $seofriendlyurls}./announcements/{$announcement.id}/{$announcement.urlfriendlytitle}.html{else}{$smarty.server.PHP_SELF}?id={$announcement.id}{/if}" class="label label-warning">{$LANG.readmore} &raquo;</a>
             {/if}</p>
         </blockquote>
 

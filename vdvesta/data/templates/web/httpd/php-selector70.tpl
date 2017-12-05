@@ -1,0 +1,1 @@
+/usr/local/vesta/data/templates/web/httpd/phpfcgid.tpl

@@ -21,7 +21,7 @@
                 <div class="list-group">
                     {foreach from=$dlcats item=dlcat}
                         <span class="list-group-item">
-                            <a href="{if $seofriendlyurls}{$WEB_ROOT}/downloads/{$dlcat.id}/{$dlcat.urlfriendlyname}{else}downloads.php?action=displaycat&amp;catid={$dlcat.id}{/if}">
+                            <a href="{if $seofriendlyurls}./downloads/{$dlcat.id}/{$dlcat.urlfriendlyname}{else}downloads.php?action=displaycat&amp;catid={$dlcat.id}{/if}">
                                 <i class="fa fa-folder-open-o"></i>
                                 <strong>{$dlcat.name}</strong>
                             </a>

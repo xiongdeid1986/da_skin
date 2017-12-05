@@ -62,5 +62,5 @@
 {/if}
 
 <p>
-    <a href="{$WEB_ROOT}/announcements.php" class="btn btn-default">{$LANG.clientareabacklink}</a>
+    <a href="./announcements.php" class="btn btn-default">{$LANG.clientareabacklink}</a>
 </p>

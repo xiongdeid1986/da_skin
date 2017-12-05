@@ -62,7 +62,7 @@
                                 </div>
                             </div>
                             <label class="checkbox-inline">
-                                <input type="checkbox" name="rememberme" /> {$LANG.loginrememberme} &bull; <a href="{$WEB_ROOT}/pwreset.php">{$LANG.forgotpw}</a>
+                                <input type="checkbox" name="rememberme" /> {$LANG.loginrememberme} &bull; <a href="./pwreset.php">{$LANG.forgotpw}</a>
                             </label>
                         </form>
                         {if $condlinks.allowClientRegistration}
@@ -74,26 +74,26 @@
             {/if}
             <!-- Shopping Cart -->
             <div class="pull-right nav">
-                <a href="{$WEB_ROOT}/cart.php?a=view" class="quick-nav"><i class="fa fa-shopping-cart"></i> <span class="hidden-xs">{$LANG.viewcart} (</span><span id="cartItemCount">{$cartitemcount}</span><span class="hidden-xs">)</span></a>
+                <a href="./cart.php?a=view" class="quick-nav"><i class="fa fa-shopping-cart"></i> <span class="hidden-xs">{$LANG.viewcart} (</span><span id="cartItemCount">{$cartitemcount}</span><span class="hidden-xs">)</span></a>
             </div>
 
             {if $adminMasqueradingAsClient}
                 <!-- Return to admin link -->
                 <div class="alert alert-danger admin-masquerade-notice">
                     {$LANG.adminmasqueradingasclient}<br />
-                    <a href="{$WEB_ROOT}/logout.php?returntoadmin=1" class="alert-link">{$LANG.logoutandreturntoadminarea}</a>
+                    <a href="./logout.php?returntoadmin=1" class="alert-link">{$LANG.logoutandreturntoadminarea}</a>
                 </div>
             {elseif $adminLoggedIn}
                 <!-- Return to admin link -->
                 <div class="alert alert-danger admin-masquerade-notice">
                     {$LANG.adminloggedin}<br />
-                    <a href="{$WEB_ROOT}/logout.php?returntoadmin=1" class="alert-link">{$LANG.returntoadminarea}</a>
+                    <a href="./logout.php?returntoadmin=1" class="alert-link">{$LANG.returntoadminarea}</a>
                 </div>
             {/if}
 
         </div>
 
-        <a href="{$WEB_ROOT}/index.php"><img src="{$WEB_ROOT}/templates/{$template}/img/logo.png" alt="{$companyname}" /></a>
+        <a href="./index.php"><img src="./templates/{$template}/img/logo.png" alt="{$companyname}" /></a>
 
     </div>
 </section>

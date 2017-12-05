@@ -71,41 +71,77 @@ bash vdvesta.sh
 
 1.设置阿里云安全组 放行8082,8082端口
   #设置后台为中文
-  
-2.安装ioncube
-	# cd /usr/local/lib64
-	# wget http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
-	# tar -xzvf ioncube_loaders_lin_x86-64.tar.gz
-	# cd ioncube
-	# rm -rf ioncube_loaders_lin_x86-64.tar.gz
-	# chown root.root -R ./
-	# chmod +x -R ./
+  mv /usr/local/vesta/web/inc/i18n/en.php /usr/local/vesta/web/inc/i18n/english.php
+  cp /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/en.php
+  #编辑模板
+  cd /usr/local/vesta/data/templates/web/skel/public_html
+  cd /usr/local/vesta/data/templates/web/skel/public_shtml
+  cd /usr/local/vesta/data/templates/web/skel/document_errors 
+2.关闭防火墙
+	systemctl stop firewalld
+	systemctl disable firewalld 
+3.安装ioncube
+	cd /usr/local/lib64
+	wget http://downloads3.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
+	tar -xzvf ioncube_loaders_lin_x86-64.tar.gz
+	rm -rf ioncube_loaders_lin_x86-64.tar.gz
+	cd ioncube
+	chown root.root -R ./
+	chmod +x -R ./
 	# --------------------------------------------------------
-	vim /opt/remi/php54/root/etc/php.d/00-ioncube.ini
-	[ioncube loader]
-	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.4.so
+vim /opt/remi/php54/root/etc/php.d/00-ioncube.ini
+[ioncube loader]
+zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.4.so
 	# --------------------------------------------------------
 	vim /opt/remi/php55/root/etc/php.d/00-ioncube.ini
-	[ioncube loader]
-	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.5.so
+[ioncube loader]
+zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.5.so
 	# --------------------------------------------------------
 	vim /opt/remi/php56/root/etc/php.d/00-ioncube.ini
-	[ioncube loader]
-	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.6.so
+[ioncube loader]
+zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_5.6.so
 	# --------------------------------------------------------
-	vim /opt/remi/php70/root/etc/php.d/00-ioncube.ini
-	[ioncube loader]
-	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.0.so
+	vim /etc/opt/remi/php70/php.d/00-ioncube.ini
+[ioncube loader]
+zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.0.so
 	# --------------------------------------------------------
-	vim /opt/remi/php71/root/etc/php.d/00-ioncube.ini
-	[ioncube loader]
-	zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.1.so
-3.关闭防火墙
-	systemctl stop firewalld
-	systemctl disabled firewalld
+	vim /etc/opt/remi/php71/php.d/00-ioncube.ini
+[ioncube loader]
+zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.1.so
 4.对接whmcs
 	#进入whcms_web/modules/servers/
 	mkdir vesta
 	wget http://c.vestacp.com/0.9.8/rhel/whmcs-module.php -O vesta.php
 	#1):服务器使用ssl连接
-
+5.自动部署ssl证书
+	yum install git -y
+	yum install certbot
+	cd /usr/local
+	git clone https://github.com/letsencrypt/letsencrypt.git
+	git clone https://github.com/interbrite/letsencrypt-vesta.git
+	mkdir -p /etc/letsencrypt/webroot
+	ln -s /usr/local/letsencrypt-vesta/letsencrypt.conf /etc/httpd/conf.d/letsencrypt.conf
+	ln -s /usr/local/letsencrypt/letsencrypt-auto /usr/local/bin/letsencrypt-auto
+	ln -s /usr/local/letsencrypt-vesta/letsencrypt-vesta /usr/local/bin/letsencrypt-vesta
+	
+	service httpd restart
+	
+	cd /use/local
+	mkdir certbot
+	cd certbot
+	wget https://dl.eff.org/certbot-auto
+	chmod a+x certbot-auto
+	
+	service httpd restart
+	
+	#生成证书
+	/usr/local/letsencrypt-vesta/letsencrypt-vesta admin ddweb.com.cn
+	
+	#证书地址
+	cd /etc/letsencrypt/live
+	
+	#证书说明
+	1.域名要使用www.linode.com DNS 否则获取不到证书
+	2.vestecp后台勾选 Let's Encrypt 支持
+	
+	

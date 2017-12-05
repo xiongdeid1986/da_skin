@@ -144,7 +144,43 @@ zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.1.so
 	1.域名要使用www.linode.com DNS 否则获取不到证书
 	2.vestecp后台勾选 Let's Encrypt 支持
 	
-	
+#mariadb my.cnf
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+symbolic-links=0
+
+skip-external-locking
+key_buffer_size = 128K
+max_allowed_packet = 16M
+table_open_cache = 65535
+sort_buffer_size = 4M
+read_buffer_size = 2M
+read_rnd_buffer_size = 8M
+net_buffer_length = 2K
+thread_stack = 240K
+
+#innodb_use_native_aio = 0
+innodb_file_per_table
+
+max_connections=600
+max_user_connections=500
+wait_timeout=28800
+interactive_timeout=50
+long_query_time=0.5
+
+#slow_query_log=1
+#slow_query_log_file=/var/log/mysql-slow-queries.log
+
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+#
+# include all files from the config directory
+#
+!includedir /etc/my.cnf.d
+
 	
 #其他说明 配置文件
 Config and log locations on a RHEL and CentOS

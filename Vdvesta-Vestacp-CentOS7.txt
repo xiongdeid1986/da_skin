@@ -145,3 +145,70 @@ zend_extension = /usr/local/lib64/ioncube/ioncube_loader_lin_7.1.so
 	2.vestecp后台勾选 Let's Encrypt 支持
 	
 	
+	
+#其他说明 配置文件
+Config and log locations on a RHEL and CentOS
+Service	Config	Log
+Apache	/etc/httpd/conf/httpd.conf
+/etc/httpd/conf.d/*
+/home/$user/conf/web/httpd.conf
+/home/$user/conf/web/shttpd.conf (ssl)	/var/log/httpd/access_log
+/var/log/httpd/error_log
+/var/log/httpd/domains/$domain.log
+/var/log/httpd/domains/$domain.error.log
+PHP	/etc/php.ini
+/etc/php.d/*	/var/log/httpd/domains/$domain.error.log
+Nginx	/etc/nginx/nginx.conf
+/etc/nginx/conf.d/*
+/home/$user/conf/web/nginx.conf
+/home/$user/conf/web/snginx.conf (ssl)	/var/log/nginx/access.log
+/var/log/nginx/error.log
+/var/log/httpd/domains/$domain.log
+/var/log/httpd/domains/$domain.error.log
+Named	/etc/named.conf
+/home/$user/conf/dns/$domain.db	/var/log/messages
+Exim	/etc/exim/exim.conf
+/home/$user/conf/mail/$domain/*	/var/log/exim/main.log
+/var/log/exim/reject.log
+/var/log/exim/panic.log
+Dovecot	/etc/dovecot/dovecot.conf
+/etc/dovecot/conf.d/*
+/etc/dovecot.conf (rhel5/centos5)
+/home/$user/conf/mail/$domain/passwd	/var/log/dovecot.log
+ClamAV	/etc/clamd.conf
+/etc/freshclam.conf	/var/log/clamav/clamd.log
+/var/log/clamav/freshclam.log
+/var/log/messages
+/var/log/exim/main.log
+SpamAssassin	/etc/mail/spamassassin/local.cf	/var/log/exim/main.log
+Roundcube	/etc/roundcubemail/main.inc.php
+/etc/roundcubemail/db.inc.php
+/etc/httpd/conf.d/roundcubemail.conf	/var/log/roundcubemail/*
+/var/log/httpd/domains/$domain.log
+/var/log/httpd/domains/$domain.error.log
+MySQL	/etc/my.cnf
+/root/.my.cnf
+/usr/local/vesta/conf/mysql.conf	/var/log/mysqld.log
+phpMyAdmin	/etc/phpMyAdmin/config.inc.php
+/etc/httpd/conf.d/phpMyAdmin.conf	/var/log/httpd/domains/$domain.log
+/var/log/httpd/domains/$domain.error.log
+PostgreSQL	/var/lib/pgsql/data/postgresql.conf
+/var/lib/pgsql/data/pg_hba.conf
+/usr/local/vesta/conf/pgsql.conf	/var/lib/pgsql/pgstartup.log
+phpPgAdmin	/etc/phpPgAdmin/config.inc.php
+/etc/httpd/conf.d/phpPgAdmin.conf	/var/log/httpd/domains/$domain.log
+/var/log/httpd/domains/$domain.error.log
+Vsftpd	/etc/vsftpd/vsftpd.conf	/var/log/xferlog
+/var/log/messages
+Vesta	/usr/local/vesta/conf/vesta.conf
+/usr/local/vesta/conf/mysql.conf
+/usr/local/vesta/conf/pgsql.conf
+/usr/local/vesta/conf/ftp.backup.conf
+/usr/local/vesta/conf/dns-cluster.conf
+/usr/local/vesta/nginx/conf/nginx.conf
+/usr/local/vesta/php/lib/php.ini
+/usr/local/vesta/php/etc/php-fpm.conf	/var/log/vesta/system.log
+/var/log/vesta/backup.log
+/var/log/vesta/auth.log
+/var/log/vesta/nginx-error.log
+/usr/local/vesta/php/var/log/php-fpm.log

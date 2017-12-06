@@ -73,6 +73,19 @@ bash vdvesta.sh
   #设置后台为中文
   mv /usr/local/vesta/web/inc/i18n/en.php /usr/local/vesta/web/inc/i18n/english.php
   cp /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/en.php
+  rm -rf /usr/local/vesta/web/inc/i18n/de.php
+  cp /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/de.php
+  rm -rf /usr/local/vesta/web/inc/i18n/cz.php
+  cp /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/cz.php
+  rm -rf /usr/local/vesta/web/inc/i18n/da.php
+  cp /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/da.php
+  \cp -rf /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/el.php
+  \cp -rf /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/es.php
+  \cp -rf /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/hu.php
+  \cp -rf /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/it.php
+  \cp -rf /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/nl.php
+  \cp -rf /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/no.php
+  \cp -rf /usr/local/vesta/web/inc/i18n/cn.php /usr/local/vesta/web/inc/i18n/se.php
   #编辑模板
   cd /usr/local/vesta/data/templates/web/skel/public_html
   cd /usr/local/vesta/data/templates/web/skel/public_shtml

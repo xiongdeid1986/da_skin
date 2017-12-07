@@ -188,11 +188,34 @@ long_query_time=0.5
 [mysqld_safe]
 log-error=/var/log/mariadb/mariadb.log
 pid-file=/var/run/mariadb/mariadb.pid
-
-#
-# include all files from the config directory
-#
 !includedir /etc/my.cnf.d
+
+#---------------------------------------------------------------
+
+#为了数据库的稳定.删除
+rm -rf /var/lib/mysql/ib_logfile0
+rm -rf /var/lib/mysql/ib_logfile1
+#ib_logfile0和ib_logfile1
+设置客户端：
+
+vim /etc/my.cnf.d/mysql-clients.cnf
+#加入
+[mysql]
+default-character-set=utf8
+
+vim /etc/my.cnf
+#加入
+[mysqld]
+init_connect='SET collation_connection = utf8_general_ci'
+ 29 init_connect='SET NAMES utf8'
+ 30 character-set-server=utf8
+ 31 collation-server=utf8_general_ci
+ 32 skip-character-set-client-handshake
+ 33
+ 34 #开启慢查询
+ 35 slow_query_log = ON
+ 36 slow_query_log_file = /var/log/mariadb/data_slow.log
+ 37 long_query_time = 1
 
 	
 #其他说明 配置文件
